@@ -2,9 +2,11 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/4
+
 ## Parent
 
-`.scratch/banking-fraud-detection-lab-v0-1/PRD.md`
+GitHub issue #1: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 
 ## What to build
 
@@ -34,5 +36,5 @@ Start after issues 01 and 02 establish generated entities and lifecycle semantic
 
 ## Blocked by
 
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/01-generate-and-inspect-minimal-banking-world.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/02-trace-suspicious-activity-through-alert-lifecycle.md`
+- GitHub issue #2: https://github.com/akepo225/banking-fraud-detection-lab/issues/2
+- GitHub issue #3: https://github.com/akepo225/banking-fraud-detection-lab/issues/3

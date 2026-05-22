@@ -2,9 +2,11 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/6
+
 ## Parent
 
-`.scratch/banking-fraud-detection-lab-v0-1/PRD.md`
+GitHub issue #1: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 
 ## What to build
 
@@ -34,5 +36,5 @@ Start after generated data, SQLite loading, and alert-aware metrics exist. This 
 
 ## Blocked by
 
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/03-query-generated-data-through-sqlite.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/04-produce-alert-aware-metrics-report-from-generated-cases.md`
+- GitHub issue #4: https://github.com/akepo225/banking-fraud-detection-lab/issues/4
+- GitHub issue #5: https://github.com/akepo225/banking-fraud-detection-lab/issues/5

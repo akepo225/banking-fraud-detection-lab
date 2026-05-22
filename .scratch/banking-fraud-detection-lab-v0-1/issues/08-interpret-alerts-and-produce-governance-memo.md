@@ -2,9 +2,11 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/9
+
 ## Parent
 
-`.scratch/banking-fraud-detection-lab-v0-1/PRD.md`
+GitHub issue #1: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 
 ## What to build
 
@@ -34,5 +36,5 @@ Start after both baseline scenario notebooks exist. This is the integration slic
 
 ## Blocked by
 
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/06-detect-alpine-crest-private-banking-transaction-fraud.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/07-detect-novabank-digital-scam-to-mule-flow.md`
+- GitHub issue #7: https://github.com/akepo225/banking-fraud-detection-lab/issues/7
+- GitHub issue #8: https://github.com/akepo225/banking-fraud-detection-lab/issues/8

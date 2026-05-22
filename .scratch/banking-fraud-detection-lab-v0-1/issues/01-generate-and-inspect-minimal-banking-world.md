@@ -2,9 +2,11 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/2
+
 ## Parent
 
-`.scratch/banking-fraud-detection-lab-v0-1/PRD.md`
+GitHub issue #1: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 
 ## What to build
 

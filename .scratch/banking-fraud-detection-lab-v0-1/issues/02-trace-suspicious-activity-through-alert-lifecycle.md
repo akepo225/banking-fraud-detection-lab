@@ -2,9 +2,11 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/3
+
 ## Parent
 
-`.scratch/banking-fraud-detection-lab-v0-1/PRD.md`
+GitHub issue #1: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 
 ## What to build
 
@@ -34,4 +36,4 @@ Start after issue 01 creates the minimal generated banking world.
 
 ## Blocked by
 
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/01-generate-and-inspect-minimal-banking-world.md`
+- GitHub issue #2: https://github.com/akepo225/banking-fraud-detection-lab/issues/2

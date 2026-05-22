@@ -2,9 +2,11 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/14
+
 ## Parent
 
-`.scratch/banking-fraud-detection-lab-v0-1/PRD.md`
+GitHub issue #1: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 
 ## What to build
 
@@ -34,4 +36,4 @@ Run last. Do not start this issue until all other v0.1 implementation issues are
 
 ## Blocked by
 
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/12-polish-publication-ready-readme-and-release-checklist.md`
+- GitHub issue #13: https://github.com/akepo225/banking-fraud-detection-lab/issues/13

@@ -2,9 +2,11 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/12
+
 ## Parent
 
-`.scratch/banking-fraud-detection-lab-v0-1/PRD.md`
+GitHub issue #1: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 
 ## What to build
 
@@ -32,8 +34,8 @@ Start after all v0.1 generated-data, notebook, case-library, and regulatory-sour
 
 ## Blocked by
 
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/06-detect-alpine-crest-private-banking-transaction-fraud.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/07-detect-novabank-digital-scam-to-mule-flow.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/08-interpret-alerts-and-produce-governance-memo.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/09-seed-case-library-with-pattern-linked-source-packs.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/10-connect-regulatory-source-index-to-v0-1-exercises.md`
+- GitHub issue #7: https://github.com/akepo225/banking-fraud-detection-lab/issues/7
+- GitHub issue #8: https://github.com/akepo225/banking-fraud-detection-lab/issues/8
+- GitHub issue #9: https://github.com/akepo225/banking-fraud-detection-lab/issues/9
+- GitHub issue #10: https://github.com/akepo225/banking-fraud-detection-lab/issues/10
+- GitHub issue #11: https://github.com/akepo225/banking-fraud-detection-lab/issues/11

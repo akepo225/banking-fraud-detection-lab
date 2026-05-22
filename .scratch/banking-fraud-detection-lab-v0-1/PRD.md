@@ -2,6 +2,8 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
+
 ## Problem Statement
 
 The user needs a private, public-ready product foundation for **Banking Fraud Detection Lab**: a portfolio-grade banking fraud detection curriculum that can eventually be published without exposing personal job-preparation context, implying affiliation with any real bank, or relying on real client data.

@@ -2,9 +2,11 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/11
+
 ## Parent
 
-`.scratch/banking-fraud-detection-lab-v0-1/PRD.md`
+GitHub issue #1: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 
 ## What to build
 
@@ -34,5 +36,5 @@ Start after the foundations and governance paths exist, so each regulatory note 
 
 ## Blocked by
 
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/05-complete-foundations-data-tour-and-sql-feature-notebook.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/08-interpret-alerts-and-produce-governance-memo.md`
+- GitHub issue #6: https://github.com/akepo225/banking-fraud-detection-lab/issues/6
+- GitHub issue #9: https://github.com/akepo225/banking-fraud-detection-lab/issues/9

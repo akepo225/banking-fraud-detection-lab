@@ -2,9 +2,11 @@
 
 Status: needs-triage
 
+GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/13
+
 ## Parent
 
-`.scratch/banking-fraud-detection-lab-v0-1/PRD.md`
+GitHub issue #1: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 
 ## What to build
 
@@ -34,7 +36,7 @@ Start after the learner path, case library, regulatory source index, and CI qual
 
 ## Blocked by
 
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/08-interpret-alerts-and-produce-governance-memo.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/09-seed-case-library-with-pattern-linked-source-packs.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/10-connect-regulatory-source-index-to-v0-1-exercises.md`
-- `.scratch/banking-fraud-detection-lab-v0-1/issues/11-enforce-v0-1-quality-gates-in-ci.md`
+- GitHub issue #9: https://github.com/akepo225/banking-fraud-detection-lab/issues/9
+- GitHub issue #10: https://github.com/akepo225/banking-fraud-detection-lab/issues/10
+- GitHub issue #11: https://github.com/akepo225/banking-fraud-detection-lab/issues/11
+- GitHub issue #12: https://github.com/akepo225/banking-fraud-detection-lab/issues/12

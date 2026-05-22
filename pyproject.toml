@@ -1,0 +1,45 @@
+[project]
+name = "banking-fraud-detection-lab"
+version = "0.1.0"
+description = "Synthetic banking fraud detection curriculum with private-banking and digital-banking tracks."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT for code; CC BY-NC 4.0 for educational content" }
+authors = [
+  { name = "Banking Fraud Detection Lab Contributors" }
+]
+dependencies = [
+  "faker>=25.0",
+  "ipykernel>=6.29",
+  "jupyterlab>=4.2",
+  "matplotlib>=3.8",
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "scikit-learn>=1.4",
+  "sqlalchemy>=2.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "nbmake>=1.5",
+  "pytest>=8.0",
+  "ruff>=0.5"
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

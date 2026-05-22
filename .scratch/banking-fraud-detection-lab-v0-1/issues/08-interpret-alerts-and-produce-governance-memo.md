@@ -1,6 +1,6 @@
 # Interpret Alerts And Produce A Governance Memo
 
-Status: needs-triage
+Status: ready-for-agent
 
 GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/9
 

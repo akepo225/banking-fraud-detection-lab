@@ -1,6 +1,6 @@
 # Detect NovaBank Digital Scam-To-Mule Flow
 
-Status: needs-triage
+Status: ready-for-agent
 
 GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/8
 

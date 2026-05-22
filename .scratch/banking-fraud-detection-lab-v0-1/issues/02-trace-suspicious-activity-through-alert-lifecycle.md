@@ -1,6 +1,6 @@
 # Trace Suspicious Activity Through The Alert Lifecycle
 
-Status: needs-triage
+Status: ready-for-agent
 
 GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/3
 

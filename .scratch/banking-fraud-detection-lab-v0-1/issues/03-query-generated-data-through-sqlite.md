@@ -1,6 +1,6 @@
 # Query Generated Data Through SQLite
 
-Status: needs-triage
+Status: ready-for-agent
 
 GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/4
 

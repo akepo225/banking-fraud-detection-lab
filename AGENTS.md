@@ -4,7 +4,7 @@
 
 ### Issue tracker
 
-Issues and PRDs are tracked as local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+Issues and PRDs are tracked in GitHub Issues for `akepo225/banking-fraud-detection-lab`. Local `.scratch/` files are mirrors of the initial planning artifacts only. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

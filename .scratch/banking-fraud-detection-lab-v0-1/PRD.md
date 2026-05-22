@@ -1,6 +1,6 @@
 # PRD: Banking Fraud Detection Lab v0.1
 
-Status: needs-triage
+Status: ready-for-human
 
 GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/1
 

@@ -1,6 +1,6 @@
 # Detect Alpine Crest Private-Banking Transaction Fraud
 
-Status: needs-triage
+Status: ready-for-agent
 
 GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/7
 

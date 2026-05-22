@@ -1,6 +1,6 @@
 # Seed Case Library With Pattern-Linked Source Packs
 
-Status: needs-triage
+Status: ready-for-human
 
 GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/10
 

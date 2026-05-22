@@ -1,19 +1,21 @@
-# Issue Tracker: Local Markdown
+# Issue Tracker: GitHub Issues
 
-Issues and PRDs for this repo live as markdown files in `.scratch/`.
+Issues and PRDs for this repo live in GitHub Issues for `akepo225/banking-fraud-detection-lab`.
+
+The local `.scratch/` files are mirrors of the initial planning artifacts only. Use GitHub Issues as the source of truth for triage state, comments, and implementation work.
 
 ## Conventions
 
-- One feature per directory: `.scratch/<feature-slug>/`
-- The PRD is `.scratch/<feature-slug>/PRD.md`
-- Implementation issues are `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01`
-- Triage state is recorded as a `Status:` line near the top of each issue file
-- Comments and conversation history append to the bottom of the file under a `## Comments` heading
+- Use `gh issue list`, `gh issue view`, `gh issue edit`, and `gh issue comment` for issue operations.
+- Every triaged issue should have exactly one category role label: `bug` or `enhancement`.
+- Every triaged issue should have exactly one state role label: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`.
+- Additional non-role labels such as `afk`, `hitl`, `blocked`, or `parent` may be used when helpful.
+- Sprint membership is tracked with GitHub milestones.
 
 ## When A Skill Says "Publish To The Issue Tracker"
 
-Create a new file under `.scratch/<feature-slug>/`, creating the directory if needed.
+Create or update a GitHub issue with `gh issue create` or `gh issue edit`.
 
 ## When A Skill Says "Fetch The Relevant Ticket"
 
-Read the file at the referenced path. The user will normally pass the path or the issue number directly.
+Read the GitHub issue with `gh issue view <number> --comments`.

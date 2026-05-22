@@ -1,6 +1,6 @@
 # Enforce v0.1 Quality Gates In CI
 
-Status: needs-triage
+Status: ready-for-agent
 
 GitHub: https://github.com/akepo225/banking-fraud-detection-lab/issues/12
 

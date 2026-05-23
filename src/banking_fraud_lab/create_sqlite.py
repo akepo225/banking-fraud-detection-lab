@@ -11,7 +11,15 @@ from banking_fraud_lab.sqlite_loader import create_minimal_banking_world_sqlite
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Create a SQLite database from the deterministic minimal banking world."""
+    """
+    Create the deterministic minimal banking world SQLite database from CLI arguments.
+    
+    Parameters:
+        argv (Sequence[str] | None): Optional list of command-line arguments to parse; if None, uses the process arguments.
+    
+    Returns:
+        int: Exit code (0 on success).
+    """
     parser = argparse.ArgumentParser(
         description="Create a SQLite database from the generated banking fraud lab tables."
     )

@@ -23,7 +23,11 @@ EXAMPLE_SQL_FILES = (
 
 
 def test_generated_tables_can_be_loaded_into_sqlite_database(tmp_path: Path) -> None:
-    """The loader must create a local SQLite database containing generated tables."""
+    """
+    Verify the generated banking tables can be loaded into a SQLite database and match expected schema and data.
+    
+    Asserts that the database contains the expected table names, has foreign key enforcement enabled, and that the transactions row count equals the number of generated transactions.
+    """
     tables = generate_minimal_banking_world(seed=42)
     connection = load_tables_to_sqlite(tables, tmp_path / "full_world.sqlite")
 
@@ -65,7 +69,11 @@ def test_sqlite_schema_includes_core_foreign_key_relationships(tmp_path: Path) -
 
 
 def test_default_sqlite_database_is_learner_facing(tmp_path: Path) -> None:
-    """Default SQLite creation should exclude protected scenario answer keys."""
+    """
+    Verify the default SQLite database contains only learner-facing tables and omits protected scenario answer keys.
+    
+    Creates a learner-facing SQLite database and asserts its table set equals LEARNER_FACING_TABLE_NAMES and that PROTECTED_SCENARIO_ANSWER_KEYS is not present.
+    """
     connection = create_minimal_banking_world_sqlite(
         tmp_path / "learner_world.sqlite",
         seed=42,
@@ -94,6 +102,12 @@ def test_representative_sql_examples_execute_successfully(tmp_path: Path) -> Non
 
 
 def _sqlite_table_names(connection: sqlite3.Connection) -> set[str]:
+    """
+    Return the set of table names present in the given SQLite connection.
+    
+    Returns:
+        set[str]: Table name strings found in the database connected to by `connection`.
+    """
     rows = connection.execute(
         "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
     ).fetchall()
@@ -103,5 +117,13 @@ def _sqlite_table_names(connection: sqlite3.Connection) -> set[str]:
 def _foreign_keys_for_table(
     connection: sqlite3.Connection, table_name: str
 ) -> set[tuple[str, str, str]]:
+    """
+    Collect foreign key relationships for a SQLite table as (column, referenced_table, referenced_column) tuples.
+    
+    Returns:
+        set[tuple[str, str, str]]: A set of triples where each triple is
+        (source_column, referenced_table, referenced_column) describing a foreign key
+        declared on the given table.
+    """
     rows = connection.execute(f'PRAGMA foreign_key_list("{table_name}")').fetchall()
     return {(str(row[3]), str(row[2]), str(row[4])) for row in rows}

@@ -62,11 +62,23 @@ banking_fraud_detection_lab/
 
 ## Quickstart
 
-This skeleton does not yet include the generator or notebooks. The intended setup will be:
+Install dependencies, run tests, and inspect the committed tiny sample data:
 
 ```bash
-uv sync
+uv sync --extra dev
 uv run pytest
+```
+
+Regenerate the canonical sample CSVs with:
+
+```bash
+uv run python - <<'PY'
+from pathlib import Path
+
+from banking_fraud_lab import generate_minimal_banking_world
+
+generate_minimal_banking_world(seed=42, output_dir=Path("data/sample"))
+PY
 ```
 
 ## Quality Bar

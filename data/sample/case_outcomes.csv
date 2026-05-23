@@ -1,0 +1,3 @@
+case_outcome_id,case_id,decided_at,outcome_type,confirmed_fraud,loss_amount_original,loss_currency,loss_amount_chf,notes
+OUT-0001,CASE-0001,2026-02-08 15:00:00,unresolved,False,0.00,GBP,0.00,No protected scenario label is exposed in this tracer bullet.
+OUT-0002,CASE-0002,2026-02-09 15:00:00,false_positive,False,0.00,USD,0.00,No protected scenario label is exposed in this tracer bullet.

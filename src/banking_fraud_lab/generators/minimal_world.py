@@ -92,6 +92,7 @@ def generate_minimal_banking_world(
 
 
 def _generate_partners(fake: Faker, rng: np.random.Generator) -> pd.DataFrame:
+    """Create partner records spanning both institutions with randomised attributes."""
     countries = ("CH", "DE", "FR", "IT", "GB", "US")
     rows = []
     for index in range(1, 9):
@@ -112,6 +113,7 @@ def _generate_partners(fake: Faker, rng: np.random.Generator) -> pd.DataFrame:
 
 
 def _generate_clients(rng: np.random.Generator, partners: pd.DataFrame) -> pd.DataFrame:
+    """Derive client records from the first six partners with institution-matched segments."""
     segments = {
         ALPINE_CREST: ("private_banking_individual", "family_office", "operating_company"),
         NOVABANK: ("digital_retail", "digital_sme", "digital_premium"),
@@ -133,6 +135,7 @@ def _generate_clients(rng: np.random.Generator, partners: pd.DataFrame) -> pd.Da
 
 
 def _generate_roles() -> pd.DataFrame:
+    """Return the static role catalog used across banking relationships."""
     rows = [
         {
             "role_id": "ROLE-001",
@@ -165,6 +168,7 @@ def _generate_roles() -> pd.DataFrame:
 def _generate_banking_relationships(
     fake: Faker, rng: np.random.Generator, clients: pd.DataFrame
 ) -> pd.DataFrame:
+    """Open one banking relationship per client with a named RM code."""
     rows = []
     for index, client in enumerate(clients.itertuples(index=False), start=1):
         relationship_prefix = "PB" if client.institution_name == ALPINE_CREST else "DB"
@@ -185,6 +189,12 @@ def _generate_banking_relationships(
 def _generate_partner_roles(
     clients: pd.DataFrame, roles: pd.DataFrame, relationships: pd.DataFrame, partners: pd.DataFrame
 ) -> pd.DataFrame:
+    """Assign primary-client and supporting partner roles per relationship.
+
+    Each relationship gets a primary_client role for the owning partner and a
+    supporting role (beneficial_owner or authorized_signatory) for another
+    partner from the same institution.
+    """
     role_by_code = dict(zip(roles["role_code"], roles["role_id"], strict=True))
     client_by_id = clients.set_index("client_id")
     partners_by_institution = {
@@ -227,6 +237,7 @@ def _generate_partner_roles(
 
 
 def _generate_accounts(rng: np.random.Generator, relationships: pd.DataFrame) -> pd.DataFrame:
+    """Open current and optional custody/savings accounts under each relationship."""
     rows = []
     for index, relationship in enumerate(relationships.itertuples(index=False), start=1):
         account_count = 2 if index in {1, 4} else 1
@@ -251,6 +262,7 @@ def _generate_accounts(rng: np.random.Generator, relationships: pd.DataFrame) ->
 
 
 def _generate_users(rng: np.random.Generator, clients: pd.DataFrame) -> pd.DataFrame:
+    """Create digital user identities for the last four clients (those eligible)."""
     rows = []
     for index, client in enumerate(clients.iloc[2:].itertuples(index=False), start=1):
         rows.append(
@@ -267,6 +279,7 @@ def _generate_users(rng: np.random.Generator, clients: pd.DataFrame) -> pd.DataF
 
 
 def _generate_sessions(rng: np.random.Generator, users: pd.DataFrame) -> pd.DataFrame:
+    """Generate login and activity sessions for digital users."""
     rows = []
     events = ("login", "view_accounts", "add_beneficiary", "payment_authorized")
     for index in range(1, 8):
@@ -291,6 +304,7 @@ def _generate_sessions(rng: np.random.Generator, users: pd.DataFrame) -> pd.Data
 def _generate_payment_beneficiaries(
     fake: Faker, rng: np.random.Generator, clients: pd.DataFrame, users: pd.DataFrame
 ) -> pd.DataFrame:
+    """Add one saved beneficiary per client that has a digital user identity."""
     rows = []
     users_by_client = users.set_index("client_id")
     eligible_clients = clients[clients["client_id"].isin(users_by_client.index)]
@@ -317,6 +331,7 @@ def _generate_transactions(
     relationships: pd.DataFrame,
     beneficiaries: pd.DataFrame,
 ) -> pd.DataFrame:
+    """Book transactions across accounts with optional beneficiary references for digital payments."""
     relationship_clients = relationships.set_index("banking_relationship_id")["primary_client_id"]
     beneficiary_ids_by_client = {
         client_id: tuple(client_beneficiaries["payment_beneficiary_id"])
@@ -354,6 +369,10 @@ def _generate_transactions(
 
 
 def _generate_alerts(transactions: pd.DataFrame) -> pd.DataFrame:
+    """Create sample fraud alerts triggered by specific transactions.
+
+    Raises ValueError if a hard-coded trigger transaction is missing.
+    """
     alert_specs = (
         ("T-0003", ALPINE_CREST, "private_banking_high_value", "triaged", "medium"),
         ("T-0008", NOVABANK, "new_beneficiary_payment", "escalated", "high"),
@@ -382,6 +401,7 @@ def _generate_alerts(transactions: pd.DataFrame) -> pd.DataFrame:
 
 
 def _generate_cases(alerts: pd.DataFrame) -> pd.DataFrame:
+    """Open investigation cases for escalated and closed alerts."""
     rows = []
     case_alerts = alerts[alerts["alert_status"].isin(("escalated", "closed"))]
     for index, alert in enumerate(case_alerts.itertuples(index=False), start=1):
@@ -403,6 +423,7 @@ def _generate_cases(alerts: pd.DataFrame) -> pd.DataFrame:
 def _generate_case_outcomes(
     cases: pd.DataFrame, transactions: pd.DataFrame, alerts: pd.DataFrame
 ) -> pd.DataFrame:
+    """Record false-positive or unresolved outcomes for each case with zero loss amounts."""
     transaction_currencies = transactions.set_index("transaction_id")["currency"]
     alert_triggers = alerts.set_index("alert_id")["triggered_transaction_id"]
     rows = []
@@ -427,38 +448,49 @@ def _generate_case_outcomes(
 
 
 def _frame(table_name: str, rows: list[dict[str, object]]) -> pd.DataFrame:
+    """Build a DataFrame with column order enforced by the schema contract."""
     return pd.DataFrame(rows, columns=COLUMN_NAMES[table_name])
 
 
 def _empty_frame(table_name: str) -> pd.DataFrame:
+    """Create a header-only DataFrame for placeholder tables."""
     return pd.DataFrame(columns=COLUMN_NAMES[table_name])
 
 
 def _identifier(prefix: str, index: int) -> str:
+    """Format a zero-padded entity identifier like ``P-0001``."""
     return f"{prefix}-{index:04d}"
 
 
 def _timestamp(days: int, hours: int = 0) -> pd.Timestamp:
+    """Return a timestamp offset from the generation baseline."""
     return BASE_TIMESTAMP + pd.Timedelta(days=days, hours=hours)
 
 
 def _money(whole_units: int) -> Decimal:
+    """Convert an integer amount to a Decimal quantised to two decimal places."""
     return Decimal(whole_units).quantize(MONEY_QUANT)
 
 
 def _to_chf(amount: Decimal, currency: str) -> Decimal:
+    """Convert a monetary amount to CHF using fixed v0.1 exchange rates.
+
+    Raises ValueError for unknown currency codes.
+    """
     if currency not in CHF_RATES:
         raise ValueError(f"Unknown currency: {currency}")
     return (amount * CHF_RATES[currency]).quantize(MONEY_QUANT)
 
 
 def _account_type(institution_name: str, account_number: int) -> str:
+    """Select account type based on institution and whether it is the secondary account."""
     if institution_name == ALPINE_CREST:
         return "custody" if account_number else "private_current"
     return "digital_savings" if account_number else "digital_current"
 
 
 def _transaction_type(institution_name: str, is_digital_payment: bool) -> str:
+    """Choose wire_transfer, card_payment, or instant_payment based on context."""
     if is_digital_payment:
         return "instant_payment"
     if institution_name == ALPINE_CREST:
@@ -467,6 +499,7 @@ def _transaction_type(institution_name: str, is_digital_payment: bool) -> str:
 
 
 def _channel(institution_name: str, is_digital_payment: bool) -> str:
+    """Pick relationship_manager, web, or mobile_app based on payment context."""
     if is_digital_payment:
         return "mobile_app"
     if institution_name == ALPINE_CREST:
@@ -475,6 +508,7 @@ def _channel(institution_name: str, is_digital_payment: bool) -> str:
 
 
 def _transaction_description(institution_name: str, is_digital_payment: bool) -> str:
+    """Return a human-readable transaction description based on context."""
     if is_digital_payment:
         return "Outbound payment to saved beneficiary"
     if institution_name == ALPINE_CREST:
@@ -483,6 +517,7 @@ def _transaction_description(institution_name: str, is_digital_payment: bool) ->
 
 
 def _alert_reason(alert_type: str) -> str:
+    """Look up a canned alert reason string for the given alert type."""
     reasons = {
         "private_banking_high_value": "High-value movement relative to sample relationship profile.",
         "new_beneficiary_payment": "Payment followed recent beneficiary setup.",

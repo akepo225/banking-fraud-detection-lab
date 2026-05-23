@@ -1,3 +1,5 @@
+"""Tests verifying generated data conforms to the schema contract."""
+
 from decimal import Decimal
 
 import pandas as pd
@@ -7,6 +9,7 @@ from banking_fraud_lab.schema import COLUMN_NAMES, TABLE_NAMES, TABLE_SPECS
 
 
 def test_schema_contract_column_names_match_generated_tables() -> None:
+    """Every generated DataFrame must have exactly the columns declared in the schema."""
     tables = generate_minimal_banking_world(seed=42)
 
     for table_name in TABLE_NAMES:
@@ -14,6 +17,7 @@ def test_schema_contract_column_names_match_generated_tables() -> None:
 
 
 def test_schema_contract_type_families_match_generated_tables() -> None:
+    """Non-nullable columns must contain no nulls; non-null values must match declared types."""
     tables = generate_minimal_banking_world(seed=42)
 
     for table_name, table_spec in TABLE_SPECS.items():
@@ -31,6 +35,7 @@ def test_schema_contract_type_families_match_generated_tables() -> None:
 
 
 def test_schema_contract_contains_documented_purposes() -> None:
+    """Every table spec must carry a non-empty purpose and at least one column."""
     for table_name, table_spec in TABLE_SPECS.items():
         assert table_spec.name == table_name
         assert table_spec.purpose
@@ -38,6 +43,7 @@ def test_schema_contract_contains_documented_purposes() -> None:
 
 
 def _assert_type_family(values: pd.Series, expected_dtype: str) -> None:
+    """Assert that all values in the Series belong to the expected type family."""
     if expected_dtype == "datetime64[ns]":
         assert pd.api.types.is_datetime64_any_dtype(values)
     elif expected_dtype == "int64":

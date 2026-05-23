@@ -1,3 +1,5 @@
+"""Tests for entity presence, referential integrity, and committed sample CSVs."""
+
 from pathlib import Path
 
 import pandas as pd
@@ -55,6 +57,7 @@ FK_RELATIONSHIPS = (
 
 
 def test_minimal_world_includes_required_v0_1_entities() -> None:
+    """All v0.1 tables must be present with correct columns and non-empty rows where required."""
     tables = generate_minimal_banking_world(seed=42)
 
     assert set(TABLE_NAMES) == REQUIRED_V0_1_TABLES
@@ -76,12 +79,14 @@ def test_minimal_world_preserves_referential_integrity(
     parent_column: str,
     nullable: bool,
 ) -> None:
+    """Every FK column must reference only values that exist in the parent table."""
     tables = generate_minimal_banking_world(seed=42)
 
     _assert_fk(tables, child_table, child_column, parent_table, parent_column, nullable=nullable)
 
 
 def test_minimal_world_preserves_semantic_join_integrity() -> None:
+    """Cross-table joins must not violate domain invariants (institution consistency)."""
     tables = generate_minimal_banking_world(seed=42)
 
     relationships = tables["banking_relationships"]
@@ -146,6 +151,7 @@ def test_minimal_world_preserves_semantic_join_integrity() -> None:
 
 
 def test_committed_sample_csvs_exist_for_all_generated_tables() -> None:
+    """Every table in the schema must have a committed sample CSV under data/sample/."""
     sample_dir = Path("data/sample")
 
     for table_name in TABLE_NAMES:
@@ -157,6 +163,7 @@ def test_committed_sample_csvs_exist_for_all_generated_tables() -> None:
 
 
 def test_committed_sample_csvs_match_canonical_seed_output(tmp_path: Path) -> None:
+    """Committed CSVs must be byte-identical to freshly generated seed-42 output."""
     sample_dir = Path("data/sample")
     generate_minimal_banking_world(seed=42, output_dir=tmp_path)
 
@@ -175,6 +182,7 @@ def _assert_fk(
     *,
     nullable: bool = False,
 ) -> None:
+    """Assert every (non-null) value in child_column exists in parent_column."""
     child_values = tables[child_table][child_column]
     if nullable:
         child_values = child_values.dropna()

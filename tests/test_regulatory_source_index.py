@@ -1,9 +1,11 @@
 """Tests for regulatory source-note structure and safety wording."""
 
+import re
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
-import re
+import yaml
 
 
 REGULATORY_INDEX = Path("docs/regulation/index.md")
@@ -161,31 +163,24 @@ def _read_note(note_path: Path) -> tuple[dict[str, str | list[str]], str]:
 
 
 def _parse_front_matter(raw_metadata: str) -> dict[str, str | list[str]]:
-    """Parse the small front-matter subset used by regulatory source notes."""
+    """Parse regulatory source-note front matter with a YAML parser."""
+    parsed: Any = yaml.safe_load(raw_metadata)
+    assert isinstance(parsed, dict), "Front matter must be a mapping"
+
     metadata: dict[str, str | list[str]] = {}
-    current_list_key: str | None = None
-
-    for raw_line in raw_metadata.splitlines():
-        line = raw_line.rstrip()
-        if not line:
-            continue
-        if line.startswith("  - "):
-            assert current_list_key is not None, f"List item without key: {line}"
-            list_value = metadata[current_list_key]
-            assert isinstance(list_value, list)
-            list_value.append(line.removeprefix("  - ").strip())
-            continue
-
-        key, separator, value = line.partition(":")
-        assert separator, f"Invalid front-matter line: {line}"
-        key = key.strip()
-        value = value.strip().strip('"')
-        if value:
-            metadata[key] = value
-            current_list_key = None
+    for raw_key, raw_value in parsed.items():
+        assert isinstance(raw_key, str), f"Front-matter key must be a string: {raw_key!r}"
+        if isinstance(raw_value, str):
+            metadata[raw_key] = raw_value
+        elif isinstance(raw_value, bool):
+            metadata[raw_key] = str(raw_value).lower()
+        elif isinstance(raw_value, list):
+            assert all(isinstance(item, str) for item in raw_value), (
+                f"{raw_key} must contain only string values"
+            )
+            metadata[raw_key] = raw_value
         else:
-            metadata[key] = []
-            current_list_key = key
+            raise AssertionError(f"Unsupported front-matter value for {raw_key}: {raw_value!r}")
 
     return metadata
 

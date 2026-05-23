@@ -2,7 +2,7 @@
 
 This data dictionary defines the stable output contract for the tiny sample datasets produced by `generate_minimal_banking_world(seed=42)`. The tables are synthetic, deterministic, and educational. They do not contain real client data and do not reconstruct real events.
 
-Money fields use exact decimal values. Where money is relevant, the model stores original amount and currency plus a CHF-normalized amount. The protected answer-key placeholder is intentionally separate from learner-facing lifecycle tables.
+Money fields use exact decimal values. Where money is relevant, the model stores original amount and currency plus a CHF-normalized amount. Protected answer keys are intentionally separate from learner-facing lifecycle tables and are excluded from learner-facing generated outputs by default.
 
 ## Tables
 
@@ -18,10 +18,11 @@ Money fields use exact decimal values. Where money is relevant, the model stores
 | `users` | Digital login identities that authenticate sessions for clients. |
 | `sessions` | Digital session telemetry for e-banking and app behavior. |
 | `payment_beneficiaries` | Saved payment beneficiaries used by digital-banking payments. |
-| `alerts` | Suspicious activity alerts generated before cases are opened or closed. |
+| `suspicious_activities` | Suspicious activity observations before alert generation. |
+| `alerts` | Alerts generated from suspicious activities that may trigger case investigations. |
 | `cases` | Investigation cases opened from alerts in the alert lifecycle. |
 | `case_outcomes` | Case decisions that separate confirmed fraud from other lifecycle states. |
-| `protected_scenario_answer_keys` | Protected placeholder table for future scenario labels. |
+| `protected_scenario_answer_keys` | Protected scenario labels excluded from learner-facing views. |
 
 ## Alert Lifecycle States
 
@@ -29,11 +30,12 @@ The v0.1 sample data keeps suspicious activity, alerts, cases, outcomes, and con
 
 | Concept | Table | Meaning |
 | --- | --- | --- |
-| Suspicious activity | `transactions` | A money movement event may look unusual, but is not itself a fraud label. |
-| Alert | `alerts` | A detection rule or model has generated an item for review. |
-| Case | `cases` | An alert has been opened for investigation. |
+| Suspicious activity | `suspicious_activities` | A detection-relevant observation linked to the underlying transaction and context, but not itself a fraud label. |
+| Alert | `alerts` | A detection rule or model has generated an item for review from suspicious activity. |
+| Case | `cases` | An alert has been opened for investigation with direct lifecycle references. |
 | Outcome | `case_outcomes` | An investigator or process has assigned an outcome to a case. |
-| Protected answer key | `protected_scenario_answer_keys` | Future scenario labels, excluded from normal learner-facing views. |
+| Confirmed fraud determination | `case_outcomes` | Fraud confirmation is recorded only after a case outcome, not as a single transaction-level `is_fraud` flag. |
+| Protected answer key | `protected_scenario_answer_keys` | Scenario labels excluded from normal learner-facing views. |
 
 ## `partners`
 
@@ -180,14 +182,40 @@ Saved payment beneficiaries used by digital-banking payments.
 | `created_at` | datetime64[ns] | no |  | Beneficiary creation timestamp. |
 | `status` | string | no |  | Beneficiary status. |
 
+## `suspicious_activities`
+
+Suspicious activity observations that sit before generated alerts in the alert lifecycle.
+
+| Column | Type | Nullable | References | Description |
+| --- | --- | --- | --- | --- |
+| `suspicious_activity_id` | string | no |  | Stable synthetic suspicious activity identifier. |
+| `institution_name` | string | no |  | Fictional institution that owns the observation. |
+| `banking_relationship_id` | string | no | `banking_relationships.banking_relationship_id` | Banking relationship where the suspicious activity was observed. |
+| `account_id` | string | no | `accounts.account_id` | Account linked to the suspicious activity. |
+| `transaction_id` | string | no | `transactions.transaction_id` | Transaction that carried the observed suspicious activity. |
+| `user_id` | string | yes | `users.user_id` | Digital login identity linked to the activity, where applicable. |
+| `session_id` | string | yes | `sessions.session_id` | Digital session linked to the activity, where applicable. |
+| `payment_beneficiary_id` | string | yes | `payment_beneficiaries.payment_beneficiary_id` | Payment beneficiary linked to the activity, where applicable. |
+| `activity_type` | string | no |  | Detection pattern observed. |
+| `detected_at` | datetime64[ns] | no |  | Time the activity was detected. |
+| `detection_signal` | string | no |  | Learner-readable signal summary. |
+| `suspected_amount_chf` | Decimal | no |  | CHF-normalized amount under review. |
+| `review_priority` | string | no |  | Low, medium, or high review priority. |
+
 ## `alerts`
 
-Suspicious activity alerts generated before cases are opened or closed.
+Alerts generated from suspicious activities that may trigger case investigations.
 
 | Column | Type | Nullable | References | Description |
 | --- | --- | --- | --- | --- |
 | `alert_id` | string | no |  | Stable synthetic alert identifier. |
+| `suspicious_activity_id` | string | no | `suspicious_activities.suspicious_activity_id` | Suspicious activity that generated the alert. |
+| `banking_relationship_id` | string | no | `banking_relationships.banking_relationship_id` | Banking relationship linked to the alert. |
+| `account_id` | string | no | `accounts.account_id` | Account linked to the alert. |
 | `triggered_transaction_id` | string | no | `transactions.transaction_id` | Transaction that triggered the alert. |
+| `user_id` | string | yes | `users.user_id` | Digital login identity linked to the alert, where applicable. |
+| `session_id` | string | yes | `sessions.session_id` | Digital session linked to the alert, where applicable. |
+| `payment_beneficiary_id` | string | yes | `payment_beneficiaries.payment_beneficiary_id` | Payment beneficiary linked to the alert, where applicable. |
 | `institution_name` | string | no |  | Fictional institution that owns the alert. |
 | `generated_at` | datetime64[ns] | no |  | Alert generation timestamp. |
 | `alert_type` | string | no |  | Alert typology or rule family. |
@@ -203,6 +231,13 @@ Investigation cases opened from alerts in the alert lifecycle.
 | --- | --- | --- | --- | --- |
 | `case_id` | string | no |  | Stable synthetic case identifier. |
 | `alert_id` | string | no | `alerts.alert_id` | Alert that opened the case. |
+| `suspicious_activity_id` | string | no | `suspicious_activities.suspicious_activity_id` | Suspicious activity being investigated. |
+| `banking_relationship_id` | string | no | `banking_relationships.banking_relationship_id` | Banking relationship linked to the case. |
+| `account_id` | string | no | `accounts.account_id` | Account linked to the case. |
+| `transaction_id` | string | no | `transactions.transaction_id` | Primary transaction under investigation. |
+| `user_id` | string | yes | `users.user_id` | Digital login identity linked to the case, where applicable. |
+| `session_id` | string | yes | `sessions.session_id` | Digital session linked to the case, where applicable. |
+| `payment_beneficiary_id` | string | yes | `payment_beneficiaries.payment_beneficiary_id` | Payment beneficiary linked to the case, where applicable. |
 | `opened_at` | datetime64[ns] | no |  | Case opening timestamp. |
 | `assigned_team` | string | no |  | Investigation team assignment. |
 | `case_status` | string | no |  | Open, closed, or escalated case status. |
@@ -217,7 +252,7 @@ Case decisions that separate confirmed fraud from other lifecycle states.
 | `case_outcome_id` | string | no |  | Stable synthetic case outcome identifier. |
 | `case_id` | string | no | `cases.case_id` | Case that received the outcome. |
 | `decided_at` | datetime64[ns] | no |  | Outcome decision timestamp. |
-| `outcome_type` | string | no |  | Confirmed fraud, false positive, or unresolved. |
+| `outcome_type` | string | no |  | confirmed-fraud, false-positive, or unresolved. |
 | `confirmed_fraud` | bool | no |  | Whether the case outcome confirmed fraud. |
 | `loss_amount_original` | Decimal | no |  | Exact loss amount in original currency. |
 | `loss_currency` | string | no |  | Currency for `loss_amount_original`. |
@@ -226,9 +261,9 @@ Case decisions that separate confirmed fraud from other lifecycle states.
 
 ## `protected_scenario_answer_keys`
 
-Protected placeholder table for future scenario labels that are excluded from normal learner-facing views.
+Protected scenario labels that are excluded from normal learner-facing views.
 
-The issue #2 sample output writes this table as a header-only CSV. Fraud scenario injection is intentionally out of scope for this tracer bullet.
+The canonical generated dataset includes protected answer keys for maintainers and tests. The learner-facing generator helper omits this table by default so exercises can inspect the lifecycle without exposing answer labels.
 
 | Column | Type | Nullable | References | Description |
 | --- | --- | --- | --- | --- |

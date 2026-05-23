@@ -1,1 +1,4 @@
 answer_key_id,scenario_name,entity_table,entity_id,label_type,label_value,available_to_learners
+AK-0001,minimal_alert_lifecycle,suspicious_activities,SA-0002,scenario_label,confirmed_fraud,False
+AK-0002,minimal_alert_lifecycle,transactions,T-0008,scenario_label,confirmed_fraud,False
+AK-0003,minimal_alert_lifecycle,case_outcomes,OUT-0001,case_outcome_answer,confirmed_fraud,False

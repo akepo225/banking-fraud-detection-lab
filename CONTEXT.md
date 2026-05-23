@@ -90,3 +90,13 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - "Fraud detection" was ambiguous between private-banking-only fraud and broader online-bank fraud; resolved: both are first-class tracks.
 - "User" was ambiguous between a legal customer and a login identity; resolved: **Client** is the legal customer and **User** is the digital login identity.
 - "Relationship" was ambiguous between **Banking relationship** and relationship manager; resolved: use **Banking relationship** for the client/account container.
+
+## Agent Progress Log
+
+### Issue #3: Trace Suspicious Activity Through The Alert Lifecycle — DONE
+
+- Branch: feat/issue-3-implementation
+- PR: #16
+- Tests added: 5 focused lifecycle/protected-key/prevalence tests plus expanded schema-derived FK coverage; all local tests passing
+- Key files changed: `src/banking_fraud_lab/generators/minimal_world.py`, `src/banking_fraud_lab/schema/tables.py`, `tests/test_generator_entities.py`, `data/sample/`, `docs/schema/`, `.github/workflows/ci.yml`
+- Notes: Implemented explicit suspicious activity, alert, case, outcome, confirmed-fraud, and protected-answer-key lifecycle. Applied narrow CI workflow hardening from review feedback without changing the configured CI commands. Local `uv run ruff check .`, `uv run pytest` (49 passed), and CodeRabbit local review passed after PR review fixes. GitHub PR checks passed after Actions budget became available.

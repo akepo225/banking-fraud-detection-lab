@@ -36,6 +36,7 @@ TRANSACTIONS = "transactions"
 USERS = "users"
 SESSIONS = "sessions"
 PAYMENT_BENEFICIARIES = "payment_beneficiaries"
+SUSPICIOUS_ACTIVITIES = "suspicious_activities"
 ALERTS = "alerts"
 CASES = "cases"
 CASE_OUTCOMES = "case_outcomes"
@@ -311,17 +312,127 @@ TABLE_SPECS: dict[str, TableSpec] = {
             ColumnSpec("status", "string", False, "Beneficiary status."),
         ),
     ),
+    SUSPICIOUS_ACTIVITIES: TableSpec(
+        name=SUSPICIOUS_ACTIVITIES,
+        purpose=(
+            "Suspicious activity observations that sit before generated alerts in the "
+            "alert lifecycle."
+        ),
+        columns=(
+            ColumnSpec(
+                "suspicious_activity_id",
+                "string",
+                False,
+                "Stable synthetic suspicious activity identifier.",
+            ),
+            ColumnSpec(
+                "institution_name",
+                "string",
+                False,
+                "Fictional institution that owns the observation.",
+            ),
+            ColumnSpec(
+                "banking_relationship_id",
+                "string",
+                False,
+                "Banking relationship where the suspicious activity was observed.",
+                references="banking_relationships.banking_relationship_id",
+            ),
+            ColumnSpec(
+                "account_id",
+                "string",
+                False,
+                "Account linked to the suspicious activity.",
+                references="accounts.account_id",
+            ),
+            ColumnSpec(
+                "transaction_id",
+                "string",
+                False,
+                "Transaction that carried the observed suspicious activity.",
+                references="transactions.transaction_id",
+            ),
+            ColumnSpec(
+                "user_id",
+                "string",
+                True,
+                "Digital login identity linked to the activity, where applicable.",
+                references="users.user_id",
+            ),
+            ColumnSpec(
+                "session_id",
+                "string",
+                True,
+                "Digital session linked to the activity, where applicable.",
+                references="sessions.session_id",
+            ),
+            ColumnSpec(
+                "payment_beneficiary_id",
+                "string",
+                True,
+                "Payment beneficiary linked to the activity, where applicable.",
+                references="payment_beneficiaries.payment_beneficiary_id",
+            ),
+            ColumnSpec("activity_type", "string", False, "Detection pattern observed."),
+            ColumnSpec("detected_at", "datetime64[ns]", False, "Time the activity was detected."),
+            ColumnSpec("detection_signal", "string", False, "Learner-readable signal summary."),
+            ColumnSpec("suspected_amount_chf", "Decimal", False, "CHF-normalized amount under review."),
+            ColumnSpec("review_priority", "string", False, "Low, medium, or high review priority."),
+        ),
+    ),
     ALERTS: TableSpec(
         name=ALERTS,
-        purpose="Suspicious activity alerts generated before cases are opened or closed.",
+        purpose="Alerts generated from suspicious activities that may trigger case investigations.",
         columns=(
             ColumnSpec("alert_id", "string", False, "Stable synthetic alert identifier."),
+            ColumnSpec(
+                "suspicious_activity_id",
+                "string",
+                False,
+                "Suspicious activity that generated the alert.",
+                references="suspicious_activities.suspicious_activity_id",
+            ),
+            ColumnSpec(
+                "banking_relationship_id",
+                "string",
+                False,
+                "Banking relationship linked to the alert.",
+                references="banking_relationships.banking_relationship_id",
+            ),
+            ColumnSpec(
+                "account_id",
+                "string",
+                False,
+                "Account linked to the alert.",
+                references="accounts.account_id",
+            ),
             ColumnSpec(
                 "triggered_transaction_id",
                 "string",
                 False,
                 "Transaction that triggered the alert.",
                 references="transactions.transaction_id",
+            ),
+            ColumnSpec(
+                "user_id",
+                "string",
+                True,
+                "Digital login identity linked to the alert, where applicable.",
+                references="users.user_id",
+            ),
+            ColumnSpec(
+                "session_id",
+                "string",
+                True,
+                "Digital session linked to the alert, where applicable.",
+                references="sessions.session_id",
+            ),
+            ColumnSpec(
+                "payment_beneficiary_id",
+                "string",
+                True,
+                "Payment beneficiary linked to the alert, where applicable.",
+                references="payment_beneficiaries.payment_beneficiary_id",
             ),
             ColumnSpec(
                 "institution_name",
@@ -348,6 +459,55 @@ TABLE_SPECS: dict[str, TableSpec] = {
                 "Alert that opened the case.",
                 references="alerts.alert_id",
             ),
+            ColumnSpec(
+                "suspicious_activity_id",
+                "string",
+                False,
+                "Suspicious activity being investigated.",
+                references="suspicious_activities.suspicious_activity_id",
+            ),
+            ColumnSpec(
+                "banking_relationship_id",
+                "string",
+                False,
+                "Banking relationship linked to the case.",
+                references="banking_relationships.banking_relationship_id",
+            ),
+            ColumnSpec(
+                "account_id",
+                "string",
+                False,
+                "Account linked to the case.",
+                references="accounts.account_id",
+            ),
+            ColumnSpec(
+                "transaction_id",
+                "string",
+                False,
+                "Primary transaction under investigation.",
+                references="transactions.transaction_id",
+            ),
+            ColumnSpec(
+                "user_id",
+                "string",
+                True,
+                "Digital login identity linked to the case, where applicable.",
+                references="users.user_id",
+            ),
+            ColumnSpec(
+                "session_id",
+                "string",
+                True,
+                "Digital session linked to the case, where applicable.",
+                references="sessions.session_id",
+            ),
+            ColumnSpec(
+                "payment_beneficiary_id",
+                "string",
+                True,
+                "Payment beneficiary linked to the case, where applicable.",
+                references="payment_beneficiaries.payment_beneficiary_id",
+            ),
             ColumnSpec("opened_at", "datetime64[ns]", False, "Case opening timestamp."),
             ColumnSpec("assigned_team", "string", False, "Investigation team assignment."),
             ColumnSpec("case_status", "string", False, "Open, closed, or escalated case status."),
@@ -367,7 +527,7 @@ TABLE_SPECS: dict[str, TableSpec] = {
                 references="cases.case_id",
             ),
             ColumnSpec("decided_at", "datetime64[ns]", False, "Outcome decision timestamp."),
-            ColumnSpec("outcome_type", "string", False, "Confirmed fraud, false positive, or unresolved."),
+            ColumnSpec("outcome_type", "string", False, "confirmed-fraud, false-positive, or unresolved."),
             ColumnSpec("confirmed_fraud", "bool", False, "Whether the case outcome confirmed fraud."),
             ColumnSpec("loss_amount_original", "Decimal", False, "Exact loss amount in original currency."),
             ColumnSpec("loss_currency", "string", False, "Currency for `loss_amount_original`."),
@@ -400,6 +560,10 @@ TABLE_SPECS: dict[str, TableSpec] = {
 }
 
 TABLE_NAMES = tuple(TABLE_SPECS)
+PROTECTED_TABLE_NAMES = (PROTECTED_SCENARIO_ANSWER_KEYS,)
+LEARNER_FACING_TABLE_NAMES = tuple(
+    table_name for table_name in TABLE_NAMES if table_name not in PROTECTED_TABLE_NAMES
+)
 COLUMN_NAMES = {
     table_name: tuple(column.name for column in table_spec.columns)
     for table_name, table_spec in TABLE_SPECS.items()
@@ -414,12 +578,15 @@ __all__ = [
     "CLIENTS",
     "COLUMN_NAMES",
     "ColumnSpec",
+    "LEARNER_FACING_TABLE_NAMES",
     "PARTNERS",
     "PARTNER_ROLES",
     "PAYMENT_BENEFICIARIES",
     "PROTECTED_SCENARIO_ANSWER_KEYS",
+    "PROTECTED_TABLE_NAMES",
     "ROLES",
     "SESSIONS",
+    "SUSPICIOUS_ACTIVITIES",
     "TABLE_NAMES",
     "TABLE_SPECS",
     "TRANSACTIONS",

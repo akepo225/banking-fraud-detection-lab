@@ -1,3 +1,3 @@
-case_id,alert_id,opened_at,assigned_team,case_status,investigation_summary
-CASE-0001,AL-0002,2026-02-06 15:00:00,digital investigations,open,Minimal lifecycle example for learner inspection.
-CASE-0002,AL-0003,2026-02-07 15:00:00,digital investigations,closed,Minimal lifecycle example for learner inspection.
+case_id,alert_id,suspicious_activity_id,banking_relationship_id,account_id,transaction_id,user_id,session_id,payment_beneficiary_id,opened_at,assigned_team,case_status,investigation_summary
+CASE-0001,AL-0002,SA-0002,BR-0006,A-0008,T-0008,U-0004,S-0004,B-0004,2026-01-23 18:20:00,digital investigations,closed,"Case reviewed payment, User, session, and beneficiary context."
+CASE-0002,AL-0003,SA-0003,BR-0005,A-0007,T-0007,U-0003,S-0003,,2026-01-22 17:20:00,digital investigations,closed,Case reviewed digital telemetry and closed without fraud confirmation.

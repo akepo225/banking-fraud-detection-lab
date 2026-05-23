@@ -47,7 +47,7 @@ A learner can install the repo, inspect the schema, generate data, run SQL featu
 Implementation workstreams:
 
 - **Schema and Data Dictionary**: document the canonical tables, relationships, money fields, label semantics, and **Alert lifecycle**.
-- **Synthetic Data Generator**: generate partners, roles, banking relationships, accounts, transactions, clients, users, sessions, payment beneficiaries, alerts, cases, case outcomes, and protected scenario answer keys.
+- **Synthetic Data Generator**: generate partners, roles, banking relationships, accounts, transactions, clients, users, sessions, payment beneficiaries, suspicious activities, alerts, cases, case outcomes, and protected scenario answer keys.
 - **Scenario Injection**: support private-banking transaction fraud and digital scam-to-mule fraud through configurable scenario settings.
 - **Progressive Data Views**: expose starter views for foundations, private-banking baseline, digital baseline, and governance exercises.
 - **SQLite Loader**: load generated tables into a local SQLite database for SQL exercises.

@@ -53,6 +53,7 @@ def load_tables_to_sqlite(
     """Load generated tables into SQLite using the project schema contract."""
     _validate_tables(tables)
     connection, owns_connection = _connect(database)
+    initial_in_transaction = connection.in_transaction
     table_order = _ordered_table_names(tuple(tables))
 
     try:
@@ -61,11 +62,12 @@ def load_tables_to_sqlite(
             _drop_tables(connection, _ordered_table_names(TABLE_NAMES))
         _create_tables(connection, table_order)
         _insert_tables(connection, tables, table_order)
-        if owns_connection:
+        if owns_connection or not initial_in_transaction:
             connection.commit()
     except Exception:
-        if owns_connection:
+        if connection.in_transaction and (owns_connection or not initial_in_transaction):
             connection.rollback()
+        if owns_connection:
             connection.close()
         raise
 

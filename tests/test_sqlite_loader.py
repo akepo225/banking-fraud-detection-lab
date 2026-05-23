@@ -141,6 +141,19 @@ def test_loader_preserves_caller_owned_transaction_control() -> None:
         connection.close()
 
 
+def test_loader_commits_implicit_transaction_on_caller_owned_connection() -> None:
+    """Caller-owned connections without an active transaction should not be left open."""
+    connection = sqlite3.connect(":memory:")
+
+    try:
+        load_tables_to_sqlite(generate_minimal_banking_world(seed=42), connection)
+
+        assert not connection.in_transaction
+        assert _sqlite_table_names(connection) == set(TABLE_NAMES)
+    finally:
+        connection.close()
+
+
 def test_representative_sql_examples_execute_successfully(tmp_path: Path) -> None:
     """Learner SQL examples must run against the generated SQLite database."""
     connection = create_minimal_banking_world_sqlite(

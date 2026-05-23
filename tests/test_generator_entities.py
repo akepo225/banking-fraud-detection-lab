@@ -5,8 +5,16 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from banking_fraud_lab import generate_minimal_banking_world
-from banking_fraud_lab.schema import COLUMN_NAMES, TABLE_NAMES, TABLE_SPECS
+from banking_fraud_lab import (
+    generate_learner_facing_minimal_banking_world,
+    generate_minimal_banking_world,
+)
+from banking_fraud_lab.schema import (
+    COLUMN_NAMES,
+    LEARNER_FACING_TABLE_NAMES,
+    TABLE_NAMES,
+    TABLE_SPECS,
+)
 
 REQUIRED_V0_1_TABLES = {
     "partners",
@@ -19,40 +27,24 @@ REQUIRED_V0_1_TABLES = {
     "users",
     "sessions",
     "payment_beneficiaries",
+    "suspicious_activities",
     "alerts",
     "cases",
     "case_outcomes",
     "protected_scenario_answer_keys",
 }
 MAX_SAMPLE_CSV_SIZE_BYTES = 20_000
-FK_RELATIONSHIPS = (
-    ("clients", "partner_id", "partners", "partner_id", False),
-    ("banking_relationships", "primary_client_id", "clients", "client_id", False),
-    ("partner_roles", "partner_id", "partners", "partner_id", False),
-    ("partner_roles", "role_id", "roles", "role_id", False),
+FK_RELATIONSHIPS = tuple(
     (
-        "partner_roles",
-        "banking_relationship_id",
-        "banking_relationships",
-        "banking_relationship_id",
-        False,
-    ),
-    ("accounts", "banking_relationship_id", "banking_relationships", "banking_relationship_id", False),
-    ("transactions", "account_id", "accounts", "account_id", False),
-    (
-        "transactions",
-        "payment_beneficiary_id",
-        "payment_beneficiaries",
-        "payment_beneficiary_id",
-        True,
-    ),
-    ("users", "client_id", "clients", "client_id", False),
-    ("sessions", "user_id", "users", "user_id", False),
-    ("payment_beneficiaries", "client_id", "clients", "client_id", False),
-    ("payment_beneficiaries", "added_by_user_id", "users", "user_id", False),
-    ("alerts", "triggered_transaction_id", "transactions", "transaction_id", False),
-    ("cases", "alert_id", "alerts", "alert_id", False),
-    ("case_outcomes", "case_id", "cases", "case_id", False),
+        child_table,
+        column.name,
+        column.references.split(".", maxsplit=1)[0],
+        column.references.split(".", maxsplit=1)[1],
+        column.nullable,
+    )
+    for child_table, table_spec in TABLE_SPECS.items()
+    for column in table_spec.columns
+    if column.references is not None
 )
 
 
@@ -121,11 +113,8 @@ def test_minimal_world_preserves_semantic_join_integrity() -> None:
     )
 
     alert_institutions = alerts.merge(
-        transactions[["transaction_id", "account_id"]],
-        left_on="triggered_transaction_id",
-        right_on="transaction_id",
-        how="left",
-    ).merge(accounts[["account_id", "institution_name"]], on="account_id", how="left")
+        accounts[["account_id", "institution_name"]], on="account_id", how="left"
+    )
     mismatches = alert_institutions[
         alert_institutions["institution_name_x"] != alert_institutions["institution_name_y"]
     ]
@@ -148,6 +137,100 @@ def test_minimal_world_preserves_semantic_join_integrity() -> None:
         "Partner role institution_name must match relationship institution_name. "
         f"Found {len(mismatches)} mismatches:\n{mismatches.head()}"
     )
+
+
+def test_alert_lifecycle_is_distinct_from_single_fraud_flag() -> None:
+    """Suspicious activity, alerts, cases, outcomes, and fraud confirmation stay separate."""
+    tables = generate_minimal_banking_world(seed=42)
+
+    learner_tables = {
+        table_name: frame
+        for table_name, frame in tables.items()
+        if table_name != "protected_scenario_answer_keys"
+    }
+    for table_name, frame in learner_tables.items():
+        assert "is_fraud" not in frame.columns, f"{table_name} should not expose is_fraud"
+
+    suspicious_activities = tables["suspicious_activities"]
+    alerts = tables["alerts"]
+    cases = tables["cases"]
+    outcomes = tables["case_outcomes"]
+
+    assert not suspicious_activities.empty
+    assert not alerts.empty
+    assert not cases.empty
+    assert not outcomes.empty
+    assert set(alerts["suspicious_activity_id"]).issubset(
+        set(suspicious_activities["suspicious_activity_id"])
+    )
+    assert set(cases["alert_id"]).issubset(set(alerts["alert_id"]))
+    assert set(outcomes["case_id"]).issubset(set(cases["case_id"]))
+    assert outcomes["confirmed_fraud"].any()
+    assert (~outcomes["confirmed_fraud"]).any()
+    assert {"triaged", "closed"}.issubset(set(alerts["alert_status"]))
+    assert {"confirmed_fraud", "false_positive"}.issubset(set(outcomes["outcome_type"]))
+
+
+def test_alert_and_case_records_carry_direct_lifecycle_references() -> None:
+    """Alerts and cases must directly reference the relevant lifecycle entities."""
+    tables = generate_minimal_banking_world(seed=42)
+
+    direct_reference_columns = {
+        "suspicious_activity_id",
+        "banking_relationship_id",
+        "account_id",
+        "user_id",
+        "session_id",
+        "payment_beneficiary_id",
+    }
+    assert direct_reference_columns.issubset(tables["alerts"].columns)
+    assert direct_reference_columns.issubset(tables["cases"].columns)
+    assert "transaction_id" in tables["cases"].columns
+    assert "triggered_transaction_id" in tables["alerts"].columns
+
+    for table_name in ("alerts", "cases"):
+        frame = tables[table_name]
+        assert frame["banking_relationship_id"].notna().all()
+        assert frame["account_id"].notna().all()
+        assert frame["user_id"].notna().any()
+        assert frame["session_id"].notna().any()
+        assert frame["payment_beneficiary_id"].notna().any()
+
+
+def test_protected_answer_keys_are_excluded_from_learner_facing_tables_by_default() -> None:
+    """Protected answer keys exist internally but not in default learner-facing outputs."""
+    tables = generate_minimal_banking_world(seed=42)
+    learner_tables = generate_learner_facing_minimal_banking_world(seed=42)
+
+    protected = tables["protected_scenario_answer_keys"]
+    assert not protected.empty
+    assert set(protected["available_to_learners"]) == {False}
+    assert "protected_scenario_answer_keys" not in learner_tables
+    assert tuple(learner_tables) == LEARNER_FACING_TABLE_NAMES
+
+
+def test_protected_answer_key_entities_reference_generated_rows() -> None:
+    """Generic answer-key entity references must point at generated table rows."""
+    tables = generate_minimal_banking_world(seed=42)
+
+    for answer_key in tables["protected_scenario_answer_keys"].itertuples(index=False):
+        target_frame = tables[answer_key.entity_table]
+        id_column = COLUMN_NAMES[answer_key.entity_table][0]
+        assert answer_key.entity_id in set(target_frame[id_column])
+
+
+def test_lifecycle_prevalence_uses_ranges_not_exact_row_outputs() -> None:
+    """Scenario prevalence tests must assert ranges rather than exact row-level labels."""
+    tables = generate_minimal_banking_world(seed=42)
+
+    transaction_count = len(tables["transactions"])
+    suspicious_activity_prevalence = len(tables["suspicious_activities"]) / transaction_count
+    confirmed_fraud_prevalence = (
+        int(tables["case_outcomes"]["confirmed_fraud"].sum()) / transaction_count
+    )
+
+    assert 0.15 <= suspicious_activity_prevalence <= 0.30
+    assert 0.02 <= confirmed_fraud_prevalence <= 0.10
 
 
 def test_committed_sample_csvs_exist_for_all_generated_tables() -> None:

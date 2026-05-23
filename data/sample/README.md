@@ -20,10 +20,11 @@ These CSV files were generated with `generate_minimal_banking_world(seed=42)`.
 | `users.csv` | 4 | Digital login identities. |
 | `sessions.csv` | 7 | Digital session telemetry. |
 | `payment_beneficiaries.csv` | 4 | Saved payment beneficiaries. |
-| `alerts.csv` | 3 | Alert lifecycle examples. |
+| `suspicious_activities.csv` | 3 | Suspicious activity observations before alert generation. |
+| `alerts.csv` | 3 | Alerts generated from suspicious activities. |
 | `cases.csv` | 2 | Investigation cases opened from alerts. |
 | `case_outcomes.csv` | 2 | Case outcome examples. |
-| `protected_scenario_answer_keys.csv` | 0 | Header-only protected placeholder for future scenario labels. |
+| `protected_scenario_answer_keys.csv` | 3 | Protected labels excluded from learner-facing views. |
 
 Regenerate the sample data from the repository root with:
 

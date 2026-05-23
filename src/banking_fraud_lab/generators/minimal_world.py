@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
@@ -17,12 +18,14 @@ from banking_fraud_lab.schema.tables import (
     CASES,
     CLIENTS,
     COLUMN_NAMES,
+    LEARNER_FACING_TABLE_NAMES,
     PARTNERS,
     PARTNER_ROLES,
     PAYMENT_BENEFICIARIES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
     ROLES,
     SESSIONS,
+    SUSPICIOUS_ACTIVITIES,
     TABLE_NAMES,
     TRANSACTIONS,
     USERS,
@@ -38,6 +41,30 @@ CHF_RATES = {
     "USD": Decimal("0.91"),
 }
 MONEY_QUANT = Decimal("0.01")
+ActivitySpec = tuple[str, str, str, str, str | None]
+DEFAULT_SUSPICIOUS_ACTIVITY_SPECS: tuple[ActivitySpec, ...] = (
+    (
+        "T-0003",
+        "private_banking_high_value",
+        "High-value movement relative to sample relationship profile.",
+        "medium",
+        None,
+    ),
+    (
+        "T-0008",
+        "new_beneficiary_payment",
+        "Payment followed recent beneficiary setup.",
+        "high",
+        "payment_authorized",
+    ),
+    (
+        "T-0007",
+        "session_payment_velocity",
+        "Multiple session and payment events observed close together.",
+        "medium",
+        "add_beneficiary",
+    ),
+)
 
 
 def generate_minimal_banking_world(
@@ -59,10 +86,20 @@ def generate_minimal_banking_world(
     sessions = _generate_sessions(rng, users)
     payment_beneficiaries = _generate_payment_beneficiaries(fake, rng, clients, users)
     transactions = _generate_transactions(rng, accounts, banking_relationships, payment_beneficiaries)
-    alerts = _generate_alerts(transactions)
+    suspicious_activities = _generate_suspicious_activities(
+        transactions,
+        accounts,
+        banking_relationships,
+        users,
+        sessions,
+    )
+    alerts = _generate_alerts(suspicious_activities)
     cases = _generate_cases(alerts)
     case_outcomes = _generate_case_outcomes(cases, transactions, alerts)
-    protected_answer_keys = _empty_frame(PROTECTED_SCENARIO_ANSWER_KEYS)
+    protected_answer_keys = _generate_protected_scenario_answer_keys(
+        suspicious_activities,
+        case_outcomes,
+    )
 
     tables = {
         PARTNERS: partners,
@@ -75,6 +112,7 @@ def generate_minimal_banking_world(
         USERS: users,
         SESSIONS: sessions,
         PAYMENT_BENEFICIARIES: payment_beneficiaries,
+        SUSPICIOUS_ACTIVITIES: suspicious_activities,
         ALERTS: alerts,
         CASES: cases,
         CASE_OUTCOMES: case_outcomes,
@@ -89,6 +127,29 @@ def generate_minimal_banking_world(
             frame.to_csv(output_path / f"{table_name}.csv", index=False, encoding="utf-8")
 
     return ordered_tables
+
+
+def generate_learner_facing_minimal_banking_world(
+    seed: int = 42, output_dir: Path | None = None
+) -> dict[str, pd.DataFrame]:
+    """Generate default learner-facing tables without protected scenario answer keys."""
+    tables = generate_minimal_banking_world(seed=seed)
+    learner_tables = build_learner_facing_views(tables)
+
+    if output_dir is not None:
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        for table_name, frame in learner_tables.items():
+            frame.to_csv(output_path / f"{table_name}.csv", index=False, encoding="utf-8")
+
+    return learner_tables
+
+
+def build_learner_facing_views(
+    tables: Mapping[str, pd.DataFrame],
+) -> dict[str, pd.DataFrame]:
+    """Return the generated tables intended for learners by default."""
+    return {table_name: tables[table_name].copy() for table_name in LEARNER_FACING_TABLE_NAMES}
 
 
 def _generate_partners(fake: Faker, rng: np.random.Generator) -> pd.DataFrame:
@@ -368,33 +429,93 @@ def _generate_transactions(
     return _frame(TRANSACTIONS, rows)
 
 
-def _generate_alerts(transactions: pd.DataFrame) -> pd.DataFrame:
-    """Create sample fraud alerts triggered by specific transactions.
+def _generate_suspicious_activities(
+    transactions: pd.DataFrame,
+    accounts: pd.DataFrame,
+    relationships: pd.DataFrame,
+    users: pd.DataFrame,
+    sessions: pd.DataFrame,
+    activity_specs: tuple[ActivitySpec, ...] = DEFAULT_SUSPICIOUS_ACTIVITY_SPECS,
+) -> pd.DataFrame:
+    """Create suspicious activity observations before alert generation."""
+    transactions_by_id = transactions.set_index("transaction_id")
+    account_context = accounts.set_index("account_id")[
+        ["banking_relationship_id", "institution_name"]
+    ]
+    client_by_relationship = relationships.set_index("banking_relationship_id")[
+        "primary_client_id"
+    ]
+    user_by_client = users.set_index("client_id")["user_id"]
 
-    Raises ValueError if a hard-coded trigger transaction is missing.
-    """
-    alert_specs = (
-        ("T-0003", ALPINE_CREST, "private_banking_high_value", "triaged", "medium"),
-        ("T-0008", NOVABANK, "new_beneficiary_payment", "escalated", "high"),
-        ("T-0007", NOVABANK, "session_payment_velocity", "closed", "low"),
-    )
-    transaction_ids = set(transactions["transaction_id"])
     rows = []
-    for index, (transaction_id, institution, alert_type, status, severity) in enumerate(
-        alert_specs, start=1
+    for index, (transaction_id, activity_type, signal, priority, session_event) in enumerate(
+        activity_specs,
+        start=1,
     ):
-        if transaction_id not in transaction_ids:
-            raise ValueError(f"Alert trigger {transaction_id} is not present in transactions")
+        if transaction_id not in transactions_by_id.index:
+            raise ValueError(f"Suspicious activity trigger {transaction_id} is not present")
+        transaction = transactions_by_id.loc[transaction_id]
+        account = account_context.loc[transaction["account_id"]]
+        banking_relationship_id = str(account["banking_relationship_id"])
+        client_id = str(client_by_relationship.loc[banking_relationship_id])
+        user_id = user_by_client.get(client_id)
+        if user_id is not None and account["institution_name"] != NOVABANK:
+            user_id = None
+        session_id = _session_id_for_user(sessions, user_id, session_event)
+        beneficiary_id = transaction["payment_beneficiary_id"]
+        if pd.isna(beneficiary_id):
+            beneficiary_id = None
+
+        rows.append(
+            {
+                "suspicious_activity_id": _identifier("SA", index),
+                "institution_name": str(account["institution_name"]),
+                "banking_relationship_id": banking_relationship_id,
+                "account_id": str(transaction["account_id"]),
+                "transaction_id": transaction_id,
+                "user_id": user_id,
+                "session_id": session_id,
+                "payment_beneficiary_id": beneficiary_id,
+                "activity_type": activity_type,
+                "detected_at": pd.Timestamp(transaction["booked_at"]) + pd.Timedelta(minutes=15),
+                "detection_signal": signal,
+                "suspected_amount_chf": transaction["amount_chf"],
+                "review_priority": priority,
+            }
+        )
+    return _frame(SUSPICIOUS_ACTIVITIES, rows)
+
+
+def _generate_alerts(suspicious_activities: pd.DataFrame) -> pd.DataFrame:
+    """Create sample fraud alerts generated from suspicious activities."""
+    status_by_activity_type = {
+        "private_banking_high_value": "triaged",
+        "new_beneficiary_payment": "closed",
+        "session_payment_velocity": "closed",
+    }
+    severity_by_activity_type = {
+        "private_banking_high_value": "medium",
+        "new_beneficiary_payment": "high",
+        "session_payment_velocity": "medium",
+    }
+    rows = []
+    for index, activity in enumerate(suspicious_activities.itertuples(index=False), start=1):
         rows.append(
             {
                 "alert_id": _identifier("AL", index),
-                "triggered_transaction_id": transaction_id,
-                "institution_name": institution,
-                "generated_at": BASE_TIMESTAMP + pd.Timedelta(days=20 + index),
-                "alert_type": alert_type,
-                "alert_status": status,
-                "severity": severity,
-                "reason": _alert_reason(alert_type),
+                "suspicious_activity_id": activity.suspicious_activity_id,
+                "banking_relationship_id": activity.banking_relationship_id,
+                "account_id": activity.account_id,
+                "triggered_transaction_id": activity.transaction_id,
+                "user_id": activity.user_id,
+                "session_id": activity.session_id,
+                "payment_beneficiary_id": activity.payment_beneficiary_id,
+                "institution_name": activity.institution_name,
+                "generated_at": pd.Timestamp(activity.detected_at) + pd.Timedelta(minutes=5),
+                "alert_type": activity.activity_type,
+                "alert_status": status_by_activity_type[activity.activity_type],
+                "severity": severity_by_activity_type[activity.activity_type],
+                "reason": _alert_reason(activity.activity_type),
             }
         )
     return _frame(ALERTS, rows)
@@ -409,12 +530,19 @@ def _generate_cases(alerts: pd.DataFrame) -> pd.DataFrame:
             {
                 "case_id": _identifier("CASE", index),
                 "alert_id": alert.alert_id,
+                "suspicious_activity_id": alert.suspicious_activity_id,
+                "banking_relationship_id": alert.banking_relationship_id,
+                "account_id": alert.account_id,
+                "transaction_id": alert.triggered_transaction_id,
+                "user_id": alert.user_id,
+                "session_id": alert.session_id,
+                "payment_beneficiary_id": alert.payment_beneficiary_id,
                 "opened_at": pd.Timestamp(alert.generated_at) + pd.Timedelta(hours=6),
                 "assigned_team": "digital investigations"
                 if alert.institution_name == NOVABANK
                 else "private banking investigations",
                 "case_status": "closed" if alert.alert_status == "closed" else "open",
-                "investigation_summary": "Minimal lifecycle example for learner inspection.",
+                "investigation_summary": _case_summary(alert.alert_type),
             }
         )
     return _frame(CASES, rows)
@@ -423,28 +551,83 @@ def _generate_cases(alerts: pd.DataFrame) -> pd.DataFrame:
 def _generate_case_outcomes(
     cases: pd.DataFrame, transactions: pd.DataFrame, alerts: pd.DataFrame
 ) -> pd.DataFrame:
-    """Record false-positive or unresolved outcomes for each case with zero loss amounts."""
+    """Record fraud and non-fraud determinations for each opened case."""
     transaction_currencies = transactions.set_index("transaction_id")["currency"]
-    alert_triggers = alerts.set_index("alert_id")["triggered_transaction_id"]
+    transaction_amounts = transactions.set_index("transaction_id")["amount_original"]
+    transaction_amounts_chf = transactions.set_index("transaction_id")["amount_chf"]
+    alert_by_id = alerts.set_index("alert_id")
     rows = []
     for index, case in enumerate(cases.itertuples(index=False), start=1):
-        transaction_id = alert_triggers.loc[case.alert_id]
+        if case.alert_id not in alert_by_id.index:
+            raise ValueError(f"Case {case.case_id} references missing alert_id {case.alert_id}")
+        alert = alert_by_id.loc[case.alert_id]
+        transaction_id = alert["triggered_transaction_id"]
         currency = str(transaction_currencies.loc[transaction_id])
-        is_closed = case.case_status == "closed"
+        confirmed_fraud = alert["alert_type"] == "new_beneficiary_payment"
+        loss_original = transaction_amounts.loc[transaction_id] if confirmed_fraud else Decimal("0.00")
+        loss_chf = transaction_amounts_chf.loc[transaction_id] if confirmed_fraud else Decimal("0.00")
         rows.append(
             {
                 "case_outcome_id": _identifier("OUT", index),
                 "case_id": case.case_id,
                 "decided_at": pd.Timestamp(case.opened_at) + pd.Timedelta(days=2),
-                "outcome_type": "false_positive" if is_closed else "unresolved",
-                "confirmed_fraud": False,
-                "loss_amount_original": Decimal("0.00"),
+                "outcome_type": "confirmed_fraud" if confirmed_fraud else "false_positive",
+                "confirmed_fraud": confirmed_fraud,
+                "loss_amount_original": loss_original,
                 "loss_currency": currency,
-                "loss_amount_chf": Decimal("0.00"),
-                "notes": "No protected scenario label is exposed in this tracer bullet.",
+                "loss_amount_chf": loss_chf,
+                "notes": _outcome_note(confirmed_fraud),
             }
         )
     return _frame(CASE_OUTCOMES, rows)
+
+
+def _generate_protected_scenario_answer_keys(
+    suspicious_activities: pd.DataFrame,
+    case_outcomes: pd.DataFrame,
+) -> pd.DataFrame:
+    """Create protected scenario labels that are never part of learner-facing views."""
+    confirmed_activities = suspicious_activities[
+        suspicious_activities["activity_type"] == "new_beneficiary_payment"
+    ]
+    confirmed_outcomes = case_outcomes[case_outcomes["confirmed_fraud"]]
+    if confirmed_activities.empty:
+        raise ValueError(f"{SUSPICIOUS_ACTIVITIES} must include a new_beneficiary_payment row")
+    if confirmed_outcomes.empty:
+        raise ValueError(f"{CASE_OUTCOMES} must include at least one confirmed_fraud row")
+
+    confirmed_activity = confirmed_activities.iloc[0]
+    confirmed_outcome = confirmed_outcomes.iloc[0]
+    rows = [
+        {
+            "answer_key_id": "AK-0001",
+            "scenario_name": "minimal_alert_lifecycle",
+            "entity_table": SUSPICIOUS_ACTIVITIES,
+            "entity_id": confirmed_activity["suspicious_activity_id"],
+            "label_type": "scenario_label",
+            "label_value": "confirmed_fraud",
+            "available_to_learners": False,
+        },
+        {
+            "answer_key_id": "AK-0002",
+            "scenario_name": "minimal_alert_lifecycle",
+            "entity_table": TRANSACTIONS,
+            "entity_id": confirmed_activity["transaction_id"],
+            "label_type": "scenario_label",
+            "label_value": "confirmed_fraud",
+            "available_to_learners": False,
+        },
+        {
+            "answer_key_id": "AK-0003",
+            "scenario_name": "minimal_alert_lifecycle",
+            "entity_table": CASE_OUTCOMES,
+            "entity_id": confirmed_outcome["case_outcome_id"],
+            "label_type": "case_outcome_answer",
+            "label_value": "confirmed_fraud",
+            "available_to_learners": False,
+        },
+    ]
+    return _frame(PROTECTED_SCENARIO_ANSWER_KEYS, rows)
 
 
 def _frame(table_name: str, rows: list[dict[str, object]]) -> pd.DataFrame:
@@ -452,9 +635,20 @@ def _frame(table_name: str, rows: list[dict[str, object]]) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=COLUMN_NAMES[table_name])
 
 
-def _empty_frame(table_name: str) -> pd.DataFrame:
-    """Create a header-only DataFrame for placeholder tables."""
-    return pd.DataFrame(columns=COLUMN_NAMES[table_name])
+def _session_id_for_user(
+    sessions: pd.DataFrame, user_id: object | None, session_event: str | None
+) -> str | None:
+    """Pick a deterministic session for a digital activity, if one exists."""
+    if user_id is None or pd.isna(user_id):
+        return None
+    user_sessions = sessions[sessions["user_id"] == user_id]
+    if user_sessions.empty:
+        return None
+    if session_event is not None:
+        event_sessions = user_sessions[user_sessions["session_event"] == session_event]
+        if not event_sessions.empty:
+            return str(event_sessions.iloc[0]["session_id"])
+    return str(user_sessions.iloc[0]["session_id"])
 
 
 def _identifier(prefix: str, index: int) -> str:
@@ -514,6 +708,22 @@ def _transaction_description(institution_name: str, is_digital_payment: bool) ->
     if institution_name == ALPINE_CREST:
         return "Private banking account movement"
     return "Digital banking account activity"
+
+
+def _case_summary(alert_type: str) -> str:
+    """Return a learner-readable investigation summary for a case."""
+    summaries = {
+        "new_beneficiary_payment": "Case reviewed payment, User, session, and beneficiary context.",
+        "session_payment_velocity": "Case reviewed digital telemetry and closed without fraud confirmation.",
+    }
+    return summaries.get(alert_type, "Case reviewed available alert context.")
+
+
+def _outcome_note(confirmed_fraud: bool) -> str:
+    """Describe whether the outcome confirmed fraud without exposing protected labels."""
+    if confirmed_fraud:
+        return "Case outcome confirmed fraud; protected scenario answer keys remain separate."
+    return "Case outcome closed without a fraud confirmation."
 
 
 def _alert_reason(alert_type: str) -> str:

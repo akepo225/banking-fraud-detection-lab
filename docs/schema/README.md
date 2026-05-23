@@ -4,7 +4,7 @@ The v0.1 data model will be realistic enough to teach durable banking analytics 
 
 ## Core Tables
 
-The issue #2 tracer bullet implements the following generated CSV tables and the matching schema contract in `src/banking_fraud_lab/schema/tables.py`.
+The v0.1 tracer bullets implement the following generated CSV tables and the matching schema contract in `src/banking_fraud_lab/schema/tables.py`.
 
 - `partners`
 - `clients`
@@ -16,6 +16,7 @@ The issue #2 tracer bullet implements the following generated CSV tables and the
 - `users`
 - `sessions`
 - `payment_beneficiaries`
+- `suspicious_activities`
 - `alerts`
 - `cases`
 - `case_outcomes`

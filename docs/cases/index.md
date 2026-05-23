@@ -1,6 +1,7 @@
 # Case Library
 
-The case library is organized by detection pattern first, with metadata for track, institution type, regulator, geography, product, and linked module.
+The case library is organized by detection pattern first, with metadata for track, institution
+type, source authority, geography, product, and linked module.
 
 ## Inclusion Rule
 

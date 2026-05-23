@@ -5,7 +5,10 @@ hitl_review_required: true
 v0_1_area: regulatory_or_model_governance_method
 track: Cross-track governance
 detection_pattern: model-output governance and threshold documentation
+institution_type: cross-bank model governance
+source_authority: Federal Reserve
 geography: United States / cross-border method
+product: fraud scoring and alert governance
 source_quality: official supervisory guidance source candidate
 linked_modules: notebooks/03_alert_governance/alert_governance_memo.ipynb
 ---

@@ -14,7 +14,10 @@ REQUIRED_METADATA_FIELDS = {
     "v0_1_area",
     "track",
     "detection_pattern",
+    "institution_type",
+    "source_authority",
     "geography",
+    "product",
     "source_quality",
     "linked_modules",
 }
@@ -51,6 +54,8 @@ def test_case_source_packs_have_required_metadata_and_sections() -> None:
         metadata = _metadata(path)
 
         assert REQUIRED_METADATA_FIELDS <= set(metadata)
+        for field_name in REQUIRED_METADATA_FIELDS:
+            assert metadata[field_name], f"{path} has empty metadata field: {field_name}"
         assert metadata["status"] == "draft-hitl"
         assert metadata["hitl_review_required"] == "true"
         assert HITL_MARKER in text

@@ -1,5 +1,6 @@
 """Banking Fraud Detection Lab package."""
 
+from banking_fraud_lab.evaluation import evaluate_alert_scores
 from banking_fraud_lab.generators import (
     build_learner_facing_views,
     generate_learner_facing_minimal_banking_world,
@@ -14,6 +15,7 @@ __all__ = [
     "__version__",
     "build_learner_facing_views",
     "create_minimal_banking_world_sqlite",
+    "evaluate_alert_scores",
     "generate_learner_facing_minimal_banking_world",
     "generate_minimal_banking_world",
     "load_tables_to_sqlite",

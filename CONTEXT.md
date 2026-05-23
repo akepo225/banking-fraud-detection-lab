@@ -148,3 +148,19 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 1 notebook execution smoke test; all local tests passing
 - Key files changed: `notebooks/03_alert_governance/alert_governance_memo.ipynb`, `tests/test_alert_governance_notebook.py`, `notebooks/README.md`
 - Notes: Added the alert-governance integration notebook consuming tiny private-banking and digital-banking baseline equivalents, summarizing alert volume, precision/recall tradeoffs, PR-AUC, investigation capacity, threshold rationale, cost, limitations, and a governance memo draft. The notebook avoids headline accuracy claims and frames outputs for business, risk, and compliance stakeholder discussion. Local `uv run ruff check .`, notebook smoke execution, and `uv run pytest` (75 passed) succeeded; GitHub CI passed before merge.
+
+### Issue #10: Seed Case Library With Pattern-Linked Source Packs — HITL-PENDING
+
+- Branch: feat/issue-10-implementation
+- PR: #26
+- Tests added: 2 case-library metadata/source-pack validation tests; all local tests passing
+- Key files changed: `docs/cases/source_packs/`, `docs/cases/index.md`, `tests/test_case_library_metadata.py`
+- Notes: Opened a draft HITL PR with detection-pattern-first source packs for private-banking transaction monitoring, digital scam-to-mule flow, model-governance method, and graph/network mule patterns. Each source pack carries draft HITL metadata and `<!-- HITL-REVIEW-REQUIRED -->` markers. Local `uv run ruff check .`, focused metadata tests, and `uv run pytest` (77 passed) succeeded; GitHub CI passed and CodeRabbit skipped because the PR is draft. Human review is still required for source selection and framing.
+
+### Issue #11: Connect Regulatory Source Index To v0.1 Exercises — HITL-PENDING
+
+- Branch: feat/issue-11-implementation
+- PR: #27
+- Tests added: 5 regulatory source-index validation tests; all local tests passing
+- Key files changed: `docs/regulation/index.md`, `docs/regulation/source_notes/`, `tests/test_regulatory_source_index.py`
+- Notes: Opened a draft HITL PR with regulatory source notes for Swiss AMLA/AMLO/FINMA anchors, UK APP scam payment guidance, FATF typology context, and model-risk governance. Each note links to official HTTPS sources, connects to existing v0.1 notebooks, states the educational/non-advice boundary, and includes `<!-- HITL-REVIEW-REQUIRED -->` markers. Local `uv sync --extra dev`, `uv run ruff check .`, focused regulatory tests, and `uv run pytest` (80 passed) succeeded; GitHub CI passed and CodeRabbit skipped because the PR is draft. Human review is still required for regulatory framing.

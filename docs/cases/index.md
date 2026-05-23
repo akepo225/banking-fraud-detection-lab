@@ -20,3 +20,14 @@ A case belongs here only if it has:
 ## Template
 
 Case documents should include source links, facts vs interpretation, detection patterns, likely data signals, linked modules, learner exercises, regulatory hooks, and limitations.
+
+## Draft v0.1 Source Packs
+
+The initial v0.1 source packs are draft HITL artifacts and require human review before publication:
+
+- `source_packs/private-banking-transaction-monitoring.md`
+- `source_packs/digital-scam-to-mule.md`
+- `source_packs/model-governance-method.md`
+- `source_packs/graph-network-money-mules.md`
+
+Each draft must keep `<!-- HITL-REVIEW-REQUIRED -->` until source selection, framing, and limitations are reviewed by a human.

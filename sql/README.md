@@ -37,8 +37,8 @@ sqlite3 data/sample/minimal_world.sqlite ".tables"
 The `sql/examples/` directory contains representative learner queries:
 
 - `00_smoke_tables.sql` verifies that the core v0.1 tables are present.
-- `01_alert_lifecycle_join.sql` joins Banking relationships, accounts,
-  transactions, Users, sessions, alerts, and cases through the alert lifecycle.
+- `01_alert_lifecycle_join.sql` joins Banking relationship, accounts,
+  transactions, User, sessions, alerts, and cases through the alert lifecycle.
 - `02_alert_review_window.sql` uses SQLite window functions to rank alerts
   within each Banking relationship for review-queue exercises.
 

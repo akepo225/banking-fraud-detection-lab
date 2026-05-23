@@ -78,6 +78,33 @@ def test_default_sqlite_database_is_learner_facing(tmp_path: Path) -> None:
         connection.close()
 
 
+def test_replace_removes_protected_tables_when_switching_to_learner_facing(
+    tmp_path: Path,
+) -> None:
+    """Replacing a full internal DB with learner-facing mode must remove protected tables."""
+    database_path = tmp_path / "world.sqlite"
+    full_connection = create_minimal_banking_world_sqlite(
+        database_path,
+        seed=42,
+        learner_facing=False,
+    )
+    try:
+        assert PROTECTED_SCENARIO_ANSWER_KEYS in _sqlite_table_names(full_connection)
+    finally:
+        full_connection.close()
+
+    learner_connection = create_minimal_banking_world_sqlite(
+        database_path,
+        seed=42,
+    )
+    try:
+        table_names = _sqlite_table_names(learner_connection)
+        assert table_names == set(LEARNER_FACING_TABLE_NAMES)
+        assert PROTECTED_SCENARIO_ANSWER_KEYS not in table_names
+    finally:
+        learner_connection.close()
+
+
 def test_representative_sql_examples_execute_successfully(tmp_path: Path) -> None:
     """Learner SQL examples must run against the generated SQLite database."""
     connection = create_minimal_banking_world_sqlite(
@@ -94,6 +121,7 @@ def test_representative_sql_examples_execute_successfully(tmp_path: Path) -> Non
 
 
 def _sqlite_table_names(connection: sqlite3.Connection) -> set[str]:
+    """Return table names present in the SQLite database."""
     rows = connection.execute(
         "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
     ).fetchall()
@@ -103,5 +131,9 @@ def _sqlite_table_names(connection: sqlite3.Connection) -> set[str]:
 def _foreign_keys_for_table(
     connection: sqlite3.Connection, table_name: str
 ) -> set[tuple[str, str, str]]:
-    rows = connection.execute(f'PRAGMA foreign_key_list("{table_name}")').fetchall()
+    """Return child column, parent table, and parent column for one SQLite table."""
+    quoted_table_name = '"' + table_name.replace('"', '""') + '"'
+    rows = connection.execute(
+        "PRAGMA foreign_key_list(" + quoted_table_name + ")"
+    ).fetchall()
     return {(str(row[3]), str(row[2]), str(row[4])) for row in rows}

@@ -58,7 +58,7 @@ def load_tables_to_sqlite(
     try:
         connection.execute("PRAGMA foreign_keys = ON")
         if replace:
-            _drop_tables(connection, table_order)
+            _drop_tables(connection, _ordered_table_names(TABLE_NAMES))
         _create_tables(connection, table_order)
         _insert_tables(connection, tables, table_order)
         connection.commit()
@@ -72,6 +72,7 @@ def load_tables_to_sqlite(
 
 
 def _connect(database: str | Path | sqlite3.Connection) -> tuple[sqlite3.Connection, bool]:
+    """Return a SQLite connection and whether this helper opened it."""
     if isinstance(database, sqlite3.Connection):
         return database, False
 
@@ -84,6 +85,7 @@ def _connect(database: str | Path | sqlite3.Connection) -> tuple[sqlite3.Connect
 
 
 def _validate_tables(tables: Mapping[str, pd.DataFrame]) -> None:
+    """Validate that provided DataFrames match known table contracts."""
     unknown_tables = set(tables) - set(TABLE_SPECS)
     if unknown_tables:
         raise ValueError(f"Unknown generated tables: {sorted(unknown_tables)}")
@@ -98,6 +100,7 @@ def _validate_tables(tables: Mapping[str, pd.DataFrame]) -> None:
 
 
 def _ordered_table_names(table_names: tuple[str, ...]) -> tuple[str, ...]:
+    """Return table names sorted so parent tables load before child tables."""
     requested_tables = set(table_names)
     ordered: list[str] = []
     visiting: set[str] = set()
@@ -128,11 +131,14 @@ def _ordered_table_names(table_names: tuple[str, ...]) -> tuple[str, ...]:
 
 
 def _drop_tables(connection: sqlite3.Connection, table_order: tuple[str, ...]) -> None:
+    """Drop tables in child-first order."""
     for table_name in reversed(table_order):
-        connection.execute(f"DROP TABLE IF EXISTS {_quote_identifier(table_name)}")
+        sql = "DROP TABLE IF EXISTS " + _quote_identifier(table_name)
+        connection.execute(sql)
 
 
 def _create_tables(connection: sqlite3.Connection, table_order: tuple[str, ...]) -> None:
+    """Create SQLite tables from the schema contract."""
     for table_name in table_order:
         table_spec = TABLE_SPECS[table_name]
         column_definitions = [
@@ -143,18 +149,25 @@ def _create_tables(connection: sqlite3.Connection, table_order: tuple[str, ...])
         constraints = [f"PRIMARY KEY ({_quote_identifier(primary_key_column)})"]
         constraints.extend(_foreign_key_constraints(table_name))
         definition_sql = ",\n  ".join((*column_definitions, *constraints))
-        connection.execute(
-            f"CREATE TABLE {_quote_identifier(table_name)} (\n  {definition_sql}\n)"
+        sql = (
+            "CREATE TABLE "
+            + _quote_identifier(table_name)
+            + " (\n  "
+            + definition_sql
+            + "\n)"
         )
+        connection.execute(sql)
 
 
 def _sqlite_column_definition(column_name: str, dtype: str, nullable: bool) -> str:
+    """Build a SQLite column definition for one schema column."""
     sqlite_type = SQLITE_TYPES[dtype]
     nullability = "" if nullable else " NOT NULL"
     return f"{_quote_identifier(column_name)} {sqlite_type}{nullability}"
 
 
 def _foreign_key_constraints(table_name: str) -> tuple[str, ...]:
+    """Build SQLite foreign-key constraints declared by the schema contract."""
     constraints = []
     for column in TABLE_SPECS[table_name].columns:
         if column.references is None:
@@ -173,6 +186,7 @@ def _insert_tables(
     tables: Mapping[str, pd.DataFrame],
     table_order: tuple[str, ...],
 ) -> None:
+    """Insert normalized DataFrame rows in dependency order."""
     for table_name in table_order:
         frame = tables[table_name]
         if frame.empty:
@@ -184,14 +198,20 @@ def _insert_tables(
             tuple(_sqlite_value(value) for value in row)
             for row in frame.itertuples(index=False, name=None)
         ]
-        connection.executemany(
-            f"INSERT INTO {_quote_identifier(table_name)} "
-            f"({quoted_columns}) VALUES ({placeholders})",
-            rows,
+        sql = (
+            "INSERT INTO "
+            + _quote_identifier(table_name)
+            + " ("
+            + quoted_columns
+            + ") VALUES ("
+            + placeholders
+            + ")"
         )
+        connection.executemany(sql, rows)
 
 
 def _sqlite_value(value: Any) -> Any:
+    """Normalize pandas, NumPy, timestamp, and Decimal values for SQLite."""
     if value is None:
         return None
     if pd.isna(value):
@@ -210,4 +230,5 @@ def _sqlite_value(value: Any) -> Any:
 
 
 def _quote_identifier(identifier: str) -> str:
+    """Quote a SQLite identifier from the trusted schema contract."""
     return '"' + identifier.replace('"', '""') + '"'

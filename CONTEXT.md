@@ -161,9 +161,9 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 
 - Branch: feat/issue-11-implementation
 - PR: #27
-- Tests added: 5 regulatory source-index validation tests; all local tests passing
+- Tests added: 8 regulatory source-index validation tests; all local tests passing
 - Key files changed: `docs/regulation/index.md`, `docs/regulation/source_notes/`, `tests/test_regulatory_source_index.py`
-- Notes: Opened a draft HITL PR with regulatory source notes for Swiss AMLA/AMLO/FINMA anchors, UK APP scam payment guidance, FATF typology context, and model-risk governance. Each note links to official HTTPS sources, connects to existing v0.1 notebooks, states the educational/non-advice boundary, and includes `<!-- HITL-REVIEW-REQUIRED -->` markers. Local `uv sync --extra dev`, `uv run ruff check .`, focused regulatory tests, and `uv run pytest` (80 passed) succeeded; GitHub CI passed and CodeRabbit skipped because the PR is draft. Human review is still required for regulatory framing.
+- Notes: Opened a draft HITL PR with regulatory source notes for Swiss AMLA/AMLO/FINMA anchors, UK APP scam payment guidance, FATF typology context, and model-risk governance. Each note links to official HTTPS sources, connects to existing v0.1 notebooks, states the educational/non-advice boundary, and includes `<!-- HITL-REVIEW-REQUIRED -->` markers. Validator coverage was strengthened to require visible Official Sources URLs, substantive learning implications, and no direct quote blocks. Local `uv sync --extra dev`, `uv run ruff check .`, focused regulatory tests, and `uv run pytest` (83 passed) succeeded; GitHub CI passed and CodeRabbit skipped because the PR is draft. Human review is still required for regulatory framing.
 
 ### Issue #12: Enforce v0.1 Quality Gates In CI — BLOCKED
 

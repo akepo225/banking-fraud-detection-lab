@@ -34,6 +34,10 @@ def evaluate_alert_scores(
     normalized_thresholds = _normalize_thresholds(thresholds)
     if alert_capacity <= 0:
         raise ValueError("alert_capacity must be positive")
+    _validate_non_negative_cost("investigation_cost_chf", investigation_cost_chf)
+    _validate_non_negative_cost("false_positive_cost_chf", false_positive_cost_chf)
+    if missed_fraud_cost_chf is not None:
+        _validate_non_negative_cost("missed_fraud_cost_chf", missed_fraud_cost_chf)
 
     threshold_summaries = [
         _threshold_summary(
@@ -56,6 +60,9 @@ def evaluate_alert_scores(
         }
         for summary in threshold_summaries
     ]
+    # lowest_cost_summary is selected from threshold_summaries by minimizing the
+    # lambda key: total cost first, then maximizing recall to avoid missed fraud,
+    # then minimizing alert volume to reduce review workload.
     lowest_cost_summary = min(
         threshold_summaries,
         key=lambda summary: (
@@ -233,6 +240,12 @@ def _require_unique(frame: pd.DataFrame, column_name: str, frame_name: str) -> N
         raise ValueError(
             f"{frame_name}.{column_name} must be unique; duplicates: {sorted(duplicated)}"
         )
+
+
+def _validate_non_negative_cost(parameter_name: str, value: float) -> None:
+    """Raise a clear error when a cost parameter is negative."""
+    if value < 0:
+        raise ValueError(f"{parameter_name} must be non-negative")
 
 
 def _money_to_float(value: object) -> float:

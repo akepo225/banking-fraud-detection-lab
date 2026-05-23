@@ -149,3 +149,23 @@ def test_alert_metrics_report_rejects_out_of_range_scores() -> None:
 
     with pytest.raises(ValueError, match="between 0 and 1"):
         evaluate_alert_scores(cases, case_outcomes, alert_scores)
+
+
+@pytest.mark.parametrize(
+    ("parameter_name", "kwargs"),
+    (
+        ("investigation_cost_chf", {"investigation_cost_chf": -1.0}),
+        ("false_positive_cost_chf", {"false_positive_cost_chf": -1.0}),
+        ("missed_fraud_cost_chf", {"missed_fraud_cost_chf": -1.0}),
+    ),
+)
+def test_alert_metrics_report_rejects_negative_cost_inputs(
+    parameter_name: str, kwargs: dict[str, float]
+) -> None:
+    """Cost inputs must be non-negative before cost summaries are calculated."""
+    cases = pd.DataFrame({"case_id": ["CASE-1"], "alert_id": ["AL-1"]})
+    case_outcomes = pd.DataFrame({"case_id": ["CASE-1"], "confirmed_fraud": [True]})
+    alert_scores = pd.DataFrame({"alert_id": ["AL-1"], "score": [0.8]})
+
+    with pytest.raises(ValueError, match=parameter_name):
+        evaluate_alert_scores(cases, case_outcomes, alert_scores, **kwargs)

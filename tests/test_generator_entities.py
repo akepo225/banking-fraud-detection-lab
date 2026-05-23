@@ -161,9 +161,9 @@ def test_committed_sample_csvs_match_canonical_seed_output(tmp_path: Path) -> No
     generate_minimal_banking_world(seed=42, output_dir=tmp_path)
 
     for table_name in TABLE_NAMES:
-        expected_csv = (tmp_path / f"{table_name}.csv").read_text(encoding="utf-8")
-        committed_csv = (sample_dir / f"{table_name}.csv").read_text(encoding="utf-8")
-        assert committed_csv == expected_csv, f"{table_name}.csv does not match seed=42 output"
+        expected_bytes = (tmp_path / f"{table_name}.csv").read_bytes()
+        committed_bytes = (sample_dir / f"{table_name}.csv").read_bytes()
+        assert committed_bytes == expected_bytes, f"{table_name}.csv does not match seed=42 output"
 
 
 def _assert_fk(

@@ -19,7 +19,12 @@ def test_schema_contract_type_families_match_generated_tables() -> None:
     for table_name, table_spec in TABLE_SPECS.items():
         frame = tables[table_name]
         for column_spec in table_spec.columns:
-            values = frame[column_spec.name].dropna()
+            col = frame[column_spec.name]
+            if not column_spec.nullable:
+                assert col.notna().all(), (
+                    f"{table_name}.{column_spec.name} is non-nullable but contains nulls"
+                )
+            values = col.dropna()
             if values.empty:
                 continue
             _assert_type_family(values, column_spec.dtype)

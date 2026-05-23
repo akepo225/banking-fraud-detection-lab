@@ -3,8 +3,11 @@
 from banking_fraud_lab.evaluation import evaluate_alert_scores
 from banking_fraud_lab.generators import (
     build_learner_facing_views,
+    generate_learner_facing_private_banking_transaction_fraud_world,
     generate_learner_facing_minimal_banking_world,
     generate_minimal_banking_world,
+    generate_private_banking_transaction_fraud_world,
+    inject_private_banking_transaction_fraud,
 )
 from banking_fraud_lab.sqlite_loader import (
     create_minimal_banking_world_sqlite,
@@ -16,8 +19,11 @@ __all__ = [
     "build_learner_facing_views",
     "create_minimal_banking_world_sqlite",
     "evaluate_alert_scores",
+    "generate_learner_facing_private_banking_transaction_fraud_world",
     "generate_learner_facing_minimal_banking_world",
     "generate_minimal_banking_world",
+    "generate_private_banking_transaction_fraud_world",
+    "inject_private_banking_transaction_fraud",
     "load_tables_to_sqlite",
 ]
 

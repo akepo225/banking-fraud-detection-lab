@@ -90,6 +90,17 @@ def _validate_tables(tables: Mapping[str, pd.DataFrame]) -> None:
     if unknown_tables:
         raise ValueError(f"Unknown generated tables: {sorted(unknown_tables)}")
 
+    requested_tables = set(tables)
+    missing_parents = sorted(
+        f"{table_name}.{column.name} -> {column.references}"
+        for table_name in requested_tables
+        for column in TABLE_SPECS[table_name].columns
+        if column.references is not None
+        and column.references.split(".", maxsplit=1)[0] not in requested_tables
+    )
+    if missing_parents:
+        raise ValueError(f"Referenced parent tables are missing: {missing_parents}")
+
     for table_name, frame in tables.items():
         expected_columns = COLUMN_NAMES[table_name]
         if tuple(frame.columns) != expected_columns:
@@ -107,6 +118,7 @@ def _ordered_table_names(table_names: tuple[str, ...]) -> tuple[str, ...]:
     visited: set[str] = set()
 
     def visit(table_name: str) -> None:
+        """Visit one table and its requested parent dependencies."""
         if table_name in visited:
             return
         if table_name in visiting:

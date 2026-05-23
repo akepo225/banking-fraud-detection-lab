@@ -85,6 +85,28 @@ def test_regulatory_notes_have_required_sections_and_hitl_marker() -> None:
             assert section in body, f"{note_path} is missing {section}"
 
 
+def test_regulatory_notes_list_metadata_sources_in_official_sources_section() -> None:
+    """Official source URLs should be visible in the learner-facing source section."""
+    for note_path in _source_note_paths():
+        metadata, body = _read_note(note_path)
+        official_sources_section = _section_text(body, "## Official Sources")
+        urls = metadata["primary_official_sources"]
+
+        assert isinstance(urls, list)
+        for url in urls:
+            assert url in official_sources_section, f"{note_path} does not list {url}"
+
+
+def test_regulatory_learning_implications_are_substantive() -> None:
+    """Learning implications should contain original learner-facing analysis."""
+    for note_path in _source_note_paths():
+        _metadata, body = _read_note(note_path)
+        learning_implications = _section_text(body, "## Learning Implications")
+        word_count = len(re.findall(r"\b\w+\b", learning_implications))
+
+        assert word_count >= 40, f"{note_path} has thin learning implications"
+
+
 def test_regulatory_notes_link_existing_v0_1_exercises() -> None:
     """Regulatory notes must connect source material to real v0.1 notebooks."""
     for note_path in _source_note_paths():
@@ -103,6 +125,16 @@ def test_regulatory_notes_avoid_imperative_compliance_wording() -> None:
         text = note_path.read_text(encoding="utf-8").lower()
         for pattern in BANNED_IMPERATIVE_PATTERNS:
             assert not re.search(pattern, text), f"{note_path} contains banned wording: {pattern}"
+
+
+def test_regulatory_notes_do_not_include_direct_quote_blocks() -> None:
+    """Draft notes should avoid direct quotation unless a future review approves excerpts."""
+    for note_path in _source_note_paths():
+        text = note_path.read_text(encoding="utf-8")
+
+        assert not any(line.startswith(">") for line in text.splitlines()), (
+            f"{note_path} contains a direct quote block"
+        )
 
 
 def _source_note_paths() -> tuple[Path, ...]:
@@ -153,3 +185,19 @@ def _is_allowed_official_domain(url: str) -> bool:
     """Return whether the source URL is on an expected official-source domain."""
     domain = urlparse(url).netloc.lower().removeprefix("www.")
     return domain in ALLOWED_OFFICIAL_DOMAINS
+
+
+def _section_text(text: str, heading: str) -> str:
+    """Return the body of one level-two markdown section."""
+    lines = text.splitlines()
+    section_lines: list[str] = []
+    in_section = False
+    for line in lines:
+        if line.strip() == heading:
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if in_section:
+            section_lines.append(line)
+    return "\n".join(section_lines)

@@ -351,9 +351,12 @@ def _generate_sessions(rng: np.random.Generator, users: pd.DataFrame) -> pd.Data
                 "user_id": user["user_id"],
                 "started_at": pd.Timestamp(user["created_at"]) + pd.Timedelta(days=index, hours=index),
                 "channel": rng.choice(("web", "mobile_app")),
+                "user_agent": _user_agent(index),
+                "app_or_browser_version": _app_or_browser_version(index),
                 "device_fingerprint_hash": f"dev_{int(rng.integers(10**10, 10**11)):x}",
                 "ip_country": rng.choice(("CH", "DE", "FR", "GB", "NL")),
                 "asn_risk_score": int(rng.integers(3, 86)),
+                "coarse_geolocation": _coarse_geolocation(index),
                 "is_vpn_or_proxy": rng.choice((False, False, False, True)),
                 "auth_method": rng.choice(("password_sms", "passkey", "push_mfa")),
                 "session_event": events[(index - 1) % len(events)],
@@ -379,6 +382,7 @@ def _generate_payment_beneficiaries(
                 "beneficiary_name": fake.company(),
                 "beneficiary_account_country": str(rng.choice(("CH", "DE", "FR", "IT", "GB"))),
                 "beneficiary_bank_country": str(rng.choice(("CH", "DE", "FR", "IT", "GB"))),
+                "beneficiary_change_event": "beneficiary_created",
                 "created_at": pd.Timestamp(user["created_at"]) + pd.Timedelta(days=index),
                 "status": "active",
             }
@@ -706,6 +710,29 @@ def _transaction_description(institution_name: str, is_digital_payment: bool) ->
     if institution_name == ALPINE_CREST:
         return "Private banking account movement"
     return "Digital banking account activity"
+
+
+def _user_agent(index: int) -> str:
+    """Return a deterministic synthetic user-agent family."""
+    user_agents = (
+        "NovaBankMobile/iOS",
+        "NovaBankMobile/Android",
+        "Firefox/Desktop",
+        "Chrome/Desktop",
+    )
+    return user_agents[(index - 1) % len(user_agents)]
+
+
+def _app_or_browser_version(index: int) -> str:
+    """Return a deterministic synthetic app or browser version."""
+    versions = ("17.4", "14.1", "126.0", "124.0")
+    return versions[(index - 1) % len(versions)]
+
+
+def _coarse_geolocation(index: int) -> str:
+    """Return a deterministic coarse geolocation signal."""
+    locations = ("Zurich-CH", "Geneva-CH", "Berlin-DE", "Paris-FR", "London-GB")
+    return locations[(index - 1) % len(locations)]
 
 
 def _case_summary(alert_type: str) -> str:

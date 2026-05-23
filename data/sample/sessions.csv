@@ -1,8 +1,8 @@
-session_id,user_id,started_at,channel,device_fingerprint_hash,ip_country,asn_risk_score,is_vpn_or_proxy,auth_method,session_event
-S-0001,U-0001,2025-01-04 13:00:00,mobile_app,dev_169a2c504f,GB,37,False,push_mfa,login
-S-0002,U-0002,2024-12-24 15:00:00,web,dev_c2af0aae6,GB,18,False,password_sms,view_accounts
-S-0003,U-0003,2024-12-13 17:00:00,mobile_app,dev_715487606,FR,49,False,push_mfa,add_beneficiary
-S-0004,U-0004,2024-12-02 19:00:00,web,dev_13c6e1604d,GB,61,False,password_sms,payment_authorized
-S-0005,U-0001,2025-01-08 17:00:00,mobile_app,dev_1331238d6e,NL,72,False,push_mfa,login
-S-0006,U-0002,2024-12-28 19:00:00,web,dev_10a13cd59d,GB,14,True,password_sms,view_accounts
-S-0007,U-0003,2024-12-17 21:00:00,mobile_app,dev_12d1701177,CH,67,False,passkey,add_beneficiary
+session_id,user_id,started_at,channel,user_agent,app_or_browser_version,device_fingerprint_hash,ip_country,asn_risk_score,coarse_geolocation,is_vpn_or_proxy,auth_method,session_event
+S-0001,U-0001,2025-01-04 13:00:00,mobile_app,NovaBankMobile/iOS,17.4,dev_169a2c504f,GB,37,Zurich-CH,False,push_mfa,login
+S-0002,U-0002,2024-12-24 15:00:00,web,NovaBankMobile/Android,14.1,dev_c2af0aae6,GB,18,Geneva-CH,False,password_sms,view_accounts
+S-0003,U-0003,2024-12-13 17:00:00,mobile_app,Firefox/Desktop,126.0,dev_715487606,FR,49,Berlin-DE,False,push_mfa,add_beneficiary
+S-0004,U-0004,2024-12-02 19:00:00,web,Chrome/Desktop,124.0,dev_13c6e1604d,GB,61,Paris-FR,False,password_sms,payment_authorized
+S-0005,U-0001,2025-01-08 17:00:00,mobile_app,NovaBankMobile/iOS,17.4,dev_1331238d6e,NL,72,London-GB,False,push_mfa,login
+S-0006,U-0002,2024-12-28 19:00:00,web,NovaBankMobile/Android,14.1,dev_10a13cd59d,GB,14,Zurich-CH,True,password_sms,view_accounts
+S-0007,U-0003,2024-12-17 21:00:00,mobile_app,Firefox/Desktop,126.0,dev_12d1701177,CH,67,Geneva-CH,False,passkey,add_beneficiary

@@ -58,6 +58,29 @@ def test_case_source_packs_have_required_metadata_and_sections() -> None:
         assert not missing_sections, f"{path} is missing sections: {sorted(missing_sections)}"
 
 
+def test_case_source_pack_source_links_are_structured() -> None:
+    """Source URLs must be listed in the source-link section, not only elsewhere."""
+    for path in _source_pack_paths():
+        source_link_section = _section_text(path.read_text(encoding="utf-8"), "## Source Links")
+
+        assert "https://" in source_link_section, f"{path} has no HTTPS URL under Source Links"
+
+
+def test_case_source_pack_metadata_links_existing_modules() -> None:
+    """Machine-readable linked modules should point to existing v0.1 artifacts."""
+    for path in _source_pack_paths():
+        metadata = _metadata(path)
+        linked_modules = [
+            linked_module.strip()
+            for linked_module in metadata["linked_modules"].split(",")
+            if linked_module.strip().startswith("notebooks/")
+        ]
+
+        assert linked_modules, f"{path} has no notebook paths in linked_modules"
+        for linked_module in linked_modules:
+            assert Path(linked_module).exists(), f"{path} links missing module: {linked_module}"
+
+
 def _source_pack_paths() -> tuple[Path, ...]:
     """Return source-pack markdown files, failing clearly if none exist."""
     paths = tuple(sorted(CASE_SOURCE_PACK_DIR.glob("*.md")))
@@ -82,3 +105,19 @@ def _metadata(path: Path) -> dict[str, str]:
 def _section_headings(text: str) -> set[str]:
     """Extract level-two markdown section headings."""
     return {line.strip() for line in text.splitlines() if line.startswith("## ")}
+
+
+def _section_text(text: str, heading: str) -> str:
+    """Return the body of one level-two markdown section."""
+    lines = text.splitlines()
+    section_lines: list[str] = []
+    in_section = False
+    for line in lines:
+        if line.strip() == heading:
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if in_section:
+            section_lines.append(line)
+    return "\n".join(section_lines)

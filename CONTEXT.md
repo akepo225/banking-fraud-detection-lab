@@ -140,3 +140,11 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 6 digital scenario/notebook tests; all local tests passing
 - Key files changed: `src/banking_fraud_lab/generators/digital_banking.py`, `src/banking_fraud_lab/schema/tables.py`, `src/banking_fraud_lab/generators/minimal_world.py`, `notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb`, `tests/test_digital_scam_to_mule_scenario.py`, `tests/test_digital_scam_to_mule_notebook.py`, `data/sample/`, `docs/schema/data_dictionary.md`
 - Notes: Added configurable NovaBank Digital Scam-to-mule flow generation with Client/User/Partner separation, user-agent and app/browser telemetry, device/IP/ASN/geolocation/VPN/auth/session fields, beneficiary-change events, early-life mule accounts, incoming victim payments, rapid pass-through, shared-device signals, noisy digital outcomes, protected labels, and a scoring-rule notebook with alert-aware metrics. Local `uv run ruff check .` and `uv run pytest` (74 passed) succeeded; GitHub CI passed before merge.
+
+### Issue #9: Interpret Alerts And Produce A Governance Memo — DONE
+
+- Branch: feat/issue-9-implementation
+- PR: #24
+- Tests added: 1 notebook execution smoke test; all local tests passing
+- Key files changed: `notebooks/03_alert_governance/alert_governance_memo.ipynb`, `tests/test_alert_governance_notebook.py`, `notebooks/README.md`
+- Notes: Added the alert-governance integration notebook consuming tiny private-banking and digital-banking baseline equivalents, summarizing alert volume, precision/recall tradeoffs, PR-AUC, investigation capacity, threshold rationale, cost, limitations, and a governance memo draft. The notebook avoids headline accuracy claims and frames outputs for business, risk, and compliance stakeholder discussion. Local `uv run ruff check .`, notebook smoke execution, and `uv run pytest` (75 passed) succeeded; GitHub CI passed before merge.

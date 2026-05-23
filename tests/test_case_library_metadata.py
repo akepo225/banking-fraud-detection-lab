@@ -143,7 +143,9 @@ def _metadata(path: Path) -> dict[str, str]:
     """Parse simple key-value front matter from a source-pack file."""
     text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
     assert text.startswith("---\n"), f"{path} is missing opening front matter"
-    _, raw_front_matter, _ = text.split("---", maxsplit=2)
+    front_matter_parts = text.split("---", maxsplit=2)
+    assert len(front_matter_parts) == 3, f"{path} is missing closing front matter"
+    _, raw_front_matter, _ = front_matter_parts
     metadata = {}
     for raw_line in raw_front_matter.splitlines():
         if not raw_line.strip() or ":" not in raw_line:

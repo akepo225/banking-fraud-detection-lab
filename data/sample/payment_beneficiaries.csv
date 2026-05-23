@@ -1,5 +1,5 @@
-payment_beneficiary_id,client_id,added_by_user_id,beneficiary_name,beneficiary_account_country,beneficiary_bank_country,created_at,status
-B-0001,C-0003,U-0001,Blair PLC,IT,DE,2025-01-04 12:00:00,active
-B-0002,C-0004,U-0002,Dudley Group,IT,FR,2024-12-24 13:00:00,active
-B-0003,C-0005,U-0003,Arnold Ltd,FR,FR,2024-12-13 14:00:00,active
-B-0004,C-0006,U-0004,"Mcclure, Ward and Lee",FR,CH,2024-12-02 15:00:00,active
+payment_beneficiary_id,client_id,added_by_user_id,beneficiary_name,beneficiary_account_country,beneficiary_bank_country,beneficiary_change_event,created_at,status
+B-0001,C-0003,U-0001,Blair PLC,IT,DE,beneficiary_created,2025-01-04 12:00:00,active
+B-0002,C-0004,U-0002,Dudley Group,IT,FR,beneficiary_created,2024-12-24 13:00:00,active
+B-0003,C-0005,U-0003,Arnold Ltd,FR,FR,beneficiary_created,2024-12-13 14:00:00,active
+B-0004,C-0006,U-0004,"Mcclure, Ward and Lee",FR,CH,beneficiary_created,2024-12-02 15:00:00,active

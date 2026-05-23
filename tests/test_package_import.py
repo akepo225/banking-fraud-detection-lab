@@ -5,10 +5,13 @@ from banking_fraud_lab import (
     build_learner_facing_views,
     create_minimal_banking_world_sqlite,
     evaluate_alert_scores,
+    generate_digital_scam_to_mule_world,
+    generate_learner_facing_digital_scam_to_mule_world,
     generate_learner_facing_private_banking_transaction_fraud_world,
     generate_learner_facing_minimal_banking_world,
     generate_minimal_banking_world,
     generate_private_banking_transaction_fraud_world,
+    inject_digital_scam_to_mule_flow,
     inject_private_banking_transaction_fraud,
     load_tables_to_sqlite,
 )
@@ -19,10 +22,13 @@ def test_package_imports() -> None:
     assert __version__ == "0.1.0"
     assert callable(generate_minimal_banking_world)
     assert callable(build_learner_facing_views)
+    assert callable(generate_digital_scam_to_mule_world)
+    assert callable(generate_learner_facing_digital_scam_to_mule_world)
     assert callable(generate_learner_facing_private_banking_transaction_fraud_world)
     assert callable(generate_learner_facing_minimal_banking_world)
     assert callable(create_minimal_banking_world_sqlite)
     assert callable(generate_private_banking_transaction_fraud_world)
+    assert callable(inject_digital_scam_to_mule_flow)
     assert callable(inject_private_banking_transaction_fraud)
     assert callable(load_tables_to_sqlite)
     assert callable(evaluate_alert_scores)

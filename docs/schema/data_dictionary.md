@@ -160,9 +160,12 @@ Digital session telemetry for e-banking and app behavior.
 | `user_id` | string | no | `users.user_id` | Digital login identity for the session. |
 | `started_at` | datetime64[ns] | no |  | Session start timestamp. |
 | `channel` | string | no |  | Web or mobile app channel. |
+| `user_agent` | string | no |  | Synthetic browser or app user-agent family. |
+| `app_or_browser_version` | string | no |  | Synthetic app or browser version observed in the session. |
 | `device_fingerprint_hash` | string | no |  | Synthetic device fingerprint token. |
 | `ip_country` | string | no |  | Country inferred from IP address. |
 | `asn_risk_score` | int64 | no |  | Coarse ASN/network risk score from 0 to 100. |
+| `coarse_geolocation` | string | no |  | Coarse city or region-level geolocation signal. |
 | `is_vpn_or_proxy` | bool | no |  | Whether the session used VPN or proxy signals. |
 | `auth_method` | string | no |  | Authentication method used. |
 | `session_event` | string | no |  | Main event observed during the session. |
@@ -179,6 +182,7 @@ Saved payment beneficiaries used by digital-banking payments.
 | `beneficiary_name` | string | no |  | Synthetic beneficiary name. |
 | `beneficiary_account_country` | string | no |  | Country code for the beneficiary account. |
 | `beneficiary_bank_country` | string | no |  | Country code for the beneficiary bank. |
+| `beneficiary_change_event` | string | no |  | Beneficiary lifecycle event such as creation or update. |
 | `created_at` | datetime64[ns] | no |  | Beneficiary creation timestamp. |
 | `status` | string | no |  | Beneficiary status. |
 

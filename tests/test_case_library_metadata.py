@@ -122,6 +122,16 @@ def test_case_source_packs_do_not_include_direct_quote_blocks() -> None:
         )
 
 
+def test_case_source_pack_metadata_parser_handles_crlf_front_matter(tmp_path: Path) -> None:
+    """Metadata parsing should be stable on Windows CRLF checkouts."""
+    source_pack = _source_pack_paths()[0]
+    crlf_path = tmp_path / source_pack.name
+    crlf_text = source_pack.read_text(encoding="utf-8").replace("\n", "\r\n")
+    crlf_path.write_bytes(crlf_text.encode("utf-8"))
+
+    assert _metadata(crlf_path)["status"] == "draft-hitl"
+
+
 def _source_pack_paths() -> tuple[Path, ...]:
     """Return source-pack markdown files, failing clearly if none exist."""
     paths = tuple(sorted(CASE_SOURCE_PACK_DIR.glob("*.md")))
@@ -131,7 +141,7 @@ def _source_pack_paths() -> tuple[Path, ...]:
 
 def _metadata(path: Path) -> dict[str, str]:
     """Parse simple key-value front matter from a source-pack file."""
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
     assert text.startswith("---\n"), f"{path} is missing opening front matter"
     _, raw_front_matter, _ = text.split("---", maxsplit=2)
     metadata = {}

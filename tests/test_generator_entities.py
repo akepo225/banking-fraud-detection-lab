@@ -146,7 +146,7 @@ def test_alert_lifecycle_is_distinct_from_single_fraud_flag() -> None:
     learner_tables = {
         table_name: frame
         for table_name, frame in tables.items()
-        if table_name != "protected_scenario_answer_keys"
+        if table_name in LEARNER_FACING_TABLE_NAMES
     }
     for table_name, frame in learner_tables.items():
         assert "is_fraud" not in frame.columns, f"{table_name} should not expose is_fraud"
@@ -168,7 +168,7 @@ def test_alert_lifecycle_is_distinct_from_single_fraud_flag() -> None:
     assert outcomes["confirmed_fraud"].any()
     assert (~outcomes["confirmed_fraud"]).any()
     assert {"triaged", "closed"}.issubset(set(alerts["alert_status"]))
-    assert {"confirmed_fraud", "false_positive"}.issubset(set(outcomes["outcome_type"]))
+    assert {"confirmed-fraud", "false-positive"}.issubset(set(outcomes["outcome_type"]))
 
 
 def test_alert_and_case_records_carry_direct_lifecycle_references() -> None:

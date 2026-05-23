@@ -1,4 +1,4 @@
 alert_id,suspicious_activity_id,banking_relationship_id,account_id,triggered_transaction_id,user_id,session_id,payment_beneficiary_id,institution_name,generated_at,alert_type,alert_status,severity,reason
-AL-0001,SA-0001,BR-0002,A-0003,T-0003,,,,Alpine Crest Private Bank,2026-01-18 12:20:00,private_banking_high_value,triaged,medium,High-value movement relative to sample relationship profile.
+AL-0001,SA-0001,BR-0002,A-0003,T-0003,,,,Alpine Crest Private Bank,2026-01-18 12:20:00,private_banking_high_value,triaged,medium,High-value movement relative to sample Banking relationship profile.
 AL-0002,SA-0002,BR-0006,A-0008,T-0008,U-0004,S-0004,B-0004,NovaBank Digital,2026-01-23 12:20:00,new_beneficiary_payment,closed,high,Payment followed recent beneficiary setup.
 AL-0003,SA-0003,BR-0005,A-0007,T-0007,U-0003,S-0003,,NovaBank Digital,2026-01-22 11:20:00,session_payment_velocity,closed,medium,Multiple session and payment events observed close together.

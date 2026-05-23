@@ -11,7 +11,7 @@ These CSV files were generated with `generate_minimal_banking_world(seed=42)`.
 | File | Rows | Purpose |
 | --- | ---: | --- |
 | `partners.csv` | 8 | Core natural and legal persons. |
-| `clients.csv` | 6 | Legal customer records mapped to partners. |
+| `clients.csv` | 6 | Client records mapped to partners. |
 | `roles.csv` | 4 | Controlled role vocabulary. |
 | `partner_roles.csv` | 12 | Effective-dated partner roles in banking relationships. |
 | `banking_relationships.csv` | 6 | Swiss-bank-style relationship containers. |

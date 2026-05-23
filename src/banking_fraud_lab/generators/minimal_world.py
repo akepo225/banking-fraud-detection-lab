@@ -46,7 +46,7 @@ DEFAULT_SUSPICIOUS_ACTIVITY_SPECS: tuple[ActivitySpec, ...] = (
     (
         "T-0003",
         "private_banking_high_value",
-        "High-value movement relative to sample relationship profile.",
+        "High-value movement relative to sample Banking relationship profile.",
         "medium",
         None,
     ),
@@ -493,11 +493,6 @@ def _generate_alerts(suspicious_activities: pd.DataFrame) -> pd.DataFrame:
         "new_beneficiary_payment": "closed",
         "session_payment_velocity": "closed",
     }
-    severity_by_activity_type = {
-        "private_banking_high_value": "medium",
-        "new_beneficiary_payment": "high",
-        "session_payment_velocity": "medium",
-    }
     rows = []
     for index, activity in enumerate(suspicious_activities.itertuples(index=False), start=1):
         rows.append(
@@ -514,8 +509,8 @@ def _generate_alerts(suspicious_activities: pd.DataFrame) -> pd.DataFrame:
                 "generated_at": pd.Timestamp(activity.detected_at) + pd.Timedelta(minutes=5),
                 "alert_type": activity.activity_type,
                 "alert_status": status_by_activity_type[activity.activity_type],
-                "severity": severity_by_activity_type[activity.activity_type],
-                "reason": _alert_reason(activity.activity_type),
+                "severity": activity.review_priority,
+                "reason": activity.detection_signal,
             }
         )
     return _frame(ALERTS, rows)
@@ -571,7 +566,7 @@ def _generate_case_outcomes(
                 "case_outcome_id": _identifier("OUT", index),
                 "case_id": case.case_id,
                 "decided_at": pd.Timestamp(case.opened_at) + pd.Timedelta(days=2),
-                "outcome_type": "confirmed_fraud" if confirmed_fraud else "false_positive",
+                "outcome_type": "confirmed-fraud" if confirmed_fraud else "false-positive",
                 "confirmed_fraud": confirmed_fraud,
                 "loss_amount_original": loss_original,
                 "loss_currency": currency,
@@ -646,8 +641,11 @@ def _session_id_for_user(
         return None
     if session_event is not None:
         event_sessions = user_sessions[user_sessions["session_event"] == session_event]
-        if not event_sessions.empty:
-            return str(event_sessions.iloc[0]["session_id"])
+        if event_sessions.empty:
+            raise ValueError(
+                f"Session event {session_event!r} was not found for user_id {user_id!r}"
+            )
+        return str(event_sessions.iloc[0]["session_id"])
     return str(user_sessions.iloc[0]["session_id"])
 
 
@@ -724,13 +722,3 @@ def _outcome_note(confirmed_fraud: bool) -> str:
     if confirmed_fraud:
         return "Case outcome confirmed fraud; protected scenario answer keys remain separate."
     return "Case outcome closed without a fraud confirmation."
-
-
-def _alert_reason(alert_type: str) -> str:
-    """Look up a canned alert reason string for the given alert type."""
-    reasons = {
-        "private_banking_high_value": "High-value movement relative to sample relationship profile.",
-        "new_beneficiary_payment": "Payment followed recent beneficiary setup.",
-        "session_payment_velocity": "Multiple session and payment events observed close together.",
-    }
-    return reasons[alert_type]

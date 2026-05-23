@@ -252,7 +252,7 @@ Case decisions that separate confirmed fraud from other lifecycle states.
 | `case_outcome_id` | string | no |  | Stable synthetic case outcome identifier. |
 | `case_id` | string | no | `cases.case_id` | Case that received the outcome. |
 | `decided_at` | datetime64[ns] | no |  | Outcome decision timestamp. |
-| `outcome_type` | string | no |  | Confirmed fraud, false positive, or unresolved. |
+| `outcome_type` | string | no |  | confirmed-fraud, false-positive, or unresolved. |
 | `confirmed_fraud` | bool | no |  | Whether the case outcome confirmed fraud. |
 | `loss_amount_original` | Decimal | no |  | Exact loss amount in original currency. |
 | `loss_currency` | string | no |  | Currency for `loss_amount_original`. |

@@ -527,7 +527,7 @@ TABLE_SPECS: dict[str, TableSpec] = {
                 references="cases.case_id",
             ),
             ColumnSpec("decided_at", "datetime64[ns]", False, "Outcome decision timestamp."),
-            ColumnSpec("outcome_type", "string", False, "Confirmed fraud, false positive, or unresolved."),
+            ColumnSpec("outcome_type", "string", False, "confirmed-fraud, false-positive, or unresolved."),
             ColumnSpec("confirmed_fraud", "bool", False, "Whether the case outcome confirmed fraud."),
             ColumnSpec("loss_amount_original", "Decimal", False, "Exact loss amount in original currency."),
             ColumnSpec("loss_currency", "string", False, "Currency for `loss_amount_original`."),

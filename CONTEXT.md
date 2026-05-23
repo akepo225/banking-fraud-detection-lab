@@ -172,3 +172,19 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 0
 - Key files changed: none
 - Notes: Wave 6 is blocked by issues #10 and #11. The goal requires strict dependency order and says not to start a wave until blocking issues are complete and merged. Issues #10 and #11 are intentionally open draft HITL PRs (#26 and #27) pending human review, so issue #12 cannot be implemented as a mergeable `main`-targeted PR yet. As of the latest handoff audit, both upstream HITL PRs are clean/mergeable, CI green, CodeRabbit green, E2E validated, locally CodeRabbit-reviewed with `findings: 0`, and free of unresolved review threads. Unblock by completing human review and merging #26 and #27.
+
+### Issue #13: Polish Publication-Ready README And Release Checklist — BLOCKED
+
+- Branch: not started
+- PR: not opened
+- Tests added: 0
+- Key files changed: none
+- Notes: Wave 7 is blocked by issue #12, which is blocked by unmerged HITL PRs #26 and #27. Issue #13 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the README/publication-polish HITL draft PR until #26 and #27 are human-reviewed and merged, then #12 is implemented and merged.
+
+### Issue #14: Run v0.1 Publication Gate Review — BLOCKED
+
+- Branch: not started
+- PR: not opened
+- Tests added: 0
+- Key files changed: none
+- Notes: Wave 8 is blocked by issue #13. Issue #14 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the publication-gate audit PR until #13 is implemented as a HITL draft PR after #12 is merged.

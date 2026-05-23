@@ -153,9 +153,9 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 
 - Branch: feat/issue-10-implementation
 - PR: #26
-- Tests added: 2 case-library metadata/source-pack validation tests; all local tests passing
+- Tests added: 4 case-library metadata/source-pack validation tests; all local tests passing
 - Key files changed: `docs/cases/source_packs/`, `docs/cases/index.md`, `tests/test_case_library_metadata.py`
-- Notes: Opened a draft HITL PR with detection-pattern-first source packs for private-banking transaction monitoring, digital scam-to-mule flow, model-governance method, and graph/network mule patterns. Each source pack carries draft HITL metadata and `<!-- HITL-REVIEW-REQUIRED -->` markers. Local `uv run ruff check .`, focused metadata tests, and `uv run pytest` (77 passed) succeeded; GitHub CI passed and CodeRabbit skipped because the PR is draft. Human review is still required for source selection and framing.
+- Notes: Opened a draft HITL PR with detection-pattern-first source packs for private-banking transaction monitoring, digital scam-to-mule flow, model-governance method, and graph/network mule patterns. Each source pack carries draft HITL metadata and `<!-- HITL-REVIEW-REQUIRED -->` markers. Validator coverage was strengthened to require structured Source Links URLs and existing linked notebook paths. Local `uv run ruff check .`, focused metadata tests, and `uv run pytest` (79 passed) succeeded; GitHub CI passed and CodeRabbit skipped because the PR is draft. Human review is still required for source selection and framing.
 
 ### Issue #11: Connect Regulatory Source Index To v0.1 Exercises — HITL-PENDING
 

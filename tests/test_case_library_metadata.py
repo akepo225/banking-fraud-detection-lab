@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 CASE_SOURCE_PACK_DIR = Path("docs/cases/source_packs")
+CASE_LIBRARY_INDEX = Path("docs/cases/index.md")
 HITL_MARKER = "<!-- HITL-REVIEW-REQUIRED -->"
 REQUIRED_METADATA_FIELDS = {
     "title",
@@ -79,6 +80,15 @@ def test_case_source_pack_metadata_links_existing_modules() -> None:
         assert linked_modules, f"{path} has no notebook paths in linked_modules"
         for linked_module in linked_modules:
             assert Path(linked_module).exists(), f"{path} links missing module: {linked_module}"
+
+
+def test_case_library_index_links_all_source_packs() -> None:
+    """The case-library index must expose every draft source pack."""
+    index_text = CASE_LIBRARY_INDEX.read_text(encoding="utf-8")
+
+    for path in _source_pack_paths():
+        relative_path = path.as_posix().removeprefix("docs/cases/")
+        assert f"]({relative_path})" in index_text, f"Index does not link {relative_path}"
 
 
 def _source_pack_paths() -> tuple[Path, ...]:

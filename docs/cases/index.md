@@ -25,9 +25,13 @@ Case documents should include source links, facts vs interpretation, detection p
 
 The initial v0.1 source packs are draft HITL artifacts and require human review before publication:
 
-- `source_packs/private-banking-transaction-monitoring.md`
-- `source_packs/digital-scam-to-mule.md`
-- `source_packs/model-governance-method.md`
-- `source_packs/graph-network-money-mules.md`
+- [Relationship and transaction monitoring control failure](source_packs/private-banking-transaction-monitoring.md):
+  private-banking transaction fraud source pack for Alpine Crest Private Bank exercises.
+- [Authorised scam payment to mule or fraudster account](source_packs/digital-scam-to-mule.md):
+  digital scam-to-mule source pack for NovaBank Digital exercises.
+- [Model-output governance and threshold documentation](source_packs/model-governance-method.md):
+  cross-track governance method source pack.
+- [Money mule network and shared-account movement](source_packs/graph-network-money-mules.md):
+  graph/network source pack for future module framing.
 
 Each draft must keep `<!-- HITL-REVIEW-REQUIRED -->` until source selection, framing, and limitations are reviewed by a human.

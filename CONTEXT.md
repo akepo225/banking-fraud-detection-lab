@@ -187,4 +187,4 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - PR: not opened
 - Tests added: 0
 - Key files changed: none
-- Notes: Wave 8 is blocked by issue #13. Issue #14 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the publication-gate audit PR until #13 is human-reviewed and merged after #12 is merged.
+- Notes: Wave 8 is blocked by issue #13. Issue #14 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the publication-gate audit PR until #12 is merged and then #13 is human-reviewed and merged.

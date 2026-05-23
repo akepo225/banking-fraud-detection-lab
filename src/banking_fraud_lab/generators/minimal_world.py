@@ -345,14 +345,15 @@ def _generate_sessions(rng: np.random.Generator, users: pd.DataFrame) -> pd.Data
     events = ("login", "view_accounts", "add_beneficiary", "payment_authorized")
     for index in range(1, 8):
         user = users.iloc[(index - 1) % len(users)]
+        channel = str(rng.choice(("web", "mobile_app")))
         rows.append(
             {
                 "session_id": _identifier("S", index),
                 "user_id": user["user_id"],
                 "started_at": pd.Timestamp(user["created_at"]) + pd.Timedelta(days=index, hours=index),
-                "channel": rng.choice(("web", "mobile_app")),
-                "user_agent": _user_agent(index),
-                "app_or_browser_version": _app_or_browser_version(index),
+                "channel": channel,
+                "user_agent": _user_agent(channel, index),
+                "app_or_browser_version": _app_or_browser_version(channel, index),
                 "device_fingerprint_hash": f"dev_{int(rng.integers(10**10, 10**11)):x}",
                 "ip_country": rng.choice(("CH", "DE", "FR", "GB", "NL")),
                 "asn_risk_score": int(rng.integers(3, 86)),
@@ -712,20 +713,25 @@ def _transaction_description(institution_name: str, is_digital_payment: bool) ->
     return "Digital banking account activity"
 
 
-def _user_agent(index: int) -> str:
-    """Return a deterministic synthetic user-agent family."""
-    user_agents = (
-        "NovaBankMobile/iOS",
-        "NovaBankMobile/Android",
-        "Firefox/Desktop",
-        "Chrome/Desktop",
-    )
+def _user_agent(channel: str, index: int) -> str:
+    """Return a deterministic synthetic user-agent family for the session channel."""
+    if channel == "mobile_app":
+        user_agents = ("NovaBankMobile/iOS", "NovaBankMobile/Android")
+    elif channel == "web":
+        user_agents = ("Firefox/Desktop", "Chrome/Desktop")
+    else:
+        raise ValueError(f"Unsupported session channel: {channel}")
     return user_agents[(index - 1) % len(user_agents)]
 
 
-def _app_or_browser_version(index: int) -> str:
-    """Return a deterministic synthetic app or browser version."""
-    versions = ("17.4", "14.1", "126.0", "124.0")
+def _app_or_browser_version(channel: str, index: int) -> str:
+    """Return a deterministic synthetic app or browser version for the channel."""
+    if channel == "mobile_app":
+        versions = ("17.4", "14.1")
+    elif channel == "web":
+        versions = ("126.0", "124.0")
+    else:
+        raise ValueError(f"Unsupported session channel: {channel}")
     return versions[(index - 1) % len(versions)]
 
 

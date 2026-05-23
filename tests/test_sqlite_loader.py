@@ -4,6 +4,8 @@ from pathlib import Path
 
 import sqlite3
 
+import pytest
+
 from banking_fraud_lab import (
     create_minimal_banking_world_sqlite,
     generate_minimal_banking_world,
@@ -103,6 +105,40 @@ def test_replace_removes_protected_tables_when_switching_to_learner_facing(
         assert PROTECTED_SCENARIO_ANSWER_KEYS not in table_names
     finally:
         learner_connection.close()
+
+
+def test_loader_rejects_active_transaction_without_foreign_keys() -> None:
+    """Caller-owned active transactions must already have SQLite FK checks enabled."""
+    connection = sqlite3.connect(":memory:")
+    connection.execute("BEGIN")
+
+    try:
+        with pytest.raises(ValueError, match="foreign_keys"):
+            load_tables_to_sqlite(generate_minimal_banking_world(seed=42), connection)
+        assert connection.in_transaction
+    finally:
+        connection.rollback()
+        connection.close()
+
+
+def test_loader_preserves_caller_owned_transaction_control() -> None:
+    """Caller-owned connections keep transaction ownership after table loading."""
+    connection = sqlite3.connect(":memory:")
+    connection.execute("PRAGMA foreign_keys = ON")
+    connection.execute("BEGIN")
+
+    try:
+        load_tables_to_sqlite(generate_minimal_banking_world(seed=42), connection)
+
+        assert connection.in_transaction
+        assert _sqlite_table_names(connection) == set(TABLE_NAMES)
+
+        connection.rollback()
+        assert _sqlite_table_names(connection) == set()
+    finally:
+        if connection.in_transaction:
+            connection.rollback()
+        connection.close()
 
 
 def test_representative_sql_examples_execute_successfully(tmp_path: Path) -> None:

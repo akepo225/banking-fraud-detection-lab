@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from decimal import Decimal
 from typing import Any
@@ -124,7 +125,7 @@ def _prepare_scored_outcomes(
         how="left",
         validate="one_to_one",
     )
-    scored["_label"] = scored["confirmed_fraud"].astype(bool)
+    scored["_label"] = scored["confirmed_fraud"].map(_parse_confirmed_fraud_label).astype(bool)
     scored["_score"] = pd.to_numeric(scored["score"], errors="raise").astype(float)
     if not scored["_score"].between(0.0, 1.0).all():
         raise ValueError("alert_scores.score values must be between 0 and 1")
@@ -218,11 +219,19 @@ def _average_precision(labels: pd.Series, scores: pd.Series) -> float:
 
 def _normalize_thresholds(thresholds: Sequence[float]) -> tuple[float, ...]:
     """Validate and sort threshold values from high to low."""
-    normalized = tuple(sorted({float(threshold) for threshold in thresholds}, reverse=True))
+    try:
+        normalized_values = {float(threshold) for threshold in thresholds}
+    except (TypeError, ValueError) as exc:
+        raise ValueError("thresholds must contain numeric values") from exc
+
+    normalized = tuple(sorted(normalized_values, reverse=True))
     if not normalized:
         raise ValueError("thresholds must contain at least one threshold")
-    if any(threshold < 0.0 or threshold > 1.0 for threshold in normalized):
-        raise ValueError("thresholds must be between 0 and 1")
+    if any(
+        not math.isfinite(threshold) or threshold < 0.0 or threshold > 1.0
+        for threshold in normalized
+    ):
+        raise ValueError("thresholds must be finite values between 0 and 1")
     return normalized
 
 
@@ -244,8 +253,37 @@ def _require_unique(frame: pd.DataFrame, column_name: str, frame_name: str) -> N
 
 def _validate_non_negative_cost(parameter_name: str, value: float) -> None:
     """Raise a clear error when a cost parameter is negative."""
-    if value < 0:
-        raise ValueError(f"{parameter_name} must be non-negative")
+    try:
+        numeric_value = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{parameter_name} must be finite and non-negative") from exc
+    if not math.isfinite(numeric_value) or numeric_value < 0:
+        raise ValueError(f"{parameter_name} must be finite and non-negative")
+
+
+def _parse_confirmed_fraud_label(value: object) -> bool:
+    """Parse generated or exported confirmed-fraud labels without truthiness coercion."""
+    if value is None or pd.isna(value):
+        raise ValueError("case_outcomes.confirmed_fraud values must be non-null booleans")
+    if isinstance(value, np.bool_ | bool):
+        return bool(value)
+    if isinstance(value, np.integer | int):
+        if int(value) in {0, 1}:
+            return bool(value)
+    if isinstance(value, np.floating | float):
+        numeric_value = float(value)
+        if math.isfinite(numeric_value) and numeric_value in {0.0, 1.0}:
+            return bool(numeric_value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "t", "yes", "y", "1"}:
+            return True
+        if normalized in {"false", "f", "no", "n", "0"}:
+            return False
+    raise ValueError(
+        "case_outcomes.confirmed_fraud values must be booleans or recognized "
+        f"boolean encodings; got {value!r}"
+    )
 
 
 def _money_to_float(value: object) -> float:

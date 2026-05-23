@@ -116,3 +116,27 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 6 focused evaluation tests covering 8 cases; all local tests passing
 - Key files changed: `src/banking_fraud_lab/evaluation.py`, `src/banking_fraud_lab/__init__.py`, `tests/test_evaluation_metrics.py`, `tests/test_package_import.py`, `docs/evaluation/metrics.md`
 - Notes: Added `evaluate_alert_scores()` for precision, recall, PR-AUC, alert volume, capacity utilization, threshold summaries, cost curves, and a limitation-aware summary that keeps simplistic accuracy claims out of scope. Local `uv run ruff check .` and `uv run pytest` passed after review fixes; GitHub CI passed and CodeRabbit's actionable findings were addressed before merge.
+
+### Issue #6: Complete Foundations Data Tour And SQL Feature Notebook — DONE
+
+- Branch: feat/issue-6-implementation
+- PR: #20
+- Tests added: 1 notebook execution smoke test; all local tests passing
+- Key files changed: `notebooks/00_foundations/foundations_data_tour.ipynb`, `tests/test_foundations_notebook.py`, `notebooks/README.md`
+- Notes: Added the shared foundations path through deterministic tiny data generation, Progressive data views, SQLite loading, SQL feature extraction, Alert lifecycle inspection, and `evaluate_alert_scores()`. Local `uv run ruff check .`, notebook smoke execution, and `uv run pytest` (63 passed) succeeded; GitHub CI passed before merge.
+
+### Issue #7: Detect Alpine Crest Private-Banking Transaction Fraud — DONE
+
+- Branch: feat/issue-7-implementation
+- PR: #21
+- Tests added: 5 private-banking scenario/notebook tests; all local tests passing
+- Key files changed: `src/banking_fraud_lab/generators/private_banking.py`, `notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb`, `tests/test_private_banking_scenario.py`, `tests/test_private_banking_notebook.py`, package exports
+- Notes: Added configurable Alpine Crest Private Bank transaction-fraud injection with protected answer keys, learner-facing views, relationship-manager and Partner/Role/Banking relationship context, one operational false-positive case, and a transparent scoring-rule notebook with alert-aware threshold metrics. Local `uv run ruff check .` and `uv run pytest` (68 passed) succeeded; GitHub CI passed before merge.
+
+### Issue #8: Detect NovaBank Digital Scam-To-Mule Flow — DONE
+
+- Branch: feat/issue-8-implementation
+- PR: #22
+- Tests added: 6 digital scenario/notebook tests; all local tests passing
+- Key files changed: `src/banking_fraud_lab/generators/digital_banking.py`, `src/banking_fraud_lab/schema/tables.py`, `src/banking_fraud_lab/generators/minimal_world.py`, `notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb`, `tests/test_digital_scam_to_mule_scenario.py`, `tests/test_digital_scam_to_mule_notebook.py`, `data/sample/`, `docs/schema/data_dictionary.md`
+- Notes: Added configurable NovaBank Digital Scam-to-mule flow generation with Client/User/Partner separation, user-agent and app/browser telemetry, device/IP/ASN/geolocation/VPN/auth/session fields, beneficiary-change events, early-life mule accounts, incoming victim payments, rapid pass-through, shared-device signals, noisy digital outcomes, protected labels, and a scoring-rule notebook with alert-aware metrics. Local `uv run ruff check .` and `uv run pytest` (74 passed) succeeded; GitHub CI passed before merge.

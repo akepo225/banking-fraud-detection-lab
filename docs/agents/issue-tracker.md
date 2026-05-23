@@ -19,3 +19,9 @@ Create or update a GitHub issue with `gh issue create` or `gh issue edit`.
 ## When A Skill Says "Fetch The Relevant Ticket"
 
 Read the GitHub issue with `gh issue view <number> --comments`.
+
+## Pull Request Review Comments
+
+Before treating a PR as complete, inspect both PR conversation comments and inline review comments. Use `gh pr view <number> --comments` for conversation context and `gh api repos/akepo225/banking-fraud-detection-lab/pulls/<number>/comments --paginate` for inline comments.
+
+For closed or stacked follow-up PRs, compare every actionable comment against current code before deciding whether to patch it. Fix still-valid comments, and record a short reason for anything intentionally skipped, already fixed, or no longer applicable.

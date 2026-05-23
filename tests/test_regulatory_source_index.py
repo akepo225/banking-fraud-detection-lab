@@ -51,6 +51,15 @@ def test_regulatory_index_declares_educational_non_advice_scope() -> None:
         assert note_path.name in text
 
 
+def test_regulatory_index_links_all_source_notes() -> None:
+    """The regulatory index must link every draft source note."""
+    index_text = REGULATORY_INDEX.read_text(encoding="utf-8")
+
+    for note_path in _source_note_paths():
+        relative_path = note_path.as_posix().removeprefix("docs/regulation/")
+        assert f"]({relative_path})" in index_text, f"Index does not link {relative_path}"
+
+
 def test_regulatory_notes_cover_required_source_families_and_official_links() -> None:
     """Draft notes must cover each v0.1 family and use official HTTPS source links."""
     covered_families: set[str] = set()

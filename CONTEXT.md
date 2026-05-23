@@ -100,3 +100,19 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 5 focused lifecycle/protected-key/prevalence tests plus expanded schema-derived FK coverage; all local tests passing
 - Key files changed: `src/banking_fraud_lab/generators/minimal_world.py`, `src/banking_fraud_lab/schema/tables.py`, `tests/test_generator_entities.py`, `data/sample/`, `docs/schema/`, `.github/workflows/ci.yml`
 - Notes: Implemented explicit suspicious activity, alert, case, outcome, confirmed-fraud, and protected-answer-key lifecycle. Applied narrow CI workflow hardening from review feedback without changing the configured CI commands. Local `uv run ruff check .`, `uv run pytest` (49 passed), and CodeRabbit local review passed after PR review fixes. GitHub PR checks passed after Actions budget became available.
+
+### Issue #4: Query Generated Data Through SQLite — DONE
+
+- Branch: feat/issue-4-implementation
+- PR: #17
+- Tests added: 5 SQLite loader/schema/query tests; all local tests passing
+- Key files changed: `src/banking_fraud_lab/sqlite_loader.py`, `src/banking_fraud_lab/create_sqlite.py`, `src/banking_fraud_lab/__init__.py`, `tests/test_sqlite_loader.py`, `sql/examples/`, `sql/README.md`
+- Notes: Added a schema-driven SQLite loader with primary-key and foreign-key DDL, learner-facing default views, full replacement behavior that removes protected tables, a module CLI, representative joins, and a window-function query. Local `uv run ruff check .` and `uv run pytest` passed after CodeRabbit review fixes; GitHub CI and CodeRabbit passed before merge.
+
+### Issue #5: Produce An Alert-Aware Metrics Report — DONE
+
+- Branch: feat/issue-5-implementation
+- PR: #18
+- Tests added: 6 focused evaluation tests covering 8 cases; all local tests passing
+- Key files changed: `src/banking_fraud_lab/evaluation.py`, `src/banking_fraud_lab/__init__.py`, `tests/test_evaluation_metrics.py`, `tests/test_package_import.py`, `docs/evaluation/metrics.md`
+- Notes: Added `evaluate_alert_scores()` for precision, recall, PR-AUC, alert volume, capacity utilization, threshold summaries, cost curves, and a limitation-aware summary that keeps simplistic accuracy claims out of scope. Local `uv run ruff check .` and `uv run pytest` passed after review fixes; GitHub CI passed and CodeRabbit's actionable findings were addressed before merge.

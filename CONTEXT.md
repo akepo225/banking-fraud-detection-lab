@@ -94,6 +94,7 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 ## Agent Progress Log
 
 ### Issue #3: Trace Suspicious Activity Through The Alert Lifecycle — BLOCKED
+
 - Branch: feat/issue-3-implementation
 - PR: #16
 - Tests added: 5 focused lifecycle/protected-key/prevalence tests plus expanded schema-derived FK coverage; all local tests passing

@@ -1,0 +1,9 @@
+account_id,banking_relationship_id,institution_name,account_type,currency,opened_at,status,balance_original,balance_currency,balance_chf
+A-0001,BR-0001,Alpine Crest Private Bank,private_current,GBP,2025-01-16 10:00:00,active,707795.00,GBP,792730.40
+A-0002,BR-0001,Alpine Crest Private Bank,custody,EUR,2025-01-17 10:00:00,active,546123.00,EUR,524278.08
+A-0003,BR-0002,Alpine Crest Private Bank,private_current,CHF,2025-01-04 11:00:00,active,650422.00,CHF,650422.00
+A-0004,BR-0003,Alpine Crest Private Bank,private_current,USD,2024-12-23 12:00:00,active,317483.00,USD,288909.53
+A-0005,BR-0004,Alpine Crest Private Bank,private_current,CHF,2024-12-11 13:00:00,active,825825.00,CHF,825825.00
+A-0006,BR-0004,Alpine Crest Private Bank,custody,EUR,2024-12-12 13:00:00,active,761824.00,EUR,731351.04
+A-0007,BR-0005,NovaBank Digital,digital_current,USD,2024-11-29 14:00:00,active,667166.00,USD,607121.06
+A-0008,BR-0006,NovaBank Digital,digital_current,GBP,2024-11-17 15:00:00,active,185576.00,GBP,207845.12

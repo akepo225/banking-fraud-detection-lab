@@ -1,0 +1,7 @@
+client_id,partner_id,institution_name,client_segment,onboarded_at,status
+C-0001,P-0001,Alpine Crest Private Bank,operating_company,2025-01-13 10:00:00,active
+C-0002,P-0002,Alpine Crest Private Bank,family_office,2025-01-01 11:00:00,active
+C-0003,P-0003,Alpine Crest Private Bank,family_office,2024-12-20 12:00:00,active
+C-0004,P-0004,Alpine Crest Private Bank,operating_company,2024-12-08 13:00:00,active
+C-0005,P-0005,NovaBank Digital,digital_sme,2024-11-26 14:00:00,active
+C-0006,P-0006,NovaBank Digital,digital_sme,2024-11-14 15:00:00,active

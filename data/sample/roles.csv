@@ -1,0 +1,5 @@
+role_id,role_code,role_name,description
+ROLE-001,primary_client,Primary Client,Legal client that owns the banking relationship.
+ROLE-002,beneficial_owner,Beneficial Owner,Partner treated as a beneficial owner in relationship context.
+ROLE-003,authorized_signatory,Authorized Signatory,Partner authorized to act on a banking relationship.
+ROLE-004,digital_login_user,Digital Login User,Partner associated with digital login activity.

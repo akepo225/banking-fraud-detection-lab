@@ -1,0 +1,3 @@
+case_id,alert_id,opened_at,assigned_team,case_status,investigation_summary
+CASE-0001,AL-0002,2026-02-06 15:00:00,digital investigations,open,Minimal lifecycle example for learner inspection.
+CASE-0002,AL-0003,2026-02-07 15:00:00,digital investigations,closed,Minimal lifecycle example for learner inspection.

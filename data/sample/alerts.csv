@@ -1,0 +1,4 @@
+alert_id,triggered_transaction_id,institution_name,generated_at,alert_type,alert_status,severity,reason
+AL-0001,T-0003,Alpine Crest Private Bank,2026-02-05 09:00:00,private_banking_high_value,triaged,medium,High-value movement relative to sample relationship profile.
+AL-0002,T-0008,NovaBank Digital,2026-02-06 09:00:00,new_beneficiary_payment,escalated,high,Payment followed recent beneficiary setup.
+AL-0003,T-0007,NovaBank Digital,2026-02-07 09:00:00,session_payment_velocity,closed,low,Multiple session and payment events observed close together.

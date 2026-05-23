@@ -141,7 +141,7 @@ def test_regulatory_notes_do_not_include_direct_quote_blocks() -> None:
     for note_path in _source_note_paths():
         text = note_path.read_text(encoding="utf-8")
 
-        assert not any(line.startswith(">") for line in text.splitlines()), (
+        assert not any(line.lstrip().startswith(">") for line in text.splitlines()), (
             f"{note_path} contains a direct quote block"
         )
 

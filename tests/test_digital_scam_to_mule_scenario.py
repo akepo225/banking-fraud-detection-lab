@@ -7,7 +7,12 @@ import math
 import pandas as pd
 import pytest
 
-from banking_fraud_lab import build_learner_facing_views, generate_digital_scam_to_mule_world
+from banking_fraud_lab import (
+    build_learner_facing_views,
+    generate_digital_scam_to_mule_world,
+    generate_minimal_banking_world,
+    inject_digital_scam_to_mule_flow,
+)
 from banking_fraud_lab.generators.digital_banking import (
     DIGITAL_SCAM_TO_MULE_ACTIVITY_TYPE,
     DIGITAL_SCAM_TO_MULE_SCENARIO_NAME,
@@ -68,6 +73,45 @@ def test_digital_scam_to_mule_distinguishes_client_user_and_partner() -> None:
     assert (identity_context["user_id"] != identity_context["client_id"]).all()
     assert (identity_context["client_id"] != identity_context["partner_id"]).all()
     assert set(identity_context["institution_name"]) == {NOVABANK}
+
+
+def test_digital_scam_to_mule_handles_multiple_users_per_client() -> None:
+    """Scenario injection must choose one deterministic User when a Client has many."""
+    tables = generate_minimal_banking_world(seed=42)
+    nova_relationship = tables["banking_relationships"].query(
+        "institution_name == @NOVABANK"
+    ).iloc[0]
+    client_id = str(nova_relationship["primary_client_id"])
+    existing_user = tables["users"][tables["users"]["client_id"] == client_id].iloc[0]
+    extra_user = existing_user.copy()
+    extra_user["user_id"] = "U-9999"
+    extra_user["username_hash"] = "usr_multi_user"
+    extra_user["created_at"] = pd.Timestamp(existing_user["created_at"]) - pd.Timedelta(days=1)
+    tables["users"] = pd.concat(
+        [tables["users"], pd.DataFrame([extra_user])],
+        ignore_index=True,
+    )
+
+    scenario_tables = inject_digital_scam_to_mule_flow(tables, scenario_prevalence=1.0)
+    scenario_activities = scenario_tables["suspicious_activities"][
+        scenario_tables["suspicious_activities"]["activity_type"]
+        == DIGITAL_SCAM_TO_MULE_ACTIVITY_TYPE
+    ]
+    scenario_activity_clients = scenario_activities.merge(
+        scenario_tables["banking_relationships"][
+            ["banking_relationship_id", "primary_client_id"]
+        ],
+        on="banking_relationship_id",
+        how="left",
+        validate="many_to_one",
+    )
+    selected_client_users = scenario_activity_clients.loc[
+        scenario_activity_clients["primary_client_id"] == client_id,
+        "user_id",
+    ]
+
+    assert not selected_client_users.empty
+    assert set(selected_client_users) == {"U-9999"}
 
 
 def test_digital_scam_to_mule_telemetry_and_mule_behavior() -> None:

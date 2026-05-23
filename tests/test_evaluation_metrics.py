@@ -131,6 +131,35 @@ def test_alert_metrics_report_uses_losses_for_missed_fraud_cost_by_default() -> 
     assert summary["total_cost_chf"] == 250.0
 
 
+def test_alert_metrics_report_parses_string_confirmed_fraud_labels() -> None:
+    """String exported fraud labels must not be coerced with Python truthiness."""
+    cases = pd.DataFrame(
+        {"case_id": ["CASE-1", "CASE-2"], "alert_id": ["AL-1", "AL-2"]}
+    )
+    case_outcomes = pd.DataFrame(
+        {"case_id": ["CASE-1", "CASE-2"], "confirmed_fraud": ["True", "False"]}
+    )
+    alert_scores = pd.DataFrame({"alert_id": ["AL-1", "AL-2"], "score": [0.9, 0.8]})
+
+    report = evaluate_alert_scores(cases, case_outcomes, alert_scores, thresholds=(0.5,))
+
+    summary = report["threshold_summaries"][0]
+    assert report["population"]["confirmed_fraud_count"] == 1
+    assert report["population"]["non_fraud_count"] == 1
+    assert summary["true_positives"] == 1
+    assert summary["false_positives"] == 1
+
+
+def test_alert_metrics_report_rejects_invalid_confirmed_fraud_labels() -> None:
+    """Ambiguous fraud labels must fail before metric calculation."""
+    cases = pd.DataFrame({"case_id": ["CASE-1"], "alert_id": ["AL-1"]})
+    case_outcomes = pd.DataFrame({"case_id": ["CASE-1"], "confirmed_fraud": ["unknown"]})
+    alert_scores = pd.DataFrame({"alert_id": ["AL-1"], "score": [0.8]})
+
+    with pytest.raises(ValueError, match="confirmed_fraud"):
+        evaluate_alert_scores(cases, case_outcomes, alert_scores)
+
+
 def test_alert_metrics_report_rejects_missing_scores() -> None:
     """Every case outcome under evaluation must have an alert score."""
     cases = pd.DataFrame({"case_id": ["CASE-1"], "alert_id": ["AL-1"]})
@@ -149,6 +178,17 @@ def test_alert_metrics_report_rejects_out_of_range_scores() -> None:
 
     with pytest.raises(ValueError, match="between 0 and 1"):
         evaluate_alert_scores(cases, case_outcomes, alert_scores)
+
+
+@pytest.mark.parametrize("threshold", (float("nan"), float("inf"), -float("inf")))
+def test_alert_metrics_report_rejects_non_finite_thresholds(threshold: float) -> None:
+    """Thresholds must be finite to produce meaningful alert summaries."""
+    cases = pd.DataFrame({"case_id": ["CASE-1"], "alert_id": ["AL-1"]})
+    case_outcomes = pd.DataFrame({"case_id": ["CASE-1"], "confirmed_fraud": [True]})
+    alert_scores = pd.DataFrame({"alert_id": ["AL-1"], "score": [0.8]})
+
+    with pytest.raises(ValueError, match="thresholds"):
+        evaluate_alert_scores(cases, case_outcomes, alert_scores, thresholds=(threshold,))
 
 
 @pytest.mark.parametrize(

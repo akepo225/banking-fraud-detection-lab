@@ -129,7 +129,7 @@ def _build_flow_rows(
     selected_accounts: pd.DataFrame,
 ) -> dict[str, list[dict[str, object]]]:
     """Build all rows needed for scam-to-mule flows."""
-    users_by_client = tables[USERS].set_index("client_id")
+    users_by_client = _primary_users_by_client(tables[USERS])
     relationships = tables["banking_relationships"].set_index("banking_relationship_id")
     all_users = tuple(tables[USERS]["user_id"])
     session_index = _next_identifier_index(tables[SESSIONS], "session_id")
@@ -366,6 +366,18 @@ def _apply_early_life_account_updates(
     for update in account_updates:
         account_mask = tables[ACCOUNTS]["account_id"] == update["account_id"]
         tables[ACCOUNTS].loc[account_mask, "opened_at"] = update["opened_at"]
+
+
+def _primary_users_by_client(users: pd.DataFrame) -> pd.DataFrame:
+    """Return one deterministic User row per Client for scenario injection."""
+    primary_users = (
+        users.sort_values(["client_id", "created_at", "user_id"], kind="mergesort")
+        .drop_duplicates("client_id", keep="first")
+        .set_index("client_id")
+    )
+    if not primary_users.index.is_unique:
+        raise ValueError("Expected one selected User per Client after deterministic selection")
+    return primary_users
 
 
 def _session_row(

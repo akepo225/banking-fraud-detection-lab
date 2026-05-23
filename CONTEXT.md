@@ -148,3 +148,43 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 1 notebook execution smoke test; all local tests passing
 - Key files changed: `notebooks/03_alert_governance/alert_governance_memo.ipynb`, `tests/test_alert_governance_notebook.py`, `notebooks/README.md`
 - Notes: Added the alert-governance integration notebook consuming tiny private-banking and digital-banking baseline equivalents, summarizing alert volume, precision/recall tradeoffs, PR-AUC, investigation capacity, threshold rationale, cost, limitations, and a governance memo draft. The notebook avoids headline accuracy claims and frames outputs for business, risk, and compliance stakeholder discussion. Local `uv run ruff check .`, notebook smoke execution, and `uv run pytest` (75 passed) succeeded; GitHub CI passed before merge.
+
+### Issue #10: Seed Case Library With Pattern-Linked Source Packs — HITL-PENDING
+
+- Branch: feat/issue-10-implementation
+- PR: #26
+- Tests added: 8 case-library metadata/source-pack validation tests; all local tests passing
+- Key files changed: `docs/cases/source_packs/`, `docs/cases/index.md`, `tests/test_case_library_metadata.py`
+- Notes: Opened a draft HITL PR with detection-pattern-first source packs for private-banking transaction monitoring, digital scam-to-mule flow, model-governance method, and graph/network mule patterns. Each source pack carries draft HITL metadata, including institution type, source authority, geography, product, source quality, linked modules, and `<!-- HITL-REVIEW-REQUIRED -->` markers. The case-library index links each draft source pack by Detection pattern. Validator coverage was strengthened to require non-empty metadata fields, structured Source Links URLs, existing linked notebook paths, index links to every source pack, no direct quote blocks, no imperative compliance wording, and CRLF-tolerant front-matter parsing. Local `uv run ruff check .`, focused metadata tests (8 passed), and `uv run pytest` (83 passed) succeeded after addressing the open inline parser comment; GitHub CI passed and CodeRabbit skipped because the PR is draft. Follow-up E2E validation passed on the issue #10 branch, local CodeRabbit review against `origin/main` completed with `findings: 0`, and the prior CRLF review thread was replied to with fix evidence and resolved. Human review is still required for source selection and framing.
+
+### Issue #11: Connect Regulatory Source Index To v0.1 Exercises — HITL-PENDING
+
+- Branch: feat/issue-11-implementation
+- PR: #27
+- Tests added: 9 regulatory source-index validation tests; all local tests passing
+- Key files changed: `docs/regulation/index.md`, `docs/regulation/source_notes/`, `tests/test_regulatory_source_index.py`
+- Notes: Opened a draft HITL PR with regulatory source notes for Swiss AMLA/AMLO/FINMA anchors, UK APP scam payment guidance, FATF typology context, and model-risk governance. Each note links to official HTTPS sources, connects to existing v0.1 notebooks, states the educational/non-advice boundary, and includes `<!-- HITL-REVIEW-REQUIRED -->` markers. Validator coverage was strengthened to require regulatory-index links to every source note, visible Official Sources URLs, substantive learning implications, and no direct quote blocks. Local `uv sync --extra dev`, `uv run ruff check .`, focused regulatory tests, and `uv run pytest` (84 passed) succeeded; GitHub CI passed and CodeRabbit skipped because the PR is draft. Follow-up E2E validation passed on the issue #11 branch, local CodeRabbit review against `origin/main` completed with `findings: 0`, and thread-aware PR review audit found no inline review threads. Human review is still required for regulatory framing.
+
+### Issue #12: Enforce v0.1 Quality Gates In CI — BLOCKED
+
+- Branch: not started
+- PR: not opened
+- Tests added: 0
+- Key files changed: none
+- Notes: Wave 6 is blocked by issues #10 and #11. The goal requires strict dependency order and says not to start a wave until blocking issues are complete and merged. Issues #10 and #11 are intentionally open draft HITL PRs (#26 and #27) pending human review, so issue #12 cannot be implemented as a mergeable `main`-targeted PR yet. As of the latest handoff audit, both upstream HITL PRs are clean/mergeable, CI green, CodeRabbit green, E2E validated, locally CodeRabbit-reviewed with `findings: 0`, and free of unresolved review threads. Unblock by completing human review and merging #26 and #27.
+
+### Issue #13: Polish Publication-Ready README And Release Checklist — BLOCKED
+
+- Branch: not started
+- PR: not opened
+- Tests added: 0
+- Key files changed: none
+- Notes: Wave 7 is blocked by issue #12, which is blocked by unmerged HITL PRs #26 and #27. Issue #13 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the README/publication-polish HITL draft PR until #26 and #27 are human-reviewed and merged, then #12 is implemented and merged.
+
+### Issue #14: Run v0.1 Publication Gate Review — BLOCKED
+
+- Branch: not started
+- PR: not opened
+- Tests added: 0
+- Key files changed: none
+- Notes: Wave 8 is blocked by issue #13. Issue #14 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the publication-gate audit PR until #13 is implemented as a HITL draft PR after #12 is merged.

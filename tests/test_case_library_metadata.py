@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 CASE_SOURCE_PACK_DIR = Path("docs/cases/source_packs")
 CASE_LIBRARY_INDEX = Path("docs/cases/index.md")
@@ -37,6 +38,13 @@ REQUIRED_SECTIONS = {
     "## Limitations",
     "## Human Review",
 }
+BANNED_IMPERATIVE_PATTERNS = (
+    r"\byou must\b",
+    r"\bmust comply\b",
+    r"\bmust report\b",
+    r"\brequired to comply\b",
+    r"\blegal requirement for learners\b",
+)
 
 
 def test_case_source_packs_cover_v0_1_learning_areas() -> None:
@@ -94,6 +102,24 @@ def test_case_library_index_links_all_source_packs() -> None:
     for path in _source_pack_paths():
         relative_path = path.as_posix().removeprefix("docs/cases/")
         assert f"]({relative_path})" in index_text, f"Index does not link {relative_path}"
+
+
+def test_case_source_packs_avoid_imperative_compliance_wording() -> None:
+    """Source packs should support learning without issuing compliance instructions."""
+    for path in _source_pack_paths():
+        text = path.read_text(encoding="utf-8").lower()
+        for pattern in BANNED_IMPERATIVE_PATTERNS:
+            assert not re.search(pattern, text), f"{path} contains banned wording: {pattern}"
+
+
+def test_case_source_packs_do_not_include_direct_quote_blocks() -> None:
+    """Draft source packs should avoid direct quotation unless human review approves excerpts."""
+    for path in _source_pack_paths():
+        text = path.read_text(encoding="utf-8")
+
+        assert not any(line.startswith(">") for line in text.splitlines()), (
+            f"{path} contains a direct quote block"
+        )
 
 
 def _source_pack_paths() -> tuple[Path, ...]:

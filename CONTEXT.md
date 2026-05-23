@@ -93,10 +93,10 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 
 ## Agent Progress Log
 
-### Issue #3: Trace Suspicious Activity Through The Alert Lifecycle — BLOCKED
+### Issue #3: Trace Suspicious Activity Through The Alert Lifecycle — DONE
 
 - Branch: feat/issue-3-implementation
 - PR: #16
 - Tests added: 5 focused lifecycle/protected-key/prevalence tests plus expanded schema-derived FK coverage; all local tests passing
-- Key files changed: `src/banking_fraud_lab/generators/minimal_world.py`, `src/banking_fraud_lab/schema/tables.py`, `tests/test_generator_entities.py`, `data/sample/`, `docs/schema/`
-- Notes: Implemented explicit suspicious activity, alert, case, outcome, confirmed-fraud, and protected-answer-key lifecycle. Local `uv run ruff check .`, `uv run pytest` (49 passed), and CodeRabbit local review passed with 0 findings after PR review fixes. GitHub PR checks remain blocked because GitHub Actions reports: "The job was not started because an Actions budget is preventing further use."
+- Key files changed: `src/banking_fraud_lab/generators/minimal_world.py`, `src/banking_fraud_lab/schema/tables.py`, `tests/test_generator_entities.py`, `data/sample/`, `docs/schema/`, `.github/workflows/ci.yml`
+- Notes: Implemented explicit suspicious activity, alert, case, outcome, confirmed-fraud, and protected-answer-key lifecycle. Applied narrow CI workflow hardening from review feedback without changing the configured CI commands. Local `uv run ruff check .`, `uv run pytest` (49 passed), and CodeRabbit local review passed after PR review fixes. GitHub PR checks passed after Actions budget became available.

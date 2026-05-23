@@ -139,6 +139,28 @@ def test_minimal_world_preserves_semantic_join_integrity() -> None:
     )
 
 
+def test_session_telemetry_matches_declared_channel() -> None:
+    """Session user-agent families and versions must agree with the declared channel."""
+    tables = generate_minimal_banking_world(seed=42)
+    sessions = tables["sessions"]
+    expected = {
+        "mobile_app": {
+            "user_agents": {"NovaBankMobile/iOS", "NovaBankMobile/Android"},
+            "versions": {"17.4", "14.1"},
+        },
+        "web": {
+            "user_agents": {"Firefox/Desktop", "Chrome/Desktop"},
+            "versions": {"126.0", "124.0"},
+        },
+    }
+
+    assert set(sessions["channel"]) <= set(expected)
+    for channel, telemetry in expected.items():
+        channel_sessions = sessions[sessions["channel"] == channel]
+        assert set(channel_sessions["user_agent"]) <= telemetry["user_agents"]
+        assert set(channel_sessions["app_or_browser_version"]) <= telemetry["versions"]
+
+
 def test_alert_lifecycle_is_distinct_from_single_fraud_flag() -> None:
     """Suspicious activity, alerts, cases, outcomes, and fraud confirmation stay separate."""
     tables = generate_minimal_banking_world(seed=42)

@@ -53,17 +53,20 @@ def load_tables_to_sqlite(
     """Load generated tables into SQLite using the project schema contract."""
     _validate_tables(tables)
     connection, owns_connection = _connect(database)
+    initial_in_transaction = connection.in_transaction
     table_order = _ordered_table_names(tuple(tables))
 
     try:
-        connection.execute("PRAGMA foreign_keys = ON")
+        _ensure_foreign_keys_enabled(connection)
         if replace:
             _drop_tables(connection, _ordered_table_names(TABLE_NAMES))
         _create_tables(connection, table_order)
         _insert_tables(connection, tables, table_order)
-        connection.commit()
+        if owns_connection or not initial_in_transaction:
+            connection.commit()
     except Exception:
-        connection.rollback()
+        if connection.in_transaction and (owns_connection or not initial_in_transaction):
+            connection.rollback()
         if owns_connection:
             connection.close()
         raise
@@ -82,6 +85,26 @@ def _connect(database: str | Path | sqlite3.Connection) -> tuple[sqlite3.Connect
     database_path = Path(database)
     database_path.parent.mkdir(parents=True, exist_ok=True)
     return sqlite3.connect(database_path), True
+
+
+def _ensure_foreign_keys_enabled(connection: sqlite3.Connection) -> None:
+    """Enable and verify SQLite foreign-key enforcement before loading rows."""
+    if connection.in_transaction:
+        if _foreign_keys_enabled(connection):
+            return
+        raise ValueError(
+            "load_tables_to_sqlite requires SQLite foreign_keys to be enabled "
+            "before using an active transaction"
+        )
+
+    connection.execute("PRAGMA foreign_keys = ON")
+    if not _foreign_keys_enabled(connection):
+        raise RuntimeError("Failed to enable SQLite foreign key enforcement")
+
+
+def _foreign_keys_enabled(connection: sqlite3.Connection) -> bool:
+    """Return whether SQLite foreign-key enforcement is active."""
+    return bool(connection.execute("PRAGMA foreign_keys").fetchone()[0])
 
 
 def _validate_tables(tables: Mapping[str, pd.DataFrame]) -> None:

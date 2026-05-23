@@ -9,7 +9,7 @@ authors = [
   { name = "Banking Fraud Detection Lab Contributors" }
 ]
 dependencies = [
-  "faker>=25.0",
+  "faker==40.19.1",
   "ipykernel>=6.29",
   "jupyterlab>=4.2",
   "matplotlib>=3.8",

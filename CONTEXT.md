@@ -168,7 +168,7 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 ### Issue #12: Enforce v0.1 Quality Gates In CI — PR-PENDING
 
 - Branch: feat/issue-12-implementation
-- PR: pending
+- PR: #42
 - Tests added: 4 new CI-quality/data-dictionary tests; all local tests passing
 - Key files changed: `docs/quality_gates/v0.1-ci.md`, `tests/test_ci_quality_gates.py`, `tests/test_schema_contract.py`, `CONTEXT.md`
 - Notes: Wave 6 unblocked after issues #10 and #11 were human-confirmed and PRs #26/#27 were merged on 2026-05-24. Added an explicit v0.1 CI quality-gate manifest, 3 CI drift tests proving CI runs the clean-checkout `uv sync --extra dev`, `uv run ruff check .`, and unfiltered `uv run pytest` commands, and 1 schema/data-dictionary alignment test. Local `uv sync --extra dev`, `uv run ruff check .`, focused CI/schema suite (7 total tests passed), and `uv run pytest` (106 total tests passed) succeeded. Local CodeRabbit review found context and meta-test documentation inconsistencies; those fixes are included. Merge of the issue #12 PR is still required before wave 7 can start.

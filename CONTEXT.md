@@ -173,18 +173,18 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Key files changed: `docs/quality_gates/v0.1-ci.md`, `tests/test_ci_quality_gates.py`, `tests/test_schema_contract.py`, `CONTEXT.md`
 - Notes: Wave 6 unblocked after issues #10 and #11 were human-confirmed and PRs #26/#27 were merged on 2026-05-24. Added an explicit v0.1 CI quality-gate manifest, 3 CI drift tests proving CI runs the clean-checkout `uv sync --extra dev`, `uv run ruff check .`, and unfiltered `uv run pytest` commands, and 1 schema/data-dictionary alignment test. Local `uv sync --extra dev`, `uv run ruff check .`, focused CI/schema suite (7 total tests passed), and `uv run pytest` (106 total tests passed) succeeded. Local CodeRabbit review found context and meta-test documentation inconsistencies; those fixes are included. PR #42 was opened non-draft, GitHub CI and CodeRabbit passed, and the PR was merged on 2026-05-24.
 
-### Issue #13: Polish Publication-Ready README And Release Checklist — PR-PENDING
+### Issue #13: Polish Publication-Ready README And Release Checklist — DONE
 
 - Branch: feat/issue-13-implementation
 - PR: #43
 - Tests added: 4 publication-readiness documentation tests; all local tests passing
 - Key files changed: `README.md`, `LICENSE.md`, `LICENSES/`, `CONTRIBUTING.md`, `docs/release/v0.1-publication-checklist.md`, `tests/test_publication_docs.py`, `CONTEXT.md`
-- Notes: Wave 7 unblocked after PR #42 merged issue #12 on 2026-05-24. Polished the pre-publication README around the actual v0.1 learner path, **Target learner**, two **Fraud detection tracks**, quickstart, curriculum map, repository links, split licensing, and disclaimers. Added the v0.1 publication checklist with `<!-- HITL-REVIEW-REQUIRED -->` and review evidence mapped to the PRD gate. Strengthened license/contribution docs with educational-only, unaffiliated, no-real-data, no-reconstruction, and no-legal-advice boundaries. PR #43 is open non-draft, with human-review signaling in the title, body, and checklist marker.
+- Notes: Wave 7 unblocked after PR #42 merged issue #12 on 2026-05-24. Polished the pre-publication README around the actual v0.1 learner path, **Target learner**, two **Fraud detection tracks**, quickstart, curriculum map, repository links, split licensing, and disclaimers. Added the v0.1 publication checklist with `<!-- HITL-REVIEW-REQUIRED -->` and review evidence mapped to the PRD gate. Strengthened license/contribution docs with educational-only, unaffiliated, no-real-data, no-reconstruction, and no-legal-advice boundaries. PR #43 was opened non-draft, GitHub CI passed, CodeRabbit completed a full review and confirmed technical mergeability, human approval was confirmed, and the PR was merged on 2026-05-24.
 
-### Issue #14: Run v0.1 Publication Gate Review — BLOCKED
+### Issue #14: Run v0.1 Publication Gate Review — PR-PENDING
 
-- Branch: not started
-- PR: not opened
-- Tests added: 0
-- Key files changed: none
-- Notes: Wave 8 is blocked by issue #13. Issue #14 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the publication-gate audit PR until issue #13 is human-reviewed and merged. Future PRs must be opened non-draft; use title/body/labels and `<!-- HITL-REVIEW-REQUIRED -->` markers for human-review signaling.
+- Branch: feat/issue-14-implementation
+- PR: PR-PENDING
+- Tests added: 0 audit-only code tests; existing quality gates all passing
+- Key files changed: `docs/release/v0.1-publication-gate-audit.md`, `CONTEXT.md`
+- Notes: Wave 8 unblocked after PR #43 merged issue #13 on 2026-05-24. Added an audit-only publication-gate report with item-by-item checklist review, command evidence, prohibited-content search evidence, and a conservative **Hold pending final human publication action** decision. Local `uv sync --extra dev`, `uv run ruff check .`, focused featured-notebook smoke tests (4 passed), and full `uv run pytest` (110 passed) succeeded. Issue #14 PR should be opened non-draft with `<!-- HITL-REVIEW-REQUIRED -->` signaling for final human publication review.

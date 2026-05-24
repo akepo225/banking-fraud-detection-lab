@@ -86,7 +86,7 @@ PY
 Create a local SQLite exercise database:
 
 ```bash
-uv run python -m banking_fraud_lab.create_sqlite data/sample banking_fraud_lab.sqlite
+uv run python -m banking_fraud_lab.create_sqlite data/sample/minimal_world.sqlite
 ```
 
 ## Repository Guide

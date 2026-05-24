@@ -1,5 +1,7 @@
 # MIT License
 
+This license applies to code in `src/`, `tests/`, and `sql/`.
+
 Copyright (c) 2026 Banking Fraud Detection Lab Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

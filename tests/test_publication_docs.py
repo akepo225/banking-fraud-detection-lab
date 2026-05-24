@@ -1,0 +1,116 @@
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _read(relative_path: str) -> str:
+    return (ROOT / relative_path).read_text(encoding="utf-8")
+
+
+def _normalize(text: str) -> str:
+    return " ".join(text.split())
+
+
+def test_readme_covers_publication_readiness_contract() -> None:
+    readme = _normalize(_read("README.md"))
+
+    required_terms = [
+        "Private pre-publication curriculum",
+        "Target learner",
+        "Fraud detection tracks",
+        "Private-banking fraud detection",
+        "Digital-banking fraud detection",
+        "Alpine Crest Private Bank",
+        "NovaBank Digital",
+        "educational only",
+        "unaffiliated",
+        "does not use real client data",
+        "does not reconstruct real events",
+        "does not provide legal, compliance, audit, investment, regulatory, or professional advice",
+        "uv sync --extra dev",
+        "uv run ruff check .",
+        "uv run pytest",
+    ]
+    for term in required_terms:
+        assert term in readme
+
+    required_links = [
+        "(docs/schema/README.md)",
+        "(docs/schema/data_dictionary.md)",
+        "(sql/README.md)",
+        "(docs/evaluation/metrics.md)",
+        "(docs/cases/index.md)",
+        "(docs/regulation/index.md)",
+        "(docs/quality_gates/v0.1-ci.md)",
+        "(docs/ROADMAP.md)",
+        "(docs/adr/0001-broaden-scope-to-banking-fraud-detection-lab.md)",
+        "(CONTRIBUTING.md)",
+        "(docs/release/v0.1-publication-checklist.md)",
+        "(LICENSE.md)",
+    ]
+    for link in required_links:
+        assert link in readme
+
+
+def test_license_documents_explain_split_scope_and_boundaries() -> None:
+    license_index = _normalize(_read("LICENSE.md"))
+    code_license = _normalize(_read("LICENSES/CODE-MIT.md"))
+    content_license = _normalize(_read("LICENSES/CONTENT-CC-BY-NC-4.0.md"))
+
+    assert "Code in `src/`, `tests/`, and `sql/` is licensed under the MIT License" in license_index
+    assert (
+        "Educational content in `README.md`, `CONTEXT.md`, `docs/`, `notebooks/`, "
+        "and `data/sample/` is licensed under Creative Commons Attribution-NonCommercial 4.0"
+        in license_index
+    )
+    assert "This license applies to code in `src/`, `tests/`, and `sql/`." in code_license
+    assert "MIT License" in code_license
+    assert "This covers `README.md`, `CONTEXT.md`, `docs/`, `notebooks/`, and" in content_license
+    assert "`data/sample/`." in content_license
+    assert "non-commercial purposes with attribution" in content_license
+    assert "unaffiliated" in content_license
+    assert "does not reconstruct real events" in content_license
+    assert "does not provide legal, compliance, audit," in content_license
+
+
+def test_publication_checklist_reflects_v0_1_prd_gate() -> None:
+    checklist = _normalize(_read("docs/release/v0.1-publication-checklist.md"))
+
+    assert "<!-- HITL-REVIEW-REQUIRED:" in checklist
+    assert "repository remains private until the v0.1 publication gate is accepted" in checklist
+    assert "educational only and unaffiliated" in checklist
+    assert "synthetic data only" in checklist
+    assert "does not claim to reconstruct real events" in checklist
+    assert "does not provide legal, compliance, audit, investment," in checklist
+
+    required_gates = [
+        "Private pre-publication posture",
+        "No personal job-preparation material or real client data",
+        "README, disclaimer, split licensing, ADR, and contribution guidance",
+        "Realistic synthetic data model and data dictionary",
+        "Deterministic generator and sample data",
+        "SQLite loader supports first SQL exercises",
+        "Featured notebooks run end-to-end on tiny data",
+        "Seeded case library and regulatory source index",
+        "Tests cover v0.1 quality gates",
+        "Lightweight CI runs linting and tests",
+    ]
+    for gate in required_gates:
+        assert gate in checklist
+
+
+def test_public_facing_docs_avoid_personal_or_real_bank_framing() -> None:
+    docs = {
+        "README.md": _read("README.md"),
+        "docs/release/v0.1-publication-checklist.md": _read(
+            "docs/release/v0.1-publication-checklist.md"
+        ),
+    }
+
+    for path, text in docs.items():
+        assert "Julius Baer" not in text, path
+        assert "job-preparation repo" not in text, path
+
+    assert "pre-publication" in docs["README.md"]
+    assert "pre-publication" in docs["docs/release/v0.1-publication-checklist.md"]

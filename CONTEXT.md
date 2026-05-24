@@ -165,21 +165,21 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Key files changed: `docs/regulation/index.md`, `docs/regulation/source_notes/`, `tests/test_regulatory_source_index.py`, `pyproject.toml`
 - Notes: Delivered regulatory source notes for Swiss AMLA/AMLO/FINMA anchors, UK APP scam payment guidance, FATF typology context, and model-risk governance. Each note links to official HTTPS sources, connects to existing v0.1 notebooks, states the educational/non-advice boundary, and includes `<!-- HITL-REVIEW-REQUIRED -->` markers. Validator coverage was strengthened to require regulatory-index links to every source note, visible Official Sources URLs, substantive learning implications, whitespace-tolerant direct-quote blocking, YAML-backed front-matter parsing through an explicit dev `pyyaml` dependency, and no imperative compliance wording. Local `uv sync --extra dev`, `uv run ruff check .`, focused regulatory tests (9 passed), and `uv run pytest` (94 passed) succeeded before handoff. PR #27 was human-confirmed, converted out of draft so CodeRabbit could review, CodeRabbit passed, and the PR was merged on 2026-05-24.
 
-### Issue #12: Enforce v0.1 Quality Gates In CI — PR-PENDING
+### Issue #12: Enforce v0.1 Quality Gates In CI — DONE
 
 - Branch: feat/issue-12-implementation
 - PR: #42
 - Tests added: 4 new CI-quality/data-dictionary tests; all local tests passing
 - Key files changed: `docs/quality_gates/v0.1-ci.md`, `tests/test_ci_quality_gates.py`, `tests/test_schema_contract.py`, `CONTEXT.md`
-- Notes: Wave 6 unblocked after issues #10 and #11 were human-confirmed and PRs #26/#27 were merged on 2026-05-24. Added an explicit v0.1 CI quality-gate manifest, 3 CI drift tests proving CI runs the clean-checkout `uv sync --extra dev`, `uv run ruff check .`, and unfiltered `uv run pytest` commands, and 1 schema/data-dictionary alignment test. Local `uv sync --extra dev`, `uv run ruff check .`, focused CI/schema suite (7 total tests passed), and `uv run pytest` (106 total tests passed) succeeded. Local CodeRabbit review found context and meta-test documentation inconsistencies; those fixes are included. Merge of the issue #12 PR is still required before wave 7 can start.
+- Notes: Wave 6 unblocked after issues #10 and #11 were human-confirmed and PRs #26/#27 were merged on 2026-05-24. Added an explicit v0.1 CI quality-gate manifest, 3 CI drift tests proving CI runs the clean-checkout `uv sync --extra dev`, `uv run ruff check .`, and unfiltered `uv run pytest` commands, and 1 schema/data-dictionary alignment test. Local `uv sync --extra dev`, `uv run ruff check .`, focused CI/schema suite (7 total tests passed), and `uv run pytest` (106 total tests passed) succeeded. Local CodeRabbit review found context and meta-test documentation inconsistencies; those fixes are included. PR #42 was opened non-draft, GitHub CI and CodeRabbit passed, and the PR was merged on 2026-05-24.
 
-### Issue #13: Polish Publication-Ready README And Release Checklist — BLOCKED
+### Issue #13: Polish Publication-Ready README And Release Checklist — PR-PENDING
 
-- Branch: not started
-- PR: not opened
-- Tests added: 0
-- Key files changed: none
-- Notes: Wave 7 remains blocked until issue #12 is merged. Issue #13 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the README/publication-polish HITL PR until #12 is implemented and merged. Future PRs must be opened non-draft; use title/body/labels and `<!-- HITL-REVIEW-REQUIRED -->` markers for human-review signaling.
+- Branch: feat/issue-13-implementation
+- PR: #43
+- Tests added: 4 publication-readiness documentation tests; all local tests passing
+- Key files changed: `README.md`, `LICENSE.md`, `LICENSES/`, `CONTRIBUTING.md`, `docs/release/v0.1-publication-checklist.md`, `tests/test_publication_docs.py`, `CONTEXT.md`
+- Notes: Wave 7 unblocked after PR #42 merged issue #12 on 2026-05-24. Polished the pre-publication README around the actual v0.1 learner path, **Target learner**, two **Fraud detection tracks**, quickstart, curriculum map, repository links, split licensing, and disclaimers. Added the v0.1 publication checklist with `<!-- HITL-REVIEW-REQUIRED -->` and review evidence mapped to the PRD gate. Strengthened license/contribution docs with educational-only, unaffiliated, no-real-data, no-reconstruction, and no-legal-advice boundaries. PR #43 is open non-draft, with human-review signaling in the title, body, and checklist marker.
 
 ### Issue #14: Run v0.1 Publication Gate Review — BLOCKED
 
@@ -187,4 +187,4 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - PR: not opened
 - Tests added: 0
 - Key files changed: none
-- Notes: Wave 8 is blocked by issue #13. Issue #14 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the publication-gate audit PR until #12 is merged and then #13 is human-reviewed and merged.
+- Notes: Wave 8 is blocked by issue #13. Issue #14 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the publication-gate audit PR until issue #13 is human-reviewed and merged. Future PRs must be opened non-draft; use title/body/labels and `<!-- HITL-REVIEW-REQUIRED -->` markers for human-review signaling.

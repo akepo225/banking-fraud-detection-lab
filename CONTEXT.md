@@ -176,10 +176,10 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 ### Issue #13: Polish Publication-Ready README And Release Checklist — PR-PENDING
 
 - Branch: feat/issue-13-implementation
-- PR: PR-PENDING
+- PR: #43
 - Tests added: 4 publication-readiness documentation tests; all local tests passing
 - Key files changed: `README.md`, `LICENSE.md`, `LICENSES/`, `CONTRIBUTING.md`, `docs/release/v0.1-publication-checklist.md`, `tests/test_publication_docs.py`, `CONTEXT.md`
-- Notes: Wave 7 unblocked after PR #42 merged issue #12 on 2026-05-24. Polished the pre-publication README around the actual v0.1 learner path, **Target learner**, two **Fraud detection tracks**, quickstart, curriculum map, repository links, split licensing, and disclaimers. Added the v0.1 publication checklist with `<!-- HITL-REVIEW-REQUIRED -->` and review evidence mapped to the PRD gate. Strengthened license/contribution docs with educational-only, unaffiliated, no-real-data, no-reconstruction, and no-legal-advice boundaries. Planned PR handoff is non-draft, with human-review signaling in the title, body, and checklist marker.
+- Notes: Wave 7 unblocked after PR #42 merged issue #12 on 2026-05-24. Polished the pre-publication README around the actual v0.1 learner path, **Target learner**, two **Fraud detection tracks**, quickstart, curriculum map, repository links, split licensing, and disclaimers. Added the v0.1 publication checklist with `<!-- HITL-REVIEW-REQUIRED -->` and review evidence mapped to the PRD gate. Strengthened license/contribution docs with educational-only, unaffiliated, no-real-data, no-reconstruction, and no-legal-advice boundaries. PR #43 is open non-draft, with human-review signaling in the title, body, and checklist marker.
 
 ### Issue #14: Run v0.1 Publication Gate Review — BLOCKED
 

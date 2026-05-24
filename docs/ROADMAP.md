@@ -239,7 +239,7 @@ Exit criteria:
 
 ### v0.9: Capstone And Public Beta
 
-Purpose: integrate the curriculum into a complete portfolio project and prepare for public release.
+Purpose: integrate the curriculum into a complete capstone project and prepare for public release.
 
 Learner outcome:
 
@@ -250,7 +250,7 @@ Deliverables:
 - Capstone scenario brief with private-banking and digital-banking variants.
 - Capstone datasets generated from hidden scenario answer keys.
 - Capstone rubric for technical analysis, fraud-domain reasoning, SQL quality, model evaluation, alert interpretation, governance, and communication.
-- Portfolio presentation template.
+- Capstone presentation template.
 - Full README polish with screenshots or schema previews.
 - Public issue templates and contributor guidance.
 - Documentation pass for all modules.
@@ -259,7 +259,7 @@ Deliverables:
 Exit criteria:
 
 - A learner can complete the capstone without hidden maintainer knowledge.
-- Public-facing docs make the repo understandable to recruiters, learners, and contributors.
+- Public-facing docs make the repo understandable to readers, learners, and contributors.
 - All core notebooks run from a clean setup.
 
 ### v1.0: Complete Public Core Curriculum
@@ -281,7 +281,7 @@ Required modules:
 - `06_graph_network_analytics`: NetworkX-first graph fraud patterns.
 - `07_interpretability_model_risk`: explainability, validation, thresholding, and model documentation.
 - `08_production_monitoring_patterns`: batch scoring, score tables, alert queues, and monitoring.
-- `09_capstone`: end-to-end portfolio project.
+- `09_capstone`: end-to-end capstone project.
 
 v1.0 acceptance criteria:
 

@@ -31,6 +31,7 @@ def test_readme_covers_publication_readiness_contract() -> None:
         "uv sync --extra dev",
         "uv run ruff check .",
         "uv run pytest",
+        "uv run python -m banking_fraud_lab.create_sqlite data/sample/minimal_world.sqlite",
     ]
     for term in required_terms:
         assert term in readme
@@ -103,6 +104,7 @@ def test_publication_checklist_reflects_v0_1_prd_gate() -> None:
 def test_public_facing_docs_avoid_personal_or_real_bank_framing() -> None:
     docs = {
         "README.md": _read("README.md"),
+        "docs/ROADMAP.md": _read("docs/ROADMAP.md"),
         "docs/release/v0.1-publication-checklist.md": _read(
             "docs/release/v0.1-publication-checklist.md"
         ),
@@ -111,6 +113,50 @@ def test_public_facing_docs_avoid_personal_or_real_bank_framing() -> None:
     for path, text in docs.items():
         assert "Julius Baer" not in text, path
         assert "job-preparation repo" not in text, path
+        assert "portfolio project" not in text, path
+        assert "Portfolio presentation" not in text, path
+        assert "recruiters" not in text, path
 
     assert "pre-publication" in docs["README.md"]
     assert "pre-publication" in docs["docs/release/v0.1-publication-checklist.md"]
+
+    readme = docs["README.md"]
+    assert "create_sqlite data/sample banking_fraud_lab.sqlite" not in readme
+    assert "create_sqlite data/sample/minimal_world.sqlite" in readme
+
+    audit = _read("docs/release/v0.1-publication-gate-audit.md")
+    assert "README SQLite command used two positional arguments" in audit
+    assert "Future roadmap wording used personal/job-market framing" in audit
+    assert "described the project as a public curriculum repository" in audit
+    assert "Data-model consistency review found no schema/sample/foreign-key" in audit
+
+    context = _read("CONTEXT.md")
+    assert "The public curriculum repository" not in context
+    assert "pre-publication curriculum repository" in context
+
+
+def test_notebook_and_sql_guides_are_actionable_for_end_users() -> None:
+    notebook_guide = _normalize(_read("notebooks/README.md"))
+    sql_guide = _normalize(_read("sql/README.md"))
+    audit = _read("docs/release/v0.1-publication-gate-audit.md")
+
+    notebook_terms = [
+        "uv sync --extra dev",
+        "uv run jupyter lab notebooks",
+        "uv run pytest tests/test_foundations_notebook.py tests/test_private_banking_notebook.py tests/test_digital_scam_to_mule_notebook.py tests/test_alert_governance_notebook.py",
+    ]
+    for term in notebook_terms:
+        assert term in notebook_guide
+
+    assert "warmups/" not in notebook_guide
+
+    sql_terms = [
+        'sqlite3 data/sample/minimal_world.sqlite ".read sql/examples/00_smoke_tables.sql"',
+        "uv run pytest tests/test_sqlite_loader.py::test_representative_sql_examples_execute_successfully",
+    ]
+    for term in sql_terms:
+        assert term in sql_guide
+
+    assert "did not tell a new user how to launch" in audit
+    assert "listed optional `warmups/` material" in audit
+    assert "did not show how to run them against the generated database" in audit

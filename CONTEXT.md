@@ -5,7 +5,7 @@ This context defines the core language for the public banking fraud detection cu
 ## Language
 
 **Banking Fraud Detection Lab**:
-The public curriculum repository for banking fraud detection data science.
+The pre-publication curriculum repository for banking fraud detection data science, intended for public release only after the v0.1 publication gate is accepted.
 _Avoid_: Julius Baer training, job-preparation repo
 
 **Target learner**:
@@ -185,6 +185,6 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 
 - Branch: feat/issue-14-implementation
 - PR: #44
-- Tests added: 0 audit-only code tests; existing quality gates all passing
-- Key files changed: `docs/release/v0.1-publication-gate-audit.md`, `CONTEXT.md`
-- Notes: Wave 8 unblocked after PR #43 merged issue #13 on 2026-05-24. Added an audit-only publication-gate report with item-by-item checklist review, command evidence, prohibited-content search evidence, and a conservative **Hold pending final human publication action** decision. Local `uv sync --extra dev`, `uv run ruff check .`, focused featured-notebook smoke tests (4 passed), and full `uv run pytest` (110 passed) succeeded. PR #44 is open non-draft with `<!-- HITL-REVIEW-REQUIRED -->` signaling for final human publication review.
+- Tests added: 2 expanded publication-doc regression tests; existing quality gates all passing
+- Key files changed: `docs/release/v0.1-publication-gate-audit.md`, `README.md`, `docs/ROADMAP.md`, `notebooks/README.md`, `sql/README.md`, `tests/test_publication_docs.py`, `CONTEXT.md`
+- Notes: Wave 8 unblocked after PR #43 merged issue #13 on 2026-05-24. Added an audit-only publication-gate report with item-by-item checklist review, command evidence, prohibited-content search evidence, and a conservative **Hold pending final human publication action** decision. Local `uv sync --extra dev`, `uv run ruff check .`, focused featured-notebook smoke tests (4 passed), and full `uv run pytest` (111 passed) succeeded. Supplemental end-user QA found and fixed a broken README SQLite command, future-roadmap portfolio/recruiter framing, present-tense public glossary wording, a stale notebook `warmups/` reference, and missing notebook/SQL run instructions; publication-doc regression tests now cover those cases. PR #44 is open non-draft with `<!-- HITL-REVIEW-REQUIRED -->` signaling for final human publication review.

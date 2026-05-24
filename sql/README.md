@@ -43,3 +43,15 @@ The `sql/examples/` directory contains representative learner queries:
   within each Banking relationship for review-queue exercises.
 
 These examples are smoke-tested against the generated SQLite database.
+
+Run one example with the SQLite CLI:
+
+```bash
+sqlite3 data/sample/minimal_world.sqlite ".read sql/examples/00_smoke_tables.sql"
+```
+
+Or verify all representative examples through the project test suite:
+
+```bash
+uv run pytest tests/test_sqlite_loader.py::test_representative_sql_examples_execute_successfully
+```

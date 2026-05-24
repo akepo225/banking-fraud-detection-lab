@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 
@@ -129,6 +130,9 @@ def test_public_facing_docs_avoid_personal_or_real_bank_framing() -> None:
     assert "Future roadmap wording used personal/job-market framing" in audit
     assert "described the project as a public curriculum repository" in audit
     assert "Data-model consistency review found no schema/sample/foreign-key" in audit
+    assert "| Prohibited-content search (see command below) | Reviewed |" in audit
+    command_blocks = re.findall(r"```(?:bash|shell)\n(.*?)```", audit, flags=re.DOTALL)
+    assert any("rg -n -i" in block for block in command_blocks), command_blocks
 
     context = _read("CONTEXT.md")
     assert "The public curriculum repository" not in context

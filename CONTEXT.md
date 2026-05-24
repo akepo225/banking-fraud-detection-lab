@@ -184,7 +184,7 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 ### Issue #14: Run v0.1 Publication Gate Review — PR-PENDING
 
 - Branch: feat/issue-14-implementation
-- PR: PR-PENDING
+- PR: #44
 - Tests added: 0 audit-only code tests; existing quality gates all passing
 - Key files changed: `docs/release/v0.1-publication-gate-audit.md`, `CONTEXT.md`
-- Notes: Wave 8 unblocked after PR #43 merged issue #13 on 2026-05-24. Added an audit-only publication-gate report with item-by-item checklist review, command evidence, prohibited-content search evidence, and a conservative **Hold pending final human publication action** decision. Local `uv sync --extra dev`, `uv run ruff check .`, focused featured-notebook smoke tests (4 passed), and full `uv run pytest` (110 passed) succeeded. Issue #14 PR should be opened non-draft with `<!-- HITL-REVIEW-REQUIRED -->` signaling for final human publication review.
+- Notes: Wave 8 unblocked after PR #43 merged issue #13 on 2026-05-24. Added an audit-only publication-gate report with item-by-item checklist review, command evidence, prohibited-content search evidence, and a conservative **Hold pending final human publication action** decision. Local `uv sync --extra dev`, `uv run ruff check .`, focused featured-notebook smoke tests (4 passed), and full `uv run pytest` (110 passed) succeeded. PR #44 is open non-draft with `<!-- HITL-REVIEW-REQUIRED -->` signaling for final human publication review.

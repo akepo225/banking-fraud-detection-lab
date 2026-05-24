@@ -149,29 +149,29 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Key files changed: `notebooks/03_alert_governance/alert_governance_memo.ipynb`, `tests/test_alert_governance_notebook.py`, `notebooks/README.md`
 - Notes: Added the alert-governance integration notebook consuming tiny private-banking and digital-banking baseline equivalents, summarizing alert volume, precision/recall tradeoffs, PR-AUC, investigation capacity, threshold rationale, cost, limitations, and a governance memo draft. The notebook avoids headline accuracy claims and frames outputs for business, risk, and compliance stakeholder discussion. Local `uv run ruff check .`, notebook smoke execution, and `uv run pytest` (75 passed) succeeded; GitHub CI passed before merge.
 
-### Issue #10: Seed Case Library With Pattern-Linked Source Packs — HITL-PENDING
+### Issue #10: Seed Case Library With Pattern-Linked Source Packs — DONE
 
 - Branch: feat/issue-10-implementation
 - PR: #26
 - Tests added: 8 case-library metadata/source-pack validation tests; all local tests passing
 - Key files changed: `docs/cases/source_packs/`, `docs/cases/index.md`, `tests/test_case_library_metadata.py`
-- Notes: Opened a draft HITL PR with detection-pattern-first source packs for private-banking transaction monitoring, digital scam-to-mule flow, model-governance method, and graph/network mule patterns. Each source pack carries draft HITL metadata, including institution type, source authority, geography, product, source quality, linked modules, and `<!-- HITL-REVIEW-REQUIRED -->` markers. The case-library index links each draft source pack by Detection pattern. Validator coverage was strengthened to require non-empty metadata fields, structured Source Links URLs, existing linked notebook paths, index links to every source pack, no direct quote blocks, no imperative compliance wording, CRLF-tolerant front-matter parsing, clearer missing-front-matter failures, and v0.1 area coverage. The branch is synced with current `origin/main`, including PR #40's dependency-chain correction. Local `uv sync --extra dev`, `uv run ruff check .`, focused metadata tests (8 passed), and `uv run pytest` (93 passed) succeeded. Follow-up E2E validation passed on the issue #10 branch, local CodeRabbit review against `origin/main` completed with `findings: 0` after the metadata validator fixes, the final no-diff `main` sync retry was rate-limited by CodeRabbit, GitHub CI and CodeRabbit status are green, and the prior CRLF review thread was replied to with fix evidence and resolved. Human review is still required for source selection and framing.
+- Notes: Delivered detection-pattern-first source packs for private-banking transaction monitoring, digital scam-to-mule flow, model-governance method, and graph/network mule patterns. Each source pack carries HITL metadata, including institution type, source authority, geography, product, source quality, linked modules, and `<!-- HITL-REVIEW-REQUIRED -->` markers. The case-library index links each source pack by Detection pattern. Validator coverage was strengthened to require non-empty metadata fields, structured Source Links URLs, existing linked notebook paths, index links to every source pack, no direct quote blocks, no imperative compliance wording, CRLF-tolerant front-matter parsing, clearer missing-front-matter failures, and v0.1 area coverage. Local `uv sync --extra dev`, `uv run ruff check .`, focused metadata tests (8 passed), and `uv run pytest` (93 passed) succeeded before handoff. PR #26 was human-confirmed, converted out of draft so CodeRabbit could review, CodeRabbit passed, and the PR was merged on 2026-05-24.
 
-### Issue #11: Connect Regulatory Source Index To v0.1 Exercises — HITL-PENDING
+### Issue #11: Connect Regulatory Source Index To v0.1 Exercises — DONE
 
 - Branch: feat/issue-11-implementation
 - PR: #27
 - Tests added: 9 regulatory source-index validation tests; all local tests passing
 - Key files changed: `docs/regulation/index.md`, `docs/regulation/source_notes/`, `tests/test_regulatory_source_index.py`, `pyproject.toml`
-- Notes: Opened a draft HITL PR with regulatory source notes for Swiss AMLA/AMLO/FINMA anchors, UK APP scam payment guidance, FATF typology context, and model-risk governance. Each note links to official HTTPS sources, connects to existing v0.1 notebooks, states the educational/non-advice boundary, and includes `<!-- HITL-REVIEW-REQUIRED -->` markers. Validator coverage was strengthened to require regulatory-index links to every source note, visible Official Sources URLs, substantive learning implications, whitespace-tolerant direct-quote blocking, YAML-backed front-matter parsing through an explicit dev `pyyaml` dependency, and no imperative compliance wording. The branch is synced with current `origin/main`, including PR #40's dependency-chain correction. Local `uv sync --extra dev`, `uv run ruff check .`, focused regulatory tests (9 passed), and `uv run pytest` (94 passed) succeeded. Follow-up E2E validation passed on the issue #11 branch, final local CodeRabbit review against current `origin/main` completed with `findings: 0`, GitHub CI and CodeRabbit status are green, and thread-aware PR review audit found no inline review threads. Human review is still required for regulatory framing.
+- Notes: Delivered regulatory source notes for Swiss AMLA/AMLO/FINMA anchors, UK APP scam payment guidance, FATF typology context, and model-risk governance. Each note links to official HTTPS sources, connects to existing v0.1 notebooks, states the educational/non-advice boundary, and includes `<!-- HITL-REVIEW-REQUIRED -->` markers. Validator coverage was strengthened to require regulatory-index links to every source note, visible Official Sources URLs, substantive learning implications, whitespace-tolerant direct-quote blocking, YAML-backed front-matter parsing through an explicit dev `pyyaml` dependency, and no imperative compliance wording. Local `uv sync --extra dev`, `uv run ruff check .`, focused regulatory tests (9 passed), and `uv run pytest` (94 passed) succeeded before handoff. PR #27 was human-confirmed, converted out of draft so CodeRabbit could review, CodeRabbit passed, and the PR was merged on 2026-05-24.
 
-### Issue #12: Enforce v0.1 Quality Gates In CI — BLOCKED
+### Issue #12: Enforce v0.1 Quality Gates In CI — PR-PENDING
 
-- Branch: not started
-- PR: not opened
-- Tests added: 0
-- Key files changed: none
-- Notes: Wave 6 is blocked by issues #10 and #11. The goal requires strict dependency order and says not to start a wave until blocking issues are complete and merged. Issues #10 and #11 are intentionally open draft HITL PRs (#26 and #27) pending human review, so issue #12 cannot be implemented as a mergeable `main`-targeted PR yet. As of the latest handoff audit, both upstream HITL PRs are draft, clean/mergeable, synced with current `main`, CI green, CodeRabbit green, E2E validated, and free of unresolved review threads. PR #26 has focused tests 8 passed, full tests 93 passed, and local CodeRabbit `findings: 0` after metadata validator fixes, with only the final no-diff sync retry rate-limited. PR #27 has focused tests 9 passed, full tests 94 passed, and final local CodeRabbit `findings: 0` after quote-block and YAML parser fixes. PR #40 is merged and resolved the missed closed-PR dependency-chain comment. Unblock by completing human review and merging #26 and #27.
+- Branch: feat/issue-12-implementation
+- PR: pending
+- Tests added: 4 new CI-quality/data-dictionary tests; all local tests passing
+- Key files changed: `docs/quality_gates/v0.1-ci.md`, `tests/test_ci_quality_gates.py`, `tests/test_schema_contract.py`, `CONTEXT.md`
+- Notes: Wave 6 unblocked after issues #10 and #11 were human-confirmed and PRs #26/#27 were merged on 2026-05-24. Added an explicit v0.1 CI quality-gate manifest, 3 CI drift tests proving CI runs the clean-checkout `uv sync --extra dev`, `uv run ruff check .`, and unfiltered `uv run pytest` commands, and 1 schema/data-dictionary alignment test. Local `uv sync --extra dev`, `uv run ruff check .`, focused CI/schema suite (7 total tests passed), and `uv run pytest` (106 total tests passed) succeeded. Local CodeRabbit review found context and meta-test documentation inconsistencies; those fixes are included. Merge of the issue #12 PR is still required before wave 7 can start.
 
 ### Issue #13: Polish Publication-Ready README And Release Checklist — BLOCKED
 
@@ -179,7 +179,7 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - PR: not opened
 - Tests added: 0
 - Key files changed: none
-- Notes: Wave 7 is blocked by issue #12, which is blocked by unmerged HITL PRs #26 and #27. Issue #13 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the README/publication-polish HITL draft PR until #26 and #27 are human-reviewed and merged, then #12 is implemented and merged.
+- Notes: Wave 7 remains blocked until issue #12 is merged. Issue #13 is already labeled `ready-for-human`, `hitl`, and `blocked`, assigned for human follow-through, and has an issue-tracker blocker-chain comment. Do not start the README/publication-polish HITL PR until #12 is implemented and merged. Future PRs must be opened non-draft; use title/body/labels and `<!-- HITL-REVIEW-REQUIRED -->` markers for human-review signaling.
 
 ### Issue #14: Run v0.1 Publication Gate Review — BLOCKED
 

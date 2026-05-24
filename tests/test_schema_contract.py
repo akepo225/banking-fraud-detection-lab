@@ -1,6 +1,7 @@
 """Tests verifying generated data conforms to the schema contract."""
 
 from decimal import Decimal
+from pathlib import Path
 
 import pandas as pd
 
@@ -42,6 +43,25 @@ def test_schema_contract_contains_documented_purposes() -> None:
         assert table_spec.columns
 
 
+def test_schema_contract_is_documented_in_data_dictionary() -> None:
+    """Every schema table and column must appear in the v0.1 data dictionary."""
+    data_dictionary = Path("docs/schema/data_dictionary.md").read_text(encoding="utf-8")
+
+    for table_name, table_spec in TABLE_SPECS.items():
+        section = _data_dictionary_section(data_dictionary, table_name)
+        for column_spec in table_spec.columns:
+            nullable = "yes" if column_spec.nullable else "no"
+            references = f"`{column_spec.references}`" if column_spec.references else ""
+            expected_row = (
+                f"| `{column_spec.name}` | {column_spec.dtype} | "
+                f"{nullable} | {references} |"
+            )
+            assert expected_row in section, (
+                f"docs/schema/data_dictionary.md is missing the schema row for "
+                f"{table_name}.{column_spec.name}"
+            )
+
+
 def _assert_type_family(values: pd.Series, expected_dtype: str) -> None:
     """Assert that all values in the Series belong to the expected type family."""
     if expected_dtype == "datetime64[ns]":
@@ -58,3 +78,18 @@ def _assert_type_family(values: pd.Series, expected_dtype: str) -> None:
         assert not bad_types, f"Expected string values, found: {sorted(bad_types)}"
     else:
         raise AssertionError(f"Unsupported schema dtype: {expected_dtype}")
+
+
+def _data_dictionary_section(data_dictionary: str, table_name: str) -> str:
+    """Return the markdown section documenting one schema table."""
+    heading = f"## `{table_name}`"
+    if data_dictionary.startswith(heading):
+        start = 0
+    else:
+        start = data_dictionary.find(f"\n{heading}")
+        assert start != -1, f"docs/schema/data_dictionary.md is missing {heading}"
+        start += 1
+    next_start = data_dictionary.find("\n## `", start + len(heading))
+    if next_start == -1:
+        return data_dictionary[start:]
+    return data_dictionary[start:next_start]

@@ -24,7 +24,7 @@ linked_modules: notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline
 ## Public Facts
 
 - The source candidate is an official Payment Systems Regulator page about authorised push payment scam performance data.
-- APP scam framing is relevant to a **Scam-to-mule flow** where a victim authorizes a payment and funds move to a fraudster or mule account.
+- APP scam framing is relevant to a **Scam-to-mule flow** where a victim authorised a payment and funds move to a fraudster or mule account.
 - The page is used as a source pack candidate, not as a claim that the synthetic NovaBank Digital scenario reconstructs real events.
 
 ## Interpretation For Detection Patterns

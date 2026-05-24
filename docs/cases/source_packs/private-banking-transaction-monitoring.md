@@ -24,7 +24,7 @@ linked_modules: notebooks/01_private_banking_transaction_fraud/alpine_crest_base
 ## Public Facts
 
 - The source candidate is an official FINMA publication related to a private-banking enforcement matter.
-- The source discusses monitoring and governance weaknesses in relation to high-risk banking relationships and transactions.
+- The source discusses monitoring and governance weaknesses in relation to high-risk **Banking relationship** activity and transactions.
 - Named institutions appear here only because this is a sourced public case-library draft, not a synthetic scenario.
 
 ## Interpretation For Detection Patterns

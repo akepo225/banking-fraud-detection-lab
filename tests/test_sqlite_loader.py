@@ -282,6 +282,24 @@ def test_run_sql_module_executes_example_without_external_sqlite_cli(
     assert "transactions" in output
 
 
+def test_run_sql_module_rejects_multi_statement_files(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The SQL runner should fail clearly for scripts outside its single-query scope."""
+    database_path = tmp_path / "learner_world.sqlite"
+    connection = create_minimal_banking_world_sqlite(database_path, seed=42)
+    connection.close()
+    sql_path = tmp_path / "multi_statement.sql"
+    sql_path.write_text("SELECT 1;\nSELECT 2;\n", encoding="utf-8")
+
+    with pytest.raises(SystemExit) as error:
+        run_sql_main([str(database_path), str(sql_path)])
+
+    assert error.value.code == 2
+    assert "one SQL statement per file" in capsys.readouterr().err
+
+
 def _sqlite_table_names(connection: sqlite3.Connection) -> set[str]:
     """Return table names present in the SQLite database."""
     rows = connection.execute(

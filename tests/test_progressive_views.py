@@ -102,26 +102,35 @@ def test_foundation_alert_lifecycle_allows_schema_valid_child_multiplicity() -> 
 
     extra_case = tables[CASES].iloc[[0]].copy()
     extra_case.loc[:, "case_id"] = "case_extra_multi_001"
-    extra_case.loc[:, "alert_id"] = tables[ALERTS].iloc[0]["alert_id"]
-    tables[CASES] = pd.concat([tables[CASES], extra_case], ignore_index=True)
+    extra_case.loc[:, "alert_id"] = "alert_extra_multi_001"
+    second_extra_case = extra_case.copy()
+    second_extra_case.loc[:, "case_id"] = "case_extra_multi_002"
+    tables[CASES] = pd.concat(
+        [tables[CASES], extra_case, second_extra_case],
+        ignore_index=True,
+    )
 
     extra_outcome = tables[CASE_OUTCOMES].iloc[[0]].copy()
     extra_outcome.loc[:, "case_outcome_id"] = "outcome_extra_multi_001"
-    extra_outcome.loc[:, "case_id"] = tables[CASE_OUTCOMES].iloc[0]["case_id"]
+    extra_outcome.loc[:, "case_id"] = "case_extra_multi_001"
+    second_extra_outcome = extra_outcome.copy()
+    second_extra_outcome.loc[:, "case_outcome_id"] = "outcome_extra_multi_002"
     tables[CASE_OUTCOMES] = pd.concat(
-        [tables[CASE_OUTCOMES], extra_outcome],
+        [tables[CASE_OUTCOMES], extra_outcome, second_extra_outcome],
         ignore_index=True,
     )
 
     view = build_foundation_progressive_views(tables)["foundation_alert_lifecycle"]
 
-    assert len(view) == len(original_view) + 2
+    assert len(view) == len(original_view) + 3
     assert set(view["suspicious_activity_id"]) == set(
         tables[SUSPICIOUS_ACTIVITIES]["suspicious_activity_id"]
     )
     assert "alert_extra_multi_001" in set(view["alert_id"])
     assert "case_extra_multi_001" in set(view["case_id"])
+    assert "case_extra_multi_002" in set(view["case_id"])
     assert "outcome_extra_multi_001" in set(view["case_outcome_id"])
+    assert "outcome_extra_multi_002" in set(view["case_outcome_id"])
 
 
 def test_foundation_progressive_view_specs_use_canonical_unprotected_sources() -> None:

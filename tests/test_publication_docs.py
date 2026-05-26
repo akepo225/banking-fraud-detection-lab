@@ -40,6 +40,7 @@ def test_readme_covers_publication_readiness_contract() -> None:
     required_links = [
         "(docs/schema/README.md)",
         "(docs/schema/data_dictionary.md)",
+        "(notebooks/00_foundations/warmups/)",
         "(sql/README.md)",
         "(docs/evaluation/metrics.md)",
         "(docs/cases/index.md)",
@@ -152,7 +153,17 @@ def test_notebook_and_sql_guides_are_actionable_for_end_users() -> None:
     for term in notebook_terms:
         assert term in notebook_guide
 
-    assert "warmups/" not in notebook_guide
+    warmup_terms = [
+        "Optional Warm-Ups",
+        "outside the required core module sequence",
+        "00_foundations/warmups/python_canonical_data_warmup.ipynb",
+        "00_foundations/warmups/pandas_progressive_views_warmup.ipynb",
+        "00_foundations/warmups/sql_progressive_views_warmup.ipynb",
+        "00_foundations/warmups/sklearn_alert_scoring_warmup.ipynb",
+        "uv run pytest tests/test_warmup_notebooks.py",
+    ]
+    for term in warmup_terms:
+        assert term in notebook_guide
 
     sql_terms = [
         'sqlite3 data/sample/minimal_world.sqlite ".read sql/examples/00_smoke_tables.sql"',

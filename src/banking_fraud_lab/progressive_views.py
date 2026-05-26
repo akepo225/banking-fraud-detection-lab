@@ -303,7 +303,7 @@ def _build_foundation_alert_lifecycle(
             validate="one_to_one",
         )
         .merge(cases, on="alert_id", how="left", validate="one_to_one")
-        .merge(case_outcomes, on="case_id", how="left", validate="one_to_one")
+        .merge(case_outcomes, on="case_id", how="left", validate="many_to_one")
     )
 
     return view.loc[:, FOUNDATION_ALERT_LIFECYCLE.columns].copy()

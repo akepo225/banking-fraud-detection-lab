@@ -123,6 +123,7 @@ SQLite databases.
 - [ERD-backed schema tour](docs/schema/erd.md) and
   [module view maps](docs/schema/module_view_maps.md)
 - [Progressive data views](docs/schema/progressive_views.md)
+- [Dataset quality report](docs/data_quality/dataset_quality_report.md)
 - [SQLite examples](sql/README.md)
 - [Evaluation metrics guide](docs/evaluation/metrics.md)
 - [Case library](docs/cases/index.md)

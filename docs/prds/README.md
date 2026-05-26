@@ -2,9 +2,9 @@
 
 Status: draft local review artifacts.
 
-These PRDs expand the roadmap from v0.2 through v1.4. They are not GitHub
-issues yet. The intended workflow is human review first, then issue-tracker
-publication and triage after scope is accepted.
+These PRDs expand the roadmap from v0.2 through v1.4. They have been published
+as GitHub issues for triage after scope review. The intended workflow is human
+review first, then implementation after scope is accepted.
 
 The [full-scope validation PRD](full-version-vision.md) defines what the completed
 curriculum must look like and how final delivery should be validated after the

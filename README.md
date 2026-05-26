@@ -61,6 +61,10 @@ modules in order:
   alert interpretation, threshold tradeoffs, limitations, and a governance memo
   draft.
 
+Optional canonical-data refreshers for Python, pandas, SQL, and sklearn live in
+[`00_foundations/warmups`](notebooks/00_foundations/warmups/). They are outside
+the required core module sequence.
+
 ## Quickstart
 
 Install dependencies, run linting, and run the full test suite:
@@ -123,6 +127,7 @@ SQLite databases.
 - [ERD-backed schema tour](docs/schema/erd.md) and
   [module view maps](docs/schema/module_view_maps.md)
 - [Progressive data views](docs/schema/progressive_views.md)
+- [Optional canonical-data warm-ups](notebooks/00_foundations/warmups/)
 - [Dataset quality report](docs/data_quality/dataset_quality_report.md)
 - [SQLite examples](sql/README.md)
 - [Evaluation metrics guide](docs/evaluation/metrics.md)

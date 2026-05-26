@@ -7,6 +7,18 @@ Featured notebooks are organized by module.
 - `02_digital_scam_to_mule/`: digital scam-to-mule fraud detection baseline. Start with `02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb`.
 - `03_alert_governance/`: alert interpretation and governance. Start with `03_alert_governance/alert_governance_memo.ipynb`.
 
+## Optional Warm-Ups
+
+The warm-ups under `00_foundations/warmups/` are outside the required core module
+sequence and are not a separate beginner curriculum. Use them only when you want
+to refresh mechanics with the same canonical synthetic data, SQLite path, and
+foundation **Progressive data views** used by the foundations exercises.
+
+- `00_foundations/warmups/python_canonical_data_warmup.ipynb`
+- `00_foundations/warmups/pandas_progressive_views_warmup.ipynb`
+- `00_foundations/warmups/sql_progressive_views_warmup.ipynb`
+- `00_foundations/warmups/sklearn_alert_scoring_warmup.ipynb`
+
 ## Run The Featured Notebooks
 
 From the repository root, install the development dependencies first:
@@ -26,4 +38,10 @@ tests:
 
 ```bash
 uv run pytest tests/test_foundations_notebook.py tests/test_private_banking_notebook.py tests/test_digital_scam_to_mule_notebook.py tests/test_alert_governance_notebook.py
+```
+
+Run the optional warm-up notebooks:
+
+```bash
+uv run pytest tests/test_warmup_notebooks.py
 ```

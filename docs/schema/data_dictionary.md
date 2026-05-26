@@ -1,4 +1,4 @@
-# v0.1 Data Dictionary
+# v0.1/v0.2 Foundation Data Dictionary
 
 This data dictionary defines the stable output contract for the datasets produced by `generate_minimal_banking_world(seed=42, scale="tiny")` and the larger deterministic `small`, `medium`, and `large` scale profiles. The tables are synthetic, deterministic, and educational. They do not contain real client data and do not reconstruct real events.
 
@@ -26,7 +26,8 @@ Money fields use exact decimal values. Where money is relevant, the model stores
 
 ## Alert Lifecycle States
 
-The v0.1 sample data keeps suspicious activity, alerts, cases, outcomes, and confirmed fraud as separate concepts.
+The foundation sample data keeps suspicious activity, alerts, cases, outcomes,
+and confirmed fraud as separate concepts.
 
 | Concept | Table | Meaning |
 | --- | --- | --- |

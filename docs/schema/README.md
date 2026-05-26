@@ -1,10 +1,13 @@
 # Schema Notes
 
-The v0.1 data model will be realistic enough to teach durable banking analytics habits while remaining approachable through progressive views.
+The v0.1/v0.2 foundation data model is realistic enough to teach durable
+banking analytics habits while remaining approachable through Progressive data
+views.
 
 ## Core Tables
 
-The v0.1 tracer bullets implement the following generated CSV tables and the matching schema contract in `src/banking_fraud_lab/schema/tables.py`.
+The v0.1/v0.2 foundation implements the following generated CSV tables and the
+matching schema contract in `src/banking_fraud_lab/schema/tables.py`.
 
 - `partners`
 - `clients`
@@ -22,7 +25,8 @@ The v0.1 tracer bullets implement the following generated CSV tables and the mat
 - `case_outcomes`
 - `protected_scenario_answer_keys`
 
-See `data_dictionary.md` for the v0.1 table purposes, columns, types, and relationships.
+See `data_dictionary.md` for the v0.1/v0.2 foundation table purposes, columns,
+types, and relationships.
 
 See `erd.md` for the v0.2 ERD-backed schema tour across canonical tables and
 key relationships.

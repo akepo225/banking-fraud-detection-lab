@@ -35,6 +35,7 @@ from banking_fraud_lab.schema.tables import (
 ALPINE_CREST = "Alpine Crest Private Bank"
 NOVABANK = "NovaBank Digital"
 BASE_TIMESTAMP = pd.Timestamp("2026-01-15 09:00:00")
+DATASET_AS_OF = pd.Timestamp("2026-03-31 23:59:59")
 CHF_RATES = {
     "CHF": Decimal("1.00"),
     "EUR": Decimal("0.96"),
@@ -270,6 +271,12 @@ def _generate_partners(
     for index in range(1, profile.partner_count + 1):
         partner_type = "legal_entity" if index in {3, 7} else "natural_person"
         institution_name = ALPINE_CREST if index <= alpine_partner_count else NOVABANK
+        created_at = _timestamp(days=-365 - index * 12, hours=index)
+        kyc_risk_effective_from = created_at + pd.Timedelta(days=30)
+        kyc_risk_reviewed_at = min(
+            kyc_risk_effective_from + pd.Timedelta(days=90 + index % 30),
+            DATASET_AS_OF - pd.Timedelta(days=index % 7),
+        )
         rows.append(
             {
                 "partner_id": _identifier("P", index),
@@ -277,8 +284,10 @@ def _generate_partners(
                 "partner_type": partner_type,
                 "display_name": fake.company() if partner_type == "legal_entity" else fake.name(),
                 "country": rng.choice(countries),
-                "created_at": _timestamp(days=-365 - index * 12, hours=index),
+                "created_at": created_at,
                 "risk_rating": rng.choice(("low", "medium", "high"), p=(0.5, 0.35, 0.15)),
+                "kyc_risk_effective_from": kyc_risk_effective_from,
+                "kyc_risk_reviewed_at": kyc_risk_reviewed_at,
             }
         )
     return _frame(PARTNERS, rows)
@@ -358,6 +367,9 @@ def _generate_banking_relationships(
                 "opened_at": pd.Timestamp(client.onboarded_at) + pd.Timedelta(days=3),
                 "status": "active",
                 "relationship_manager_code": f"RM-{int(rng.integers(101, 1000))}",
+                "relationship_manager_assigned_at": (
+                    pd.Timestamp(client.onboarded_at) + pd.Timedelta(days=3, hours=-1)
+                ),
             }
         )
     return _frame(BANKING_RELATIONSHIPS, rows)
@@ -423,6 +435,7 @@ def _generate_accounts(
         for account_number in range(account_count):
             currency = str(rng.choice(("CHF", "EUR", "USD", "GBP")))
             balance = _money(int(rng.integers(25_000, 850_000)))
+            opened_at = pd.Timestamp(relationship.opened_at) + pd.Timedelta(days=account_number)
             rows.append(
                 {
                     "account_id": _identifier("A", len(rows) + 1),
@@ -430,8 +443,10 @@ def _generate_accounts(
                     "institution_name": relationship.institution_name,
                     "account_type": _account_type(relationship.institution_name, account_number),
                     "currency": currency,
-                    "opened_at": pd.Timestamp(relationship.opened_at) + pd.Timedelta(days=account_number),
+                    "opened_at": opened_at,
                     "status": "active",
+                    "status_effective_from": opened_at,
+                    "status_effective_to": pd.NaT,
                     "balance_original": balance,
                     "balance_currency": currency,
                     "balance_chf": _to_chf(balance, currency),
@@ -459,6 +474,9 @@ def _generate_users(rng: np.random.Generator, clients: pd.DataFrame) -> pd.DataF
                 "username_hash": f"usr_{int(rng.integers(10**11, 10**12)):x}",
                 "created_at": pd.Timestamp(client.onboarded_at) + pd.Timedelta(days=14),
                 "status": "active",
+                "authorized_from": pd.Timestamp(client.onboarded_at)
+                + pd.Timedelta(days=14, hours=1),
+                "authorized_to": pd.NaT,
             }
         )
     return _frame(USERS, rows)
@@ -473,11 +491,20 @@ def _generate_sessions(
     for index in range(1, profile.session_count + 1):
         user = users.iloc[(index - 1) % len(users)]
         channel = str(rng.choice(("web", "mobile_app")))
+        started_at = _bounded_timestamp(
+            index,
+            profile.session_count,
+            start=max(
+                pd.Timestamp(user["created_at"]) + pd.Timedelta(days=1),
+                DATASET_AS_OF - pd.Timedelta(days=60),
+            ),
+            end=DATASET_AS_OF - pd.Timedelta(days=10),
+        )
         rows.append(
             {
                 "session_id": _identifier("S", index),
                 "user_id": user["user_id"],
-                "started_at": pd.Timestamp(user["created_at"]) + pd.Timedelta(days=index, hours=index),
+                "started_at": started_at,
                 "channel": channel,
                 "user_agent": _user_agent(channel, index),
                 "app_or_browser_version": _app_or_browser_version(channel, index),
@@ -502,6 +529,10 @@ def _generate_payment_beneficiaries(
     eligible_clients = clients[clients["client_id"].isin(users_by_client.index)]
     for index, client in enumerate(eligible_clients.itertuples(index=False), start=1):
         user = users_by_client.loc[client.client_id]
+        created_at = min(
+            pd.Timestamp(user["created_at"]) + pd.Timedelta(days=index),
+            DATASET_AS_OF - pd.Timedelta(days=20),
+        )
         rows.append(
             {
                 "payment_beneficiary_id": _identifier("B", index),
@@ -511,7 +542,7 @@ def _generate_payment_beneficiaries(
                 "beneficiary_account_country": str(rng.choice(("CH", "DE", "FR", "IT", "GB"))),
                 "beneficiary_bank_country": str(rng.choice(("CH", "DE", "FR", "IT", "GB"))),
                 "beneficiary_change_event": "beneficiary_created",
-                "created_at": pd.Timestamp(user["created_at"]) + pd.Timedelta(days=index),
+                "created_at": created_at,
                 "status": "active",
             }
         )
@@ -544,12 +575,18 @@ def _generate_transactions(
         )
         currency = str(account["currency"])
         amount = _money(int(rng.integers(75, 65_000)))
+        booked_at = _bounded_timestamp(
+            index,
+            profile.transaction_count,
+            start=DATASET_AS_OF - pd.Timedelta(days=90),
+            end=DATASET_AS_OF - pd.Timedelta(days=5),
+        )
         rows.append(
             {
                 "transaction_id": _identifier("T", index),
                 "account_id": account["account_id"],
                 "payment_beneficiary_id": beneficiary_id,
-                "booked_at": BASE_TIMESTAMP + pd.Timedelta(days=index, hours=index % 5),
+                "booked_at": booked_at,
                 "transaction_type": _transaction_type(account["institution_name"], is_digital_payment),
                 "channel": _channel(account["institution_name"], is_digital_payment),
                 "direction": "debit" if index % 3 else "credit",
@@ -718,6 +755,8 @@ def _generate_alerts(suspicious_activities: pd.DataFrame) -> pd.DataFrame:
     }
     rows = []
     for index, activity in enumerate(suspicious_activities.itertuples(index=False), start=1):
+        generated_at = pd.Timestamp(activity.detected_at) + pd.Timedelta(minutes=5)
+        status_updated_at = generated_at + pd.Timedelta(minutes=30)
         rows.append(
             {
                 "alert_id": _identifier("AL", index),
@@ -729,9 +768,10 @@ def _generate_alerts(suspicious_activities: pd.DataFrame) -> pd.DataFrame:
                 "session_id": activity.session_id,
                 "payment_beneficiary_id": activity.payment_beneficiary_id,
                 "institution_name": activity.institution_name,
-                "generated_at": pd.Timestamp(activity.detected_at) + pd.Timedelta(minutes=5),
+                "generated_at": generated_at,
                 "alert_type": activity.activity_type,
                 "alert_status": status_by_activity_type[activity.activity_type],
+                "status_updated_at": status_updated_at,
                 "severity": activity.review_priority,
                 "reason": activity.detection_signal,
             }
@@ -744,6 +784,8 @@ def _generate_cases(alerts: pd.DataFrame) -> pd.DataFrame:
     rows = []
     case_alerts = alerts[alerts["alert_status"].isin(("escalated", "closed"))]
     for index, alert in enumerate(case_alerts.itertuples(index=False), start=1):
+        opened_at = pd.Timestamp(alert.generated_at) + pd.Timedelta(hours=6)
+        case_status = "closed" if alert.alert_status == "closed" else "open"
         rows.append(
             {
                 "case_id": _identifier("CASE", index),
@@ -755,11 +797,12 @@ def _generate_cases(alerts: pd.DataFrame) -> pd.DataFrame:
                 "user_id": alert.user_id,
                 "session_id": alert.session_id,
                 "payment_beneficiary_id": alert.payment_beneficiary_id,
-                "opened_at": pd.Timestamp(alert.generated_at) + pd.Timedelta(hours=6),
+                "opened_at": opened_at,
                 "assigned_team": "digital investigations"
                 if alert.institution_name == NOVABANK
                 else "private banking investigations",
-                "case_status": "closed" if alert.alert_status == "closed" else "open",
+                "case_status": case_status,
+                "closed_at": opened_at + pd.Timedelta(days=2) if case_status == "closed" else pd.NaT,
                 "investigation_summary": _case_summary(alert.alert_type),
             }
         )
@@ -784,11 +827,13 @@ def _generate_case_outcomes(
         confirmed_fraud = alert["alert_type"] == "new_beneficiary_payment"
         loss_original = transaction_amounts.loc[transaction_id] if confirmed_fraud else Decimal("0.00")
         loss_chf = transaction_amounts_chf.loc[transaction_id] if confirmed_fraud else Decimal("0.00")
+        decided_at = pd.Timestamp(case.opened_at) + pd.Timedelta(days=2)
         rows.append(
             {
                 "case_outcome_id": _identifier("OUT", index),
                 "case_id": case.case_id,
-                "decided_at": pd.Timestamp(case.opened_at) + pd.Timedelta(days=2),
+                "decided_at": decided_at,
+                "recorded_at": decided_at + pd.Timedelta(hours=1),
                 "outcome_type": "confirmed-fraud" if confirmed_fraud else "false-positive",
                 "confirmed_fraud": confirmed_fraud,
                 "loss_amount_original": loss_original,
@@ -888,6 +933,21 @@ def _identifier(prefix: str, index: int) -> str:
 def _timestamp(days: int, hours: int = 0) -> pd.Timestamp:
     """Return a timestamp offset from the generation baseline."""
     return BASE_TIMESTAMP + pd.Timedelta(days=days, hours=hours)
+
+
+def _bounded_timestamp(
+    index: int,
+    total: int,
+    *,
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+) -> pd.Timestamp:
+    """Spread deterministic timestamps across a bounded historical window."""
+    if start > end:
+        raise ValueError("Timestamp window start cannot be after end")
+    slot_count = max(total - 1, 1)
+    offset_nanos = (end - start).value * (index - 1) // slot_count
+    return (start + pd.Timedelta(offset_nanos, unit="ns")).floor("min")
 
 
 def _money(whole_units: int) -> Decimal:

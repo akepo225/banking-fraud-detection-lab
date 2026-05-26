@@ -1,9 +1,9 @@
-partner_id,institution_name,partner_type,display_name,country,created_at,risk_rating
-P-0001,Alpine Crest Private Bank,natural_person,Allison Hill,CH,2025-01-03 10:00:00,low
-P-0002,Alpine Crest Private Bank,natural_person,Noah Rhodes,GB,2024-12-22 11:00:00,high
-P-0003,Alpine Crest Private Bank,legal_entity,"Miller, Henderson and Johnson",CH,2024-12-10 12:00:00,low
-P-0004,Alpine Crest Private Bank,natural_person,Jonathan Johnson,GB,2024-11-28 13:00:00,high
-P-0005,NovaBank Digital,natural_person,Matthew Gardner,GB,2024-11-16 14:00:00,medium
-P-0006,NovaBank Digital,natural_person,Kevin Pacheco,GB,2024-11-04 15:00:00,low
-P-0007,NovaBank Digital,legal_entity,Blake and Sons,US,2024-10-23 16:00:00,low
-P-0008,NovaBank Digital,natural_person,Gina Moore,FR,2024-10-11 17:00:00,high
+partner_id,institution_name,partner_type,display_name,country,created_at,risk_rating,kyc_risk_effective_from,kyc_risk_reviewed_at
+P-0001,Alpine Crest Private Bank,natural_person,Allison Hill,CH,2025-01-03 10:00:00,low,2025-02-02 10:00:00,2025-05-04 10:00:00
+P-0002,Alpine Crest Private Bank,natural_person,Noah Rhodes,GB,2024-12-22 11:00:00,high,2025-01-21 11:00:00,2025-04-23 11:00:00
+P-0003,Alpine Crest Private Bank,legal_entity,"Miller, Henderson and Johnson",CH,2024-12-10 12:00:00,low,2025-01-09 12:00:00,2025-04-12 12:00:00
+P-0004,Alpine Crest Private Bank,natural_person,Jonathan Johnson,GB,2024-11-28 13:00:00,high,2024-12-28 13:00:00,2025-04-01 13:00:00
+P-0005,NovaBank Digital,natural_person,Matthew Gardner,GB,2024-11-16 14:00:00,medium,2024-12-16 14:00:00,2025-03-21 14:00:00
+P-0006,NovaBank Digital,natural_person,Kevin Pacheco,GB,2024-11-04 15:00:00,low,2024-12-04 15:00:00,2025-03-10 15:00:00
+P-0007,NovaBank Digital,legal_entity,Blake and Sons,US,2024-10-23 16:00:00,low,2024-11-22 16:00:00,2025-02-27 16:00:00
+P-0008,NovaBank Digital,natural_person,Gina Moore,FR,2024-10-11 17:00:00,high,2024-11-10 17:00:00,2025-02-16 17:00:00

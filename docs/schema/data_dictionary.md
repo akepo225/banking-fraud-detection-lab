@@ -50,6 +50,8 @@ Natural and legal persons represented in the fictional banking core model.
 | `country` | string | no |  | Primary country code. |
 | `created_at` | datetime64[ns] | no |  | Partner creation timestamp. |
 | `risk_rating` | string | no |  | Low, medium, or high KYC risk band. |
+| `kyc_risk_effective_from` | datetime64[ns] | no |  | Timestamp when the current KYC risk band became effective. |
+| `kyc_risk_reviewed_at` | datetime64[ns] | no |  | Timestamp when the current KYC risk band was last reviewed. |
 
 ## `clients`
 
@@ -101,6 +103,7 @@ Swiss-bank-style containers grouping clients, partners, and accounts.
 | `opened_at` | datetime64[ns] | no |  | Relationship opening timestamp. |
 | `status` | string | no |  | Relationship status. |
 | `relationship_manager_code` | string | no |  | Synthetic relationship manager assignment code. |
+| `relationship_manager_assigned_at` | datetime64[ns] | no |  | Timestamp when the current relationship manager assignment became effective. |
 
 ## `accounts`
 
@@ -115,6 +118,8 @@ Deposit, custody, and payment accounts under banking relationships.
 | `currency` | string | no |  | Account currency. |
 | `opened_at` | datetime64[ns] | no |  | Account opening timestamp. |
 | `status` | string | no |  | Account status. |
+| `status_effective_from` | datetime64[ns] | no |  | Timestamp when the current account status became effective. |
+| `status_effective_to` | datetime64[ns] | yes |  | Timestamp when the account status ended, if closed or superseded. |
 | `balance_original` | Decimal | no |  | Exact account balance in original currency. |
 | `balance_currency` | string | no |  | Currency for `balance_original`. |
 | `balance_chf` | Decimal | no |  | Exact CHF-normalized account balance. |
@@ -149,6 +154,8 @@ Digital login identities that authenticate sessions for clients.
 | `username_hash` | string | no |  | Synthetic hash-like username token. |
 | `created_at` | datetime64[ns] | no |  | Digital user creation timestamp. |
 | `status` | string | no |  | Digital user status. |
+| `authorized_from` | datetime64[ns] | no |  | Timestamp when the current digital authorization became effective. |
+| `authorized_to` | datetime64[ns] | yes |  | Timestamp when the digital authorization ended, if revoked. |
 
 ## `sessions`
 
@@ -224,6 +231,7 @@ Alerts generated from suspicious activities that may trigger case investigations
 | `generated_at` | datetime64[ns] | no |  | Alert generation timestamp. |
 | `alert_type` | string | no |  | Alert typology or rule family. |
 | `alert_status` | string | no |  | Generated, triaged, escalated, or closed. |
+| `status_updated_at` | datetime64[ns] | no |  | Timestamp when the current alert status was assigned. |
 | `severity` | string | no |  | Low, medium, or high alert severity. |
 | `reason` | string | no |  | Learner-readable alert reason. |
 
@@ -245,6 +253,7 @@ Investigation cases opened from alerts in the alert lifecycle.
 | `opened_at` | datetime64[ns] | no |  | Case opening timestamp. |
 | `assigned_team` | string | no |  | Investigation team assignment. |
 | `case_status` | string | no |  | Open, closed, or escalated case status. |
+| `closed_at` | datetime64[ns] | yes |  | Case closure timestamp, populated for closed cases. |
 | `investigation_summary` | string | no |  | Brief synthetic investigation note. |
 
 ## `case_outcomes`
@@ -256,6 +265,7 @@ Case decisions that separate confirmed fraud from other lifecycle states.
 | `case_outcome_id` | string | no |  | Stable synthetic case outcome identifier. |
 | `case_id` | string | no | `cases.case_id` | Case that received the outcome. |
 | `decided_at` | datetime64[ns] | no |  | Outcome decision timestamp. |
+| `recorded_at` | datetime64[ns] | no |  | Timestamp when the outcome was recorded in the case lifecycle. |
 | `outcome_type` | string | no |  | confirmed-fraud, false-positive, or unresolved. |
 | `confirmed_fraud` | bool | no |  | Whether the case outcome confirmed fraud. |
 | `loss_amount_original` | Decimal | no |  | Exact loss amount in original currency. |

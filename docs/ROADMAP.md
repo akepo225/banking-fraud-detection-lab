@@ -110,7 +110,7 @@ Deliverables:
 - Expanded Alpine Crest private-banking scenario set.
 - Relationship-manager assignment and effective-dated responsibility exercises.
 - Beneficial ownership and authorized signatory joins.
-- Account and transaction typology expansion for wires, FX, fees, and portfolio-related flows.
+- Account and transaction typology expansion for wires, FX, fees, and investment-related flows.
 - Private-banking feature library for amount-to-AUM ratios, new counterparty behavior, off-hours activity, cross-border movement, velocity changes, and relationship-manager concentration.
 - Notebook for private-banking feature engineering.
 - Notebook for private-banking supervised baseline and threshold tuning.
@@ -390,5 +390,9 @@ Start by creating implementation issues in this order:
 
 - Update this roadmap whenever a release boundary changes.
 - Record hard-to-reverse scope or architecture changes as ADRs.
+- Current roadmap-shaping ADRs are ADR-0001 through ADR-0005, covering scope,
+  canonical data model and **Progressive data views**, SQLite-first local-first
+  core, optional advanced extensions, and GitHub Issues as the operational source
+  of truth.
 - Keep implementation issues linked back to the PRD and this roadmap.
 - Do not add advanced tracks into the v1.0 core without explicitly changing this roadmap.

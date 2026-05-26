@@ -10,8 +10,17 @@ The [full-scope validation PRD](full-version-vision.md) defines what the complet
 curriculum must look like and how final delivery should be validated after the
 v1.0 core and v1.1-v1.4 optional advanced extensions are in place.
 
-Terminology follows the glossary in `CONTEXT.md` and ADR-0001. PRD issue
-breakdown should preserve those definitions unless a new ADR changes them.
+Terminology follows the glossary in `CONTEXT.md` and ADR-0001. Architecture and
+workflow boundaries are also governed by ADR-0002 through ADR-0005. PRD issue
+breakdown should preserve those decisions unless a new ADR changes them.
+
+Relevant ADRs:
+
+- [ADR-0001: Broaden Scope To Banking Fraud Detection Lab](../adr/0001-broaden-scope-to-banking-fraud-detection-lab.md)
+- [ADR-0002: Use One Canonical Synthetic Data Model With Progressive Views](../adr/0002-use-one-canonical-synthetic-data-model-with-progressive-views.md)
+- [ADR-0003: Keep SQLite-First Local-First Core](../adr/0003-keep-sqlite-first-local-first-core.md)
+- [ADR-0004: Treat v1.1 Through v1.4 As Optional Advanced Extensions](../adr/0004-treat-v1-1-through-v1-4-as-optional-advanced-extensions.md)
+- [ADR-0005: Use GitHub Issues As PRD And Implementation Source Of Truth](../adr/0005-use-github-issues-as-prd-and-implementation-source-of-truth.md)
 
 ## Review Order
 

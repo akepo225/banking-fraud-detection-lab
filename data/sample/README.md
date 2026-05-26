@@ -4,9 +4,32 @@ Tiny sample datasets are committed here for quick starts and CI smoke tests.
 
 Medium and large generated datasets should be created locally and kept out of git.
 
+## Scale Profiles
+
+The generator supports named scale profiles through the `scale` parameter:
+
+| Scale | Intended use | Approximate rows |
+| --- | --- | --- |
+| `tiny` | Committed sample data and CI smoke tests. | 6 Clients, 12 transactions, 3 alerts. |
+| `small` | Local learner exercises with larger joins. | 24 Clients, 96 transactions, 24 alerts. |
+| `medium` | Laptop-feasible richer SQL and validation checks. | 90 Clients, 600 transactions, 120 alerts. |
+| `large` | Optional local stress testing. | 240 Clients, 2,400 transactions, 480 alerts. |
+
+Use the larger profiles for local experimentation only, for example:
+
+```bash
+uv run python - <<'PY'
+from pathlib import Path
+
+from banking_fraud_lab import generate_minimal_banking_world
+
+generate_minimal_banking_world(seed=42, scale="small", output_dir=Path("data/local/small"))
+PY
+```
+
 ## Canonical Sample
 
-These CSV files were generated with `generate_minimal_banking_world(seed=42)`.
+These CSV files were generated with `generate_minimal_banking_world(seed=42, scale="tiny")`.
 
 | File | Rows | Purpose |
 | --- | ---: | --- |
@@ -34,6 +57,6 @@ from pathlib import Path
 
 from banking_fraud_lab import generate_minimal_banking_world
 
-generate_minimal_banking_world(seed=42, output_dir=Path("data/sample"))
+generate_minimal_banking_world(seed=42, scale="tiny", output_dir=Path("data/sample"))
 PY
 ```

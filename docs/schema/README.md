@@ -24,6 +24,23 @@ The v0.1 tracer bullets implement the following generated CSV tables and the mat
 
 See `data_dictionary.md` for the v0.1 table purposes, columns, types, and relationships.
 
+## Generator Scale Profiles
+
+The canonical generator accepts named `tiny`, `small`, `medium`, and `large`
+scale profiles. The `tiny` profile is the committed sample and CI smoke-test
+surface. The `small` and `medium` profiles are deterministic local learner
+profiles for larger joins and validation checks. The `large` profile is an
+optional local stress-test profile and generated outputs should stay out of git.
+
+Approximate row counts for `seed=42`:
+
+| Scale | Clients | Transactions | Alerts |
+| --- | ---: | ---: | ---: |
+| `tiny` | 6 | 12 | 3 |
+| `small` | 24 | 96 | 24 |
+| `medium` | 90 | 600 | 120 |
+| `large` | 240 | 2,400 | 480 |
+
 ## Design Rules
 
 - Use exact decimal precision for money.

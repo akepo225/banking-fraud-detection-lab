@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 
 from banking_fraud_lab.generators import (
+    DEFAULT_SCALE_PROFILE,
+    DatasetScaleProfile,
     build_learner_facing_views,
     generate_minimal_banking_world,
 )
@@ -34,11 +36,12 @@ def create_minimal_banking_world_sqlite(
     database: str | Path | sqlite3.Connection,
     *,
     seed: int = 42,
+    scale: str | DatasetScaleProfile = DEFAULT_SCALE_PROFILE,
     learner_facing: bool = True,
     replace: bool = True,
 ) -> sqlite3.Connection:
     """Generate the minimal banking world and load it into a SQLite database."""
-    tables = generate_minimal_banking_world(seed=seed)
+    tables = generate_minimal_banking_world(seed=seed, scale=scale)
     if learner_facing:
         tables = build_learner_facing_views(tables)
     return load_tables_to_sqlite(tables, database, replace=replace)

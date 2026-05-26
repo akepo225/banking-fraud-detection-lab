@@ -188,3 +188,11 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 2 expanded publication-doc regression tests; existing quality gates all passing
 - Key files changed: `docs/release/v0.1-publication-gate-audit.md`, `README.md`, `docs/ROADMAP.md`, `notebooks/README.md`, `sql/README.md`, `tests/test_publication_docs.py`, `CONTEXT.md`
 - Notes: Wave 8 unblocked after PR #43 merged issue #13 on 2026-05-24. Added an audit-only publication-gate report with item-by-item checklist review, command evidence, prohibited-content search evidence, and a conservative **Hold pending final human publication action** decision. Local `uv sync --extra dev`, `uv run ruff check .`, focused featured-notebook smoke tests (4 passed), and full `uv run pytest` (111 passed) succeeded. Supplemental end-user QA found and fixed a broken README SQLite command, future-roadmap portfolio/recruiter framing, present-tense public glossary wording, a stale notebook `warmups/` reference, and missing notebook/SQL run instructions; publication-doc regression tests now cover those cases. PR #44 is open non-draft with `<!-- HITL-REVIEW-REQUIRED -->` signaling for final human publication review.
+
+### Issue #59: Generate Deterministic Dataset Scale Profiles — DONE
+
+- Branch: feat/issue-59-scale-profiles
+- PR: #69
+- Tests added: 9 scale-profile pytest cases; all local tests passing
+- Key files changed: `src/banking_fraud_lab/generators/minimal_world.py`, `src/banking_fraud_lab/generators/private_banking.py`, `src/banking_fraud_lab/generators/digital_banking.py`, `src/banking_fraud_lab/sqlite_loader.py`, `src/banking_fraud_lab/create_sqlite.py`, `tests/test_generator_determinism.py`, `README.md`, `data/sample/README.md`, `docs/schema/README.md`, `docs/schema/data_dictionary.md`, `sql/README.md`
+- Notes: Added named `tiny`, `small`, `medium`, and `large` scale profiles while preserving the default tiny seed-42 committed sample output. Scale support now flows through learner-facing generation, scenario generators, SQLite creation, and the CLI. Local `uv run ruff check .`, local CodeRabbit review, focused generator/schema/SQLite/scenario checks, and full `uv run pytest` (120 passed) succeeded. GitHub CI and Socket checks passed on PR #69 before the progress-log commit.

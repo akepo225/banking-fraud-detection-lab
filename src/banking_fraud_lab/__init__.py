@@ -2,6 +2,8 @@
 
 from banking_fraud_lab.evaluation import evaluate_alert_scores
 from banking_fraud_lab.generators import (
+    SCALE_PROFILES,
+    DatasetScaleProfile,
     build_learner_facing_views,
     generate_digital_scam_to_mule_world,
     generate_learner_facing_digital_scam_to_mule_world,
@@ -18,6 +20,8 @@ from banking_fraud_lab.sqlite_loader import (
 )
 
 __all__ = [
+    "SCALE_PROFILES",
+    "DatasetScaleProfile",
     "__version__",
     "build_learner_facing_views",
     "create_minimal_banking_world_sqlite",

@@ -16,6 +16,9 @@ This creates a learner-facing database that excludes
 `protected_scenario_answer_keys` by default. To include protected scenario
 answer keys for internal validation, pass `--include-protected`.
 
+Pass `--scale small`, `--scale medium`, or `--scale large` to create a larger
+local learner database from the same canonical data model.
+
 The same path is available from Python:
 
 ```python
@@ -23,7 +26,10 @@ from pathlib import Path
 
 from banking_fraud_lab import create_minimal_banking_world_sqlite
 
-connection = create_minimal_banking_world_sqlite(Path("data/sample/minimal_world.sqlite"))
+connection = create_minimal_banking_world_sqlite(
+    Path("data/sample/minimal_world.sqlite"),
+    scale="tiny",
+)
 ```
 
 Inspect the tables with any SQLite client:

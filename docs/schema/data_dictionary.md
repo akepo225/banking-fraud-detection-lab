@@ -1,6 +1,6 @@
 # v0.1 Data Dictionary
 
-This data dictionary defines the stable output contract for the tiny sample datasets produced by `generate_minimal_banking_world(seed=42)`. The tables are synthetic, deterministic, and educational. They do not contain real client data and do not reconstruct real events.
+This data dictionary defines the stable output contract for the datasets produced by `generate_minimal_banking_world(seed=42, scale="tiny")` and the larger deterministic `small`, `medium`, and `large` scale profiles. The tables are synthetic, deterministic, and educational. They do not contain real client data and do not reconstruct real events.
 
 Money fields use exact decimal values. Where money is relevant, the model stores original amount and currency plus a CHF-normalized amount. Protected answer keys are intentionally separate from learner-facing lifecycle tables and are excluded from learner-facing generated outputs by default.
 

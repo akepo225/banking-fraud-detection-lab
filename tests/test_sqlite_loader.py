@@ -22,6 +22,9 @@ EXAMPLE_SQL_FILES = (
     Path("sql/examples/00_smoke_tables.sql"),
     Path("sql/examples/01_alert_lifecycle_join.sql"),
     Path("sql/examples/02_alert_review_window.sql"),
+    Path("sql/examples/03_client_relationship_cohorts.sql"),
+    Path("sql/examples/04_progressive_alert_queue.sql"),
+    Path("sql/examples/05_transaction_feature_extraction.sql"),
 )
 
 

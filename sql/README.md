@@ -52,8 +52,17 @@ The `sql/examples/` directory contains representative learner queries:
   transactions, User, sessions, alerts, and cases through the alert lifecycle.
 - `02_alert_review_window.sql` uses SQLite window functions to rank alerts
   within each Banking relationship for review-queue exercises.
+- `03_client_relationship_cohorts.sql` performs cohort-style analysis by
+  Client segment and KYC risk band through the
+  `foundation_client_relationships` Progressive data view.
+- `04_progressive_alert_queue.sql` inspects an alert queue through the
+  `foundation_alert_lifecycle` Progressive data view.
+- `05_transaction_feature_extraction.sql` covers feature extraction by building
+  transaction-level features from canonical tables plus foundation Progressive
+  data views.
 
-These examples are smoke-tested against the generated SQLite database.
+These examples are smoke-tested against the generated SQLite database and return
+meaningful rows against the default learner-facing tiny data.
 
 Run one example with the SQLite CLI:
 

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
+.codex/
 .ipynb_checkpoints/
 *.egg-info/
 data/generated/

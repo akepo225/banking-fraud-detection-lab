@@ -244,3 +244,11 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 4 optional warm-up notebook smoke tests plus 2 warm-up documentation/data-surface tests and expanded publication-doc coverage; all local tests passing
 - Key files changed: `notebooks/00_foundations/warmups/`, `tests/test_warmup_notebooks.py`, `notebooks/README.md`, `README.md`, `tests/test_publication_docs.py`
 - Notes: Added optional Python, pandas, SQL, and sklearn warm-up notebooks that use tiny seed-42 canonical generated data, learner-facing tables, foundation Progressive data views, the SQLite learner path, and alert-aware evaluation. The warm-ups are clearly marked outside the required core module sequence and not a separate beginner curriculum. Local `uv sync --extra dev`, `uv run ruff check .`, focused warm-up/publication-doc tests, and `uv run pytest` (164 passed) succeeded before PR #75 was opened.
+
+### Issue #66: Run v0.2 Foundation Acceptance Review — PR-PENDING
+
+- Branch: hitl/issue-66-v02-acceptance-review
+- PR: #76 (draft HITL review)
+- Tests added: 3 v0.2 acceptance-review documentation tests; all local tests passing
+- Key files changed: `docs/release/v0.2-foundation-acceptance-review.md`, `tests/test_v02_acceptance_review.py`
+- Notes: Added a draft HITL v0.2 foundation acceptance review that maps PRD deliverables, user-story groups, issues #59-#65, verification commands, boundary scan evidence, and deferred follow-up issue references. Local `uv sync --extra dev`, `uv run ruff check .`, focused SQL exercise tests, all-scale data-quality report generation, v0.1 featured notebook plus optional warm-up smoke tests (10 passed), focused acceptance-review tests, and full `uv run pytest` (167 passed) succeeded before draft PR #76 was opened. The review explicitly does not start next-version work and leaves acceptance/closure to human review.

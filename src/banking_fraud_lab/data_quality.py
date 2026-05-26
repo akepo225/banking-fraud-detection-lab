@@ -198,10 +198,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def _row_counts(tables: Mapping[str, pd.DataFrame]) -> dict[str, int]:
+    """Return deterministic row counts for every canonical table."""
     return {table_name: int(len(tables[table_name])) for table_name in TABLE_NAMES}
 
 
 def _key_nullability_checks(tables: Mapping[str, pd.DataFrame]) -> list[dict[str, Any]]:
+    """Check primary-key health and required schema-column nullability."""
     checks: list[dict[str, Any]] = []
     for table_name in TABLE_NAMES:
         frame = tables[table_name]
@@ -238,6 +240,7 @@ def _key_nullability_checks(tables: Mapping[str, pd.DataFrame]) -> list[dict[str
 def _referential_integrity_checks(
     tables: Mapping[str, pd.DataFrame],
 ) -> list[dict[str, Any]]:
+    """Check every documented foreign-key reference against parent tables."""
     checks: list[dict[str, Any]] = []
     for child_table, table_spec in TABLE_SPECS.items():
         for column in table_spec.columns:
@@ -266,6 +269,7 @@ def _referential_integrity_checks(
 
 
 def _temporal_checks(tables: Mapping[str, pd.DataFrame]) -> list[dict[str, Any]]:
+    """Summarize datetime ranges and temporal ordering health."""
     checks: list[dict[str, Any]] = []
     for table_name, table_spec in TABLE_SPECS.items():
         frame = tables[table_name]
@@ -291,6 +295,7 @@ def _temporal_checks(tables: Mapping[str, pd.DataFrame]) -> list[dict[str, Any]]
 
 
 def _temporal_ordering_checks(tables: Mapping[str, pd.DataFrame]) -> list[dict[str, Any]]:
+    """Check foundation effective-date and Alert lifecycle ordering."""
     checks = [
         _ordering_check(
             "partners",
@@ -429,6 +434,7 @@ def _temporal_ordering_checks(tables: Mapping[str, pd.DataFrame]) -> list[dict[s
 
 
 def _prevalence_checks(tables: Mapping[str, pd.DataFrame]) -> list[dict[str, Any]]:
+    """Return stable rate-band checks for generated lifecycle prevalence."""
     transaction_count = len(tables["transactions"])
     suspicious_count = len(tables["suspicious_activities"])
     alert_count = len(tables["alerts"])
@@ -478,6 +484,7 @@ def _prevalence_checks(tables: Mapping[str, pd.DataFrame]) -> list[dict[str, Any
 def _protected_key_exclusion_checks(
     tables: Mapping[str, pd.DataFrame],
 ) -> list[dict[str, Any]]:
+    """Verify protected answer keys remain outside learner-facing tables."""
     learner_tables = build_learner_facing_views(tables)
     protected = tables[PROTECTED_SCENARIO_ANSWER_KEYS]
     protected_columns_in_learner_tables = sorted(
@@ -515,6 +522,7 @@ def _protected_key_exclusion_checks(
 def _progressive_view_health_checks(
     tables: Mapping[str, pd.DataFrame],
 ) -> list[dict[str, Any]]:
+    """Check foundation Progressive data views against their contracts."""
     views = build_foundation_progressive_views(tables)
     checks: list[dict[str, Any]] = []
     for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS:
@@ -550,6 +558,7 @@ def _progressive_view_health_checks(
 
 
 def _ordering_check(table: str, check: str, mask: pd.Series) -> dict[str, Any]:
+    """Build a standard pass/fail result for a boolean ordering mask."""
     failing_rows = int((~mask).sum())
     return {
         "table": table,
@@ -566,6 +575,7 @@ def _nullable_ordering_check(
     start_column: str,
     end_column: str,
 ) -> dict[str, Any]:
+    """Check ordering only where the nullable end timestamp is populated."""
     populated = frame.dropna(subset=[end_column])
     if populated.empty:
         failing_rows = 0
@@ -587,6 +597,7 @@ def _rate_check(
     lower: float,
     upper: float,
 ) -> dict[str, Any]:
+    """Build a stable prevalence rate check result."""
     rate = numerator / denominator if denominator else 0.0
     return {
         "check": check,
@@ -600,10 +611,12 @@ def _rate_check(
 
 
 def _timestamp_to_iso(value: pd.Timestamp) -> str:
+    """Normalize timestamps to deterministic ISO-8601 strings."""
     return pd.Timestamp(value).isoformat()
 
 
 def _issue_for_check(dimension: str, check: Mapping[str, Any]) -> str:
+    """Create a compact issue identifier for a failing check."""
     check_name = check.get("check", "unknown_check")
     location = check.get("table") or check.get("view") or check.get("child_table") or "dataset"
     return f"{dimension}:{location}:{check_name}"
@@ -614,6 +627,7 @@ def _render_reports(
     *,
     output_format: str,
 ) -> str:
+    """Render one or more quality reports in the requested format."""
     if output_format == "json":
         return json.dumps([report.to_dict() for report in reports], indent=2) + "\n"
     return "\n".join(report.to_markdown().rstrip() for report in reports) + "\n"

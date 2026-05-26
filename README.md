@@ -83,11 +83,38 @@ generate_minimal_banking_world(seed=42, output_dir=Path("data/sample"))
 PY
 ```
 
+Generate a larger local dataset by passing a named scale profile. Keep medium
+and large outputs outside git.
+
+```bash
+uv run python - <<'PY'
+from pathlib import Path
+
+from banking_fraud_lab import generate_minimal_banking_world
+
+generate_minimal_banking_world(
+    seed=42,
+    scale="small",
+    output_dir=Path("data/local/small"),
+)
+PY
+```
+
+| Scale | Use | Approximate row counts |
+| --- | --- | --- |
+| `tiny` | Committed sample data and CI smoke tests. | 6 Clients, 12 transactions, 3 alerts. |
+| `small` | Local learner exercises with larger joins. | 24 Clients, 96 transactions, 24 alerts. |
+| `medium` | Laptop-feasible richer SQL and validation checks. | 90 Clients, 600 transactions, 120 alerts. |
+| `large` | Optional local stress testing. | 240 Clients, 2,400 transactions, 480 alerts. |
+
 Create a local SQLite exercise database:
 
 ```bash
 uv run python -m banking_fraud_lab.create_sqlite data/sample/minimal_world.sqlite
 ```
+
+Use `--scale small`, `--scale medium`, or `--scale large` for larger local
+SQLite databases.
 
 ## Repository Guide
 

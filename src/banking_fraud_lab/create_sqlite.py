@@ -6,6 +6,7 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 
+from banking_fraud_lab.generators import SCALE_PROFILES
 from banking_fraud_lab.schema import LEARNER_FACING_TABLE_NAMES, TABLE_NAMES
 from banking_fraud_lab.sqlite_loader import create_minimal_banking_world_sqlite
 
@@ -23,6 +24,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--seed", type=int, default=42, help="Generator seed.")
     parser.add_argument(
+        "--scale",
+        choices=tuple(SCALE_PROFILES),
+        default="tiny",
+        help="Named generator scale profile.",
+    )
+    parser.add_argument(
         "--include-protected",
         action="store_true",
         help="Include protected scenario answer keys in the SQLite database.",
@@ -33,6 +40,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     connection = create_minimal_banking_world_sqlite(
         database_path,
         seed=args.seed,
+        scale=args.scale,
         learner_facing=not args.include_protected,
     )
     connection.close()

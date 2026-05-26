@@ -11,6 +11,8 @@ import pandas as pd
 
 from banking_fraud_lab.generators.minimal_world import (
     ALPINE_CREST,
+    DEFAULT_SCALE_PROFILE,
+    DatasetScaleProfile,
     build_learner_facing_views,
     generate_minimal_banking_world,
 )
@@ -35,11 +37,12 @@ MONEY_ZERO = Decimal("0.00")
 def generate_private_banking_transaction_fraud_world(
     seed: int = 42,
     *,
+    scale: str | DatasetScaleProfile = DEFAULT_SCALE_PROFILE,
     scenario_prevalence: float = 0.2,
     output_dir: Path | None = None,
 ) -> dict[str, pd.DataFrame]:
     """Generate a minimal world with Alpine Crest transaction-fraud labels injected."""
-    tables = generate_minimal_banking_world(seed=seed)
+    tables = generate_minimal_banking_world(seed=seed, scale=scale)
     scenario_tables = inject_private_banking_transaction_fraud(
         tables,
         scenario_prevalence=scenario_prevalence,
@@ -54,12 +57,14 @@ def generate_private_banking_transaction_fraud_world(
 def generate_learner_facing_private_banking_transaction_fraud_world(
     seed: int = 42,
     *,
+    scale: str | DatasetScaleProfile = DEFAULT_SCALE_PROFILE,
     scenario_prevalence: float = 0.2,
     output_dir: Path | None = None,
 ) -> dict[str, pd.DataFrame]:
     """Generate learner-facing Alpine Crest scenario tables without protected keys."""
     tables = generate_private_banking_transaction_fraud_world(
         seed=seed,
+        scale=scale,
         scenario_prevalence=scenario_prevalence,
     )
     learner_tables = build_learner_facing_views(tables)

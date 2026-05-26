@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 
@@ -42,6 +43,60 @@ CHF_RATES = {
 }
 MONEY_QUANT = Decimal("0.01")
 ActivitySpec = tuple[str, str, str, str, str | None]
+
+
+@dataclass(frozen=True)
+class DatasetScaleProfile:
+    """Named row-count profile for deterministic synthetic data generation."""
+
+    name: str
+    partner_count: int
+    client_count: int
+    session_count: int
+    transaction_count: int
+    suspicious_activity_count: int
+    description: str
+
+
+SCALE_PROFILES: dict[str, DatasetScaleProfile] = {
+    "tiny": DatasetScaleProfile(
+        name="tiny",
+        partner_count=8,
+        client_count=6,
+        session_count=7,
+        transaction_count=12,
+        suspicious_activity_count=3,
+        description="Committed sample and CI smoke-test scale.",
+    ),
+    "small": DatasetScaleProfile(
+        name="small",
+        partner_count=32,
+        client_count=24,
+        session_count=36,
+        transaction_count=96,
+        suspicious_activity_count=24,
+        description="Local learner exercise scale with visibly larger joins.",
+    ),
+    "medium": DatasetScaleProfile(
+        name="medium",
+        partner_count=120,
+        client_count=90,
+        session_count=180,
+        transaction_count=600,
+        suspicious_activity_count=120,
+        description="Laptop-feasible development scale for richer SQL and validation checks.",
+    ),
+    "large": DatasetScaleProfile(
+        name="large",
+        partner_count=320,
+        client_count=240,
+        session_count=480,
+        transaction_count=2400,
+        suspicious_activity_count=480,
+        description="Optional local stress-test scale; generated data should stay out of git.",
+    ),
+}
+DEFAULT_SCALE_PROFILE = "tiny"
 DEFAULT_SUSPICIOUS_ACTIVITY_SPECS: tuple[ActivitySpec, ...] = (
     (
         "T-0003",
@@ -68,30 +123,42 @@ DEFAULT_SUSPICIOUS_ACTIVITY_SPECS: tuple[ActivitySpec, ...] = (
 
 
 def generate_minimal_banking_world(
-    seed: int = 42, output_dir: Path | None = None
+    seed: int = 42,
+    output_dir: Path | None = None,
+    *,
+    scale: str | DatasetScaleProfile = DEFAULT_SCALE_PROFILE,
 ) -> dict[str, pd.DataFrame]:
-    """Generate a tiny deterministic banking dataset and optionally write CSV files."""
+    """Generate a deterministic banking dataset and optionally write CSV files."""
 
+    profile = _resolve_scale_profile(scale)
     fake = Faker("en_US")
     fake.seed_instance(seed)
     rng = np.random.default_rng(seed)
 
-    partners = _generate_partners(fake, rng)
-    clients = _generate_clients(rng, partners)
+    partners = _generate_partners(fake, rng, profile)
+    clients = _generate_clients(rng, partners, profile)
     roles = _generate_roles()
     banking_relationships = _generate_banking_relationships(fake, rng, clients)
     partner_roles = _generate_partner_roles(clients, roles, banking_relationships, partners)
-    accounts = _generate_accounts(rng, banking_relationships)
+    accounts = _generate_accounts(rng, banking_relationships, profile)
     users = _generate_users(rng, clients)
-    sessions = _generate_sessions(rng, users)
+    sessions = _generate_sessions(rng, users, profile)
     payment_beneficiaries = _generate_payment_beneficiaries(fake, rng, clients, users)
-    transactions = _generate_transactions(rng, accounts, banking_relationships, payment_beneficiaries)
+    transactions = _generate_transactions(
+        rng,
+        accounts,
+        banking_relationships,
+        payment_beneficiaries,
+        profile,
+    )
+    activity_specs = _activity_specs_for_profile(profile, transactions, accounts)
     suspicious_activities = _generate_suspicious_activities(
         transactions,
         accounts,
         banking_relationships,
         users,
         sessions,
+        activity_specs=activity_specs,
     )
     alerts = _generate_alerts(suspicious_activities)
     cases = _generate_cases(alerts)
@@ -130,10 +197,13 @@ def generate_minimal_banking_world(
 
 
 def generate_learner_facing_minimal_banking_world(
-    seed: int = 42, output_dir: Path | None = None
+    seed: int = 42,
+    output_dir: Path | None = None,
+    *,
+    scale: str | DatasetScaleProfile = DEFAULT_SCALE_PROFILE,
 ) -> dict[str, pd.DataFrame]:
     """Generate default learner-facing tables without protected scenario answer keys."""
-    tables = generate_minimal_banking_world(seed=seed)
+    tables = generate_minimal_banking_world(seed=seed, scale=scale)
     learner_tables = build_learner_facing_views(tables)
 
     if output_dir is not None:
@@ -152,13 +222,54 @@ def build_learner_facing_views(
     return {table_name: tables[table_name].copy() for table_name in LEARNER_FACING_TABLE_NAMES}
 
 
-def _generate_partners(fake: Faker, rng: np.random.Generator) -> pd.DataFrame:
+def _resolve_scale_profile(scale: str | DatasetScaleProfile) -> DatasetScaleProfile:
+    """Return a known scale profile or validate a custom profile."""
+    if isinstance(scale, DatasetScaleProfile):
+        _validate_scale_profile(scale)
+        return scale
+    try:
+        profile = SCALE_PROFILES[scale]
+    except KeyError as exc:
+        valid_scales = ", ".join(SCALE_PROFILES)
+        raise ValueError(f"Unknown scale profile {scale!r}; expected one of: {valid_scales}") from exc
+    _validate_scale_profile(profile)
+    return profile
+
+
+def _validate_scale_profile(profile: DatasetScaleProfile) -> None:
+    """Validate profile sizes needed by the foundation generator."""
+    if not profile.name:
+        raise ValueError("Scale profile name must be non-empty")
+    if profile.partner_count < 4:
+        raise ValueError("Scale profile partner_count must be at least 4")
+    if profile.client_count < 3:
+        raise ValueError("Scale profile client_count must be at least 3")
+    if profile.client_count > profile.partner_count:
+        raise ValueError("Scale profile client_count cannot exceed partner_count")
+    # _generate_users creates one User for each Client after clients.iloc[2:].
+    if profile.session_count < profile.client_count - 2:
+        raise ValueError(
+            "Scale profile session_count must be at least client_count - 2 "
+            "(users created from clients.iloc[2:])"
+        )
+    if profile.transaction_count < 3:
+        raise ValueError("Scale profile transaction_count must be at least 3")
+    if profile.suspicious_activity_count < 1:
+        raise ValueError("Scale profile suspicious_activity_count must be positive")
+    if profile.suspicious_activity_count > profile.transaction_count:
+        raise ValueError("Scale profile suspicious_activity_count cannot exceed transaction_count")
+
+
+def _generate_partners(
+    fake: Faker, rng: np.random.Generator, profile: DatasetScaleProfile
+) -> pd.DataFrame:
     """Create partner records spanning both institutions with randomised attributes."""
     countries = ("CH", "DE", "FR", "IT", "GB", "US")
     rows = []
-    for index in range(1, 9):
+    alpine_partner_count = profile.partner_count // 2
+    for index in range(1, profile.partner_count + 1):
         partner_type = "legal_entity" if index in {3, 7} else "natural_person"
-        institution_name = ALPINE_CREST if index <= 4 else NOVABANK
+        institution_name = ALPINE_CREST if index <= alpine_partner_count else NOVABANK
         rows.append(
             {
                 "partner_id": _identifier("P", index),
@@ -173,14 +284,19 @@ def _generate_partners(fake: Faker, rng: np.random.Generator) -> pd.DataFrame:
     return _frame(PARTNERS, rows)
 
 
-def _generate_clients(rng: np.random.Generator, partners: pd.DataFrame) -> pd.DataFrame:
-    """Derive client records from the first six partners with institution-matched segments."""
+def _generate_clients(
+    rng: np.random.Generator, partners: pd.DataFrame, profile: DatasetScaleProfile
+) -> pd.DataFrame:
+    """Derive client records from the configured partners with institution-matched segments."""
     segments = {
         ALPINE_CREST: ("private_banking_individual", "family_office", "operating_company"),
         NOVABANK: ("digital_retail", "digital_sme", "digital_premium"),
     }
     rows = []
-    for index, partner in enumerate(partners.iloc[:6].itertuples(index=False), start=1):
+    for index, partner in enumerate(
+        partners.iloc[: profile.client_count].itertuples(index=False),
+        start=1,
+    ):
         institution_name = partner.institution_name
         rows.append(
             {
@@ -297,11 +413,13 @@ def _generate_partner_roles(
     return _frame(PARTNER_ROLES, rows)
 
 
-def _generate_accounts(rng: np.random.Generator, relationships: pd.DataFrame) -> pd.DataFrame:
+def _generate_accounts(
+    rng: np.random.Generator, relationships: pd.DataFrame, profile: DatasetScaleProfile
+) -> pd.DataFrame:
     """Open current and optional custody/savings accounts under each relationship."""
     rows = []
     for index, relationship in enumerate(relationships.itertuples(index=False), start=1):
-        account_count = 2 if index in {1, 4} else 1
+        account_count = 2 if _has_secondary_account(profile, index) else 1
         for account_number in range(account_count):
             currency = str(rng.choice(("CHF", "EUR", "USD", "GBP")))
             balance = _money(int(rng.integers(25_000, 850_000)))
@@ -322,8 +440,15 @@ def _generate_accounts(rng: np.random.Generator, relationships: pd.DataFrame) ->
     return _frame(ACCOUNTS, rows)
 
 
+def _has_secondary_account(profile: DatasetScaleProfile, relationship_index: int) -> bool:
+    """Return whether the relationship receives a second account at this scale."""
+    if profile.name == "tiny":
+        return relationship_index in {1, 4}
+    return relationship_index % 4 == 1
+
+
 def _generate_users(rng: np.random.Generator, clients: pd.DataFrame) -> pd.DataFrame:
-    """Create digital user identities for the last four clients (those eligible)."""
+    """Create digital user identities for eligible generated clients."""
     rows = []
     for index, client in enumerate(clients.iloc[2:].itertuples(index=False), start=1):
         rows.append(
@@ -339,11 +464,13 @@ def _generate_users(rng: np.random.Generator, clients: pd.DataFrame) -> pd.DataF
     return _frame(USERS, rows)
 
 
-def _generate_sessions(rng: np.random.Generator, users: pd.DataFrame) -> pd.DataFrame:
+def _generate_sessions(
+    rng: np.random.Generator, users: pd.DataFrame, profile: DatasetScaleProfile
+) -> pd.DataFrame:
     """Generate login and activity sessions for digital users."""
     rows = []
     events = ("login", "view_accounts", "add_beneficiary", "payment_authorized")
-    for index in range(1, 8):
+    for index in range(1, profile.session_count + 1):
         user = users.iloc[(index - 1) % len(users)]
         channel = str(rng.choice(("web", "mobile_app")))
         rows.append(
@@ -396,6 +523,7 @@ def _generate_transactions(
     accounts: pd.DataFrame,
     relationships: pd.DataFrame,
     beneficiaries: pd.DataFrame,
+    profile: DatasetScaleProfile,
 ) -> pd.DataFrame:
     """Book transactions across accounts with optional beneficiary references for digital payments."""
     relationship_clients = relationships.set_index("banking_relationship_id")["primary_client_id"]
@@ -404,7 +532,7 @@ def _generate_transactions(
         for client_id, client_beneficiaries in beneficiaries.groupby("client_id")
     }
     rows = []
-    for index in range(1, 13):
+    for index in range(1, profile.transaction_count + 1):
         account = accounts.iloc[(index - 1) % len(accounts)]
         client_id = str(relationship_clients.loc[account["banking_relationship_id"]])
         is_digital_payment = account["institution_name"] == NOVABANK and index % 2 == 0
@@ -432,6 +560,96 @@ def _generate_transactions(
             }
         )
     return _frame(TRANSACTIONS, rows)
+
+
+def _activity_specs_for_profile(
+    profile: DatasetScaleProfile,
+    transactions: pd.DataFrame,
+    accounts: pd.DataFrame,
+) -> tuple[ActivitySpec, ...]:
+    """Return deterministic suspicious activity triggers for the requested scale."""
+    if profile.name == "tiny":
+        return DEFAULT_SUSPICIOUS_ACTIVITY_SPECS
+
+    transaction_context = transactions.merge(
+        accounts[["account_id", "institution_name"]],
+        on="account_id",
+        how="left",
+        validate="many_to_one",
+    )
+    private_transactions = transaction_context[
+        transaction_context["institution_name"] == ALPINE_CREST
+    ]["transaction_id"]
+    digital_payment_transactions = transaction_context[
+        (transaction_context["institution_name"] == NOVABANK)
+        & (transaction_context["payment_beneficiary_id"].notna())
+    ]["transaction_id"]
+    digital_transactions = transaction_context[transaction_context["institution_name"] == NOVABANK][
+        "transaction_id"
+    ]
+    candidates = {
+        "private_banking_high_value": tuple(private_transactions),
+        "new_beneficiary_payment": tuple(digital_payment_transactions),
+        "session_payment_velocity": tuple(digital_transactions),
+    }
+    signals = {
+        "private_banking_high_value": (
+            "High-value movement relative to sample Banking relationship profile."
+        ),
+        "new_beneficiary_payment": "Payment followed recent beneficiary setup.",
+        "session_payment_velocity": "Multiple session and payment events observed close together.",
+    }
+    priorities = {
+        "private_banking_high_value": "medium",
+        "new_beneficiary_payment": "high",
+        "session_payment_velocity": "medium",
+    }
+
+    rows: list[ActivitySpec] = []
+    used_transaction_ids: set[str] = set()
+    # Cycle through pattern families so scaled alerts stay balanced and deterministic.
+    pattern_order = (
+        "private_banking_high_value",
+        "new_beneficiary_payment",
+        "session_payment_velocity",
+    )
+    while len(rows) < profile.suspicious_activity_count:
+        row_count_before_cycle = len(rows)
+        for activity_type in pattern_order:
+            # Select one unused candidate per pattern before repeating the cycle.
+            transaction_id = _next_unused_transaction(candidates[activity_type], used_transaction_ids)
+            if transaction_id is None:
+                continue
+            used_transaction_ids.add(transaction_id)
+            rows.append(
+                (
+                    transaction_id,
+                    activity_type,
+                    signals[activity_type],
+                    priorities[activity_type],
+                    None,
+                )
+            )
+            if len(rows) == profile.suspicious_activity_count:
+                break
+        # Safety exit for custom profiles whose candidate pools are exhausted.
+        if len(rows) == row_count_before_cycle:
+            break
+
+    if not rows:
+        raise ValueError(f"Scale profile {profile.name!r} did not produce suspicious activities")
+    return tuple(rows)
+
+
+def _next_unused_transaction(
+    candidates: tuple[str, ...],
+    used_transaction_ids: set[str],
+) -> str | None:
+    """Return the first unused transaction ID from a deterministic candidate list."""
+    for transaction_id in candidates:
+        if transaction_id not in used_transaction_ids:
+            return transaction_id
+    return None
 
 
 def _generate_suspicious_activities(
@@ -596,37 +814,45 @@ def _generate_protected_scenario_answer_keys(
     if confirmed_outcomes.empty:
         raise ValueError(f"{CASE_OUTCOMES} must include at least one confirmed_fraud row")
 
-    confirmed_activity = confirmed_activities.iloc[0]
-    confirmed_outcome = confirmed_outcomes.iloc[0]
-    rows = [
-        {
-            "answer_key_id": "AK-0001",
-            "scenario_name": "minimal_alert_lifecycle",
-            "entity_table": SUSPICIOUS_ACTIVITIES,
-            "entity_id": confirmed_activity["suspicious_activity_id"],
-            "label_type": "scenario_label",
-            "label_value": "confirmed_fraud",
-            "available_to_learners": False,
-        },
-        {
-            "answer_key_id": "AK-0002",
-            "scenario_name": "minimal_alert_lifecycle",
-            "entity_table": TRANSACTIONS,
-            "entity_id": confirmed_activity["transaction_id"],
-            "label_type": "scenario_label",
-            "label_value": "confirmed_fraud",
-            "available_to_learners": False,
-        },
-        {
-            "answer_key_id": "AK-0003",
-            "scenario_name": "minimal_alert_lifecycle",
-            "entity_table": CASE_OUTCOMES,
-            "entity_id": confirmed_outcome["case_outcome_id"],
-            "label_type": "case_outcome_answer",
-            "label_value": "confirmed_fraud",
-            "available_to_learners": False,
-        },
-    ]
+    rows = []
+    answer_key_index = 1
+    for confirmed_activity in confirmed_activities.itertuples(index=False):
+        rows.extend(
+            [
+                {
+                    "answer_key_id": _identifier("AK", answer_key_index),
+                    "scenario_name": "minimal_alert_lifecycle",
+                    "entity_table": SUSPICIOUS_ACTIVITIES,
+                    "entity_id": confirmed_activity.suspicious_activity_id,
+                    "label_type": "scenario_label",
+                    "label_value": "confirmed_fraud",
+                    "available_to_learners": False,
+                },
+                {
+                    "answer_key_id": _identifier("AK", answer_key_index + 1),
+                    "scenario_name": "minimal_alert_lifecycle",
+                    "entity_table": TRANSACTIONS,
+                    "entity_id": confirmed_activity.transaction_id,
+                    "label_type": "scenario_label",
+                    "label_value": "confirmed_fraud",
+                    "available_to_learners": False,
+                },
+            ]
+        )
+        answer_key_index += 2
+    for confirmed_outcome in confirmed_outcomes.itertuples(index=False):
+        rows.append(
+            {
+                "answer_key_id": _identifier("AK", answer_key_index),
+                "scenario_name": "minimal_alert_lifecycle",
+                "entity_table": CASE_OUTCOMES,
+                "entity_id": confirmed_outcome.case_outcome_id,
+                "label_type": "case_outcome_answer",
+                "label_value": "confirmed_fraud",
+                "available_to_learners": False,
+            }
+        )
+        answer_key_index += 1
     return _frame(PROTECTED_SCENARIO_ANSWER_KEYS, rows)
 
 

@@ -10,7 +10,9 @@ from pathlib import Path
 import pandas as pd
 
 from banking_fraud_lab.generators.minimal_world import (
+    DEFAULT_SCALE_PROFILE,
     NOVABANK,
+    DatasetScaleProfile,
     build_learner_facing_views,
     generate_minimal_banking_world,
 )
@@ -38,11 +40,12 @@ MONEY_ZERO = Decimal("0.00")
 def generate_digital_scam_to_mule_world(
     seed: int = 42,
     *,
+    scale: str | DatasetScaleProfile = DEFAULT_SCALE_PROFILE,
     scenario_prevalence: float = 0.5,
     output_dir: Path | None = None,
 ) -> dict[str, pd.DataFrame]:
     """Generate a minimal world with NovaBank scam-to-mule flows injected."""
-    tables = generate_minimal_banking_world(seed=seed)
+    tables = generate_minimal_banking_world(seed=seed, scale=scale)
     scenario_tables = inject_digital_scam_to_mule_flow(
         tables,
         scenario_prevalence=scenario_prevalence,
@@ -57,12 +60,14 @@ def generate_digital_scam_to_mule_world(
 def generate_learner_facing_digital_scam_to_mule_world(
     seed: int = 42,
     *,
+    scale: str | DatasetScaleProfile = DEFAULT_SCALE_PROFILE,
     scenario_prevalence: float = 0.5,
     output_dir: Path | None = None,
 ) -> dict[str, pd.DataFrame]:
     """Generate learner-facing NovaBank scam-to-mule tables without protected keys."""
     tables = generate_digital_scam_to_mule_world(
         seed=seed,
+        scale=scale,
         scenario_prevalence=scenario_prevalence,
     )
     learner_tables = build_learner_facing_views(tables)

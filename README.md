@@ -120,6 +120,7 @@ SQLite databases.
 
 - [Schema overview](docs/schema/README.md) and
   [data dictionary](docs/schema/data_dictionary.md)
+- [Progressive data views](docs/schema/progressive_views.md)
 - [SQLite examples](sql/README.md)
 - [Evaluation metrics guide](docs/evaluation/metrics.md)
 - [Case library](docs/cases/index.md)

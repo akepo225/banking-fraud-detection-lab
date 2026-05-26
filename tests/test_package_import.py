@@ -1,8 +1,11 @@
 """Tests for package-level imports and version."""
 
 from banking_fraud_lab import (
+    FOUNDATION_PROGRESSIVE_VIEW_SPECS,
+    ProgressiveViewSpec,
     __version__,
     build_learner_facing_views,
+    build_foundation_progressive_views,
     create_minimal_banking_world_sqlite,
     evaluate_alert_scores,
     generate_digital_scam_to_mule_world,
@@ -20,8 +23,11 @@ from banking_fraud_lab import (
 def test_package_imports() -> None:
     """The package must expose the correct version and a callable generator."""
     assert __version__ == "0.1.0"
+    assert FOUNDATION_PROGRESSIVE_VIEW_SPECS
+    assert ProgressiveViewSpec
     assert callable(generate_minimal_banking_world)
     assert callable(build_learner_facing_views)
+    assert callable(build_foundation_progressive_views)
     assert callable(generate_digital_scam_to_mule_world)
     assert callable(generate_learner_facing_digital_scam_to_mule_world)
     assert callable(generate_learner_facing_private_banking_transaction_fraud_world)

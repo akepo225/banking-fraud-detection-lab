@@ -11,6 +11,7 @@ from banking_fraud_lab import (
     generate_minimal_banking_world,
     load_tables_to_sqlite,
 )
+from banking_fraud_lab.progressive_views import FOUNDATION_PROGRESSIVE_VIEW_SPECS
 from banking_fraud_lab.schema import (
     LEARNER_FACING_TABLE_NAMES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
@@ -80,6 +81,36 @@ def test_default_sqlite_database_is_learner_facing(tmp_path: Path) -> None:
         connection.close()
 
 
+def test_default_sqlite_database_exposes_foundation_progressive_views(
+    tmp_path: Path,
+) -> None:
+    """Default SQLite creation should expose foundation Progressive data views."""
+    connection = create_minimal_banking_world_sqlite(
+        tmp_path / "learner_world.sqlite",
+        seed=42,
+    )
+
+    try:
+        view_names = _sqlite_view_names(connection)
+        assert view_names == {spec.name for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS}
+
+        for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS:
+            assert _sqlite_view_column_names(connection, spec.name) == spec.columns
+            row_count = connection.execute(
+                "SELECT COUNT(*) FROM " + _quote_identifier(spec.name)
+            ).fetchone()[0]
+            assert row_count > 0
+
+        protected_view_columns = _sqlite_view_column_names(
+            connection,
+            "foundation_alert_lifecycle",
+        )
+        assert "available_to_learners" not in protected_view_columns
+        assert PROTECTED_SCENARIO_ANSWER_KEYS not in view_names
+    finally:
+        connection.close()
+
+
 def test_replace_removes_protected_tables_when_switching_to_learner_facing(
     tmp_path: Path,
 ) -> None:
@@ -105,6 +136,31 @@ def test_replace_removes_protected_tables_when_switching_to_learner_facing(
         assert PROTECTED_SCENARIO_ANSWER_KEYS not in table_names
     finally:
         learner_connection.close()
+
+
+def test_loader_recreates_stale_progressive_views_when_replace_is_false() -> None:
+    """Existing SQLite views must not block a caller-managed no-replace load."""
+    connection = sqlite3.connect(":memory:")
+
+    try:
+        load_tables_to_sqlite(generate_minimal_banking_world(seed=42), connection)
+        _drop_sqlite_tables_for_test(connection, TABLE_NAMES)
+
+        load_tables_to_sqlite(
+            generate_minimal_banking_world(seed=42),
+            connection,
+            replace=False,
+        )
+
+        assert _sqlite_view_names(connection) == {
+            spec.name for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS
+        }
+        row_count = connection.execute(
+            "SELECT COUNT(*) FROM " + _quote_identifier("foundation_alert_lifecycle")
+        ).fetchone()[0]
+        assert row_count > 0
+    finally:
+        connection.close()
 
 
 def test_loader_rejects_active_transaction_without_foreign_keys() -> None:
@@ -177,6 +233,37 @@ def _sqlite_table_names(connection: sqlite3.Connection) -> set[str]:
     return {str(row[0]) for row in rows}
 
 
+def _sqlite_view_names(connection: sqlite3.Connection) -> set[str]:
+    """Return view names present in the SQLite database."""
+    rows = connection.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'view' ORDER BY name"
+    ).fetchall()
+    return {str(row[0]) for row in rows}
+
+
+def _sqlite_view_column_names(
+    connection: sqlite3.Connection,
+    view_name: str,
+) -> tuple[str, ...]:
+    """Return column names for one SQLite view."""
+    rows = connection.execute(
+        "PRAGMA table_info(" + _quote_identifier(view_name) + ")"
+    ).fetchall()
+    return tuple(str(row[1]) for row in rows)
+
+
+def _drop_sqlite_tables_for_test(
+    connection: sqlite3.Connection,
+    table_names: tuple[str, ...],
+) -> None:
+    """Drop tables while deliberately leaving SQLite views behind."""
+    connection.execute("PRAGMA foreign_keys = OFF")
+    for table_name in reversed(table_names):
+        connection.execute("DROP TABLE IF EXISTS " + _quote_identifier(table_name))
+    connection.commit()
+    connection.execute("PRAGMA foreign_keys = ON")
+
+
 def _foreign_keys_for_table(
     connection: sqlite3.Connection, table_name: str
 ) -> set[tuple[str, str, str]]:
@@ -186,3 +273,8 @@ def _foreign_keys_for_table(
         "PRAGMA foreign_key_list(" + quoted_table_name + ")"
     ).fetchall()
     return {(str(row[3]), str(row[2]), str(row[4])) for row in rows}
+
+
+def _quote_identifier(identifier: str) -> str:
+    """Quote a trusted SQLite identifier for tests."""
+    return '"' + identifier.replace('"', '""') + '"'

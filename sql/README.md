@@ -38,6 +38,11 @@ Inspect the tables with any SQLite client:
 sqlite3 data/sample/minimal_world.sqlite ".tables"
 ```
 
+Generated SQLite databases also expose foundation Progressive data views:
+`foundation_client_relationships` and `foundation_alert_lifecycle`. Their
+source tables, columns, and learner purposes are documented in
+`docs/schema/progressive_views.md`.
+
 ## Example Queries
 
 The `sql/examples/` directory contains representative learner queries:

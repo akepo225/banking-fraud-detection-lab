@@ -17,7 +17,7 @@ The repo stays private until the v0.1 publication gate is met. The final version
 
 ### Phase 0: Private Skeleton
 
-Status: in progress.
+Status: complete.
 
 Purpose: establish the private public-ready repo shape before implementation work begins.
 
@@ -29,7 +29,7 @@ Deliverables:
 - [x] ADR for scope broadening.
 - [x] Local markdown issue tracker setup.
 - [x] v0.1 PRD under `needs-triage`.
-- [ ] PRD broken into implementation issues.
+- [x] PRD broken into implementation issues.
 
 Exit criteria:
 

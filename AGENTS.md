@@ -3,7 +3,7 @@
 ## Start Here
 
 - Read `CONTEXT.md` and `docs/adr/` before implementation work; this repo has a fixed glossary and ADR-0001 establishes two first-class fraud detection tracks.
-- `README.md` is still a skeleton: trust `pyproject.toml`, `.github/workflows/ci.yml`, GitHub Issues, and `docs/ROADMAP.md` for current implementation state.
+- Treat `README.md`, `pyproject.toml`, `.github/workflows/ci.yml`, GitHub Issues, and `docs/ROADMAP.md` as the current implementation sources.
 - This repo is private until the v0.1 publication gate passes; do not add public-release language that implies it is already published.
 
 ## Commands
@@ -17,7 +17,7 @@
 ## Repo Shape
 
 - Python package source is under `src/banking_fraud_lab/`; package discovery is configured in `pyproject.toml` with `where = ["src"]`.
-- Notebooks are planned curriculum artifacts under `notebooks/`; featured v0.1 modules are `00_foundations`, `01_private_banking_transaction_fraud`, `02_digital_scam_to_mule`, and `03_alert_governance`.
+- Featured v0.1 notebooks are under `notebooks/00_foundations`, `notebooks/01_private_banking_transaction_fraud`, `notebooks/02_digital_scam_to_mule`, and `notebooks/03_alert_governance`.
 - `data/sample/` is the only committed data area. Generated medium/large datasets should stay out of git.
 - `sql/` is SQLite-first; PostgreSQL is only a later optional path.
 

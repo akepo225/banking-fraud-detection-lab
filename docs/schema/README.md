@@ -24,6 +24,9 @@ The v0.1 tracer bullets implement the following generated CSV tables and the mat
 
 See `data_dictionary.md` for the v0.1 table purposes, columns, types, and relationships.
 
+See `progressive_views.md` for the foundation Progressive data view contracts,
+learner purposes, source tables, and SQLite view surfaces.
+
 ## Generator Scale Profiles
 
 The canonical generator accepts named `tiny`, `small`, `medium`, and `large`

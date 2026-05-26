@@ -17,6 +17,10 @@ from banking_fraud_lab.generators import (
     build_learner_facing_views,
     generate_minimal_banking_world,
 )
+from banking_fraud_lab.progressive_views import (
+    FOUNDATION_PROGRESSIVE_VIEW_SPECS,
+    FOUNDATION_PROGRESSIVE_VIEW_SQL,
+)
 from banking_fraud_lab.schema import (
     COLUMN_NAMES,
     TABLE_NAMES,
@@ -38,19 +42,26 @@ def create_minimal_banking_world_sqlite(
     seed: int = 42,
     scale: str | DatasetScaleProfile = DEFAULT_SCALE_PROFILE,
     learner_facing: bool = True,
+    include_progressive_views: bool = True,
     replace: bool = True,
 ) -> sqlite3.Connection:
     """Generate the minimal banking world and load it into a SQLite database."""
     tables = generate_minimal_banking_world(seed=seed, scale=scale)
     if learner_facing:
         tables = build_learner_facing_views(tables)
-    return load_tables_to_sqlite(tables, database, replace=replace)
+    return load_tables_to_sqlite(
+        tables,
+        database,
+        include_progressive_views=include_progressive_views,
+        replace=replace,
+    )
 
 
 def load_tables_to_sqlite(
     tables: Mapping[str, pd.DataFrame],
     database: str | Path | sqlite3.Connection,
     *,
+    include_progressive_views: bool = True,
     replace: bool = True,
 ) -> sqlite3.Connection:
     """Load generated tables into SQLite using the project schema contract."""
@@ -62,9 +73,13 @@ def load_tables_to_sqlite(
     try:
         _ensure_foreign_keys_enabled(connection)
         if replace:
+            _drop_progressive_views(connection)
             _drop_tables(connection, _ordered_table_names(TABLE_NAMES))
         _create_tables(connection, table_order)
         _insert_tables(connection, tables, table_order)
+        if include_progressive_views:
+            _drop_progressive_views(connection)
+            _create_progressive_views(connection, set(tables))
         if owns_connection or not initial_in_transaction:
             connection.commit()
     except Exception:
@@ -175,6 +190,13 @@ def _drop_tables(connection: sqlite3.Connection, table_order: tuple[str, ...]) -
         connection.execute(sql)
 
 
+def _drop_progressive_views(connection: sqlite3.Connection) -> None:
+    """Drop known Progressive data views before replacing source tables."""
+    for view_name in FOUNDATION_PROGRESSIVE_VIEW_SQL:
+        sql = "DROP VIEW IF EXISTS " + _quote_identifier(view_name)
+        connection.execute(sql)
+
+
 def _create_tables(connection: sqlite3.Connection, table_order: tuple[str, ...]) -> None:
     """Create SQLite tables from the schema contract."""
     for table_name in table_order:
@@ -195,6 +217,16 @@ def _create_tables(connection: sqlite3.Connection, table_order: tuple[str, ...])
             + "\n)"
         )
         connection.execute(sql)
+
+
+def _create_progressive_views(
+    connection: sqlite3.Connection,
+    loaded_table_names: set[str],
+) -> None:
+    """Create Progressive data views whose source tables are available."""
+    for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS:
+        if set(spec.source_tables) <= loaded_table_names:
+            connection.execute(FOUNDATION_PROGRESSIVE_VIEW_SQL[spec.name])
 
 
 def _sqlite_column_definition(column_name: str, dtype: str, nullable: bool) -> str:

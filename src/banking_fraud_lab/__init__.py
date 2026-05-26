@@ -14,15 +14,23 @@ from banking_fraud_lab.generators import (
     inject_digital_scam_to_mule_flow,
     inject_private_banking_transaction_fraud,
 )
+from banking_fraud_lab.progressive_views import (
+    FOUNDATION_PROGRESSIVE_VIEW_SPECS,
+    ProgressiveViewSpec,
+    build_foundation_progressive_views,
+)
 from banking_fraud_lab.sqlite_loader import (
     create_minimal_banking_world_sqlite,
     load_tables_to_sqlite,
 )
 
 __all__ = [
+    "FOUNDATION_PROGRESSIVE_VIEW_SPECS",
+    "ProgressiveViewSpec",
     "SCALE_PROFILES",
     "DatasetScaleProfile",
     "__version__",
+    "build_foundation_progressive_views",
     "build_learner_facing_views",
     "create_minimal_banking_world_sqlite",
     "evaluate_alert_scores",

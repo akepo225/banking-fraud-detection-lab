@@ -75,33 +75,18 @@ uv run ruff check .
 uv run pytest
 ```
 
-Regenerate the committed tiny sample CSVs:
+Regenerate the committed tiny sample CSVs with a command that works in Bash and
+PowerShell:
 
 ```bash
-uv run python - <<'PY'
-from pathlib import Path
-
-from banking_fraud_lab import generate_minimal_banking_world
-
-generate_minimal_banking_world(seed=42, output_dir=Path("data/sample"))
-PY
+uv run python -c "from pathlib import Path; from banking_fraud_lab import generate_minimal_banking_world; generate_minimal_banking_world(seed=42, output_dir=Path('data/sample'))"
 ```
 
 Generate a larger local dataset by passing a named scale profile. Keep medium
 and large outputs outside git.
 
 ```bash
-uv run python - <<'PY'
-from pathlib import Path
-
-from banking_fraud_lab import generate_minimal_banking_world
-
-generate_minimal_banking_world(
-    seed=42,
-    scale="small",
-    output_dir=Path("data/local/small"),
-)
-PY
+uv run python -c "from pathlib import Path; from banking_fraud_lab import generate_minimal_banking_world; generate_minimal_banking_world(seed=42, scale='small', output_dir=Path('data/local/small'))"
 ```
 
 | Scale | Use | Approximate row counts |

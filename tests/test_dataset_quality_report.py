@@ -8,8 +8,14 @@ from banking_fraud_lab import (
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
     SCALE_PROFILES,
     generate_dataset_quality_report,
+    generate_minimal_banking_world,
 )
-from banking_fraud_lab.data_quality import main as data_quality_main
+from banking_fraud_lab.data_quality import (
+    _progressive_view_health_checks,
+    _protected_key_exclusion_checks,
+    main as data_quality_main,
+)
+from banking_fraud_lab.schema import ALERTS, PROTECTED_SCENARIO_ANSWER_KEYS
 
 REPORT_DOC_PATH = Path("docs/data_quality/dataset_quality_report.md")
 
@@ -74,6 +80,49 @@ def test_dataset_quality_report_runs_for_all_supported_scale_profiles(scale: str
     assert reported_views == {spec.name for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS}
 
 
+def test_protected_key_checks_report_missing_internal_table_without_crashing() -> None:
+    """Protected-key checks should fail gracefully if the internal table is absent."""
+    tables = generate_minimal_banking_world(seed=42)
+    tables.pop(PROTECTED_SCENARIO_ANSWER_KEYS)
+
+    checks = _protected_key_exclusion_checks(tables)
+    checks_by_name = {check["check"]: check for check in checks}
+
+    assert not checks_by_name["protected_table_present_internal"]["passed"]
+    assert checks_by_name["protected_answer_keys_not_available_to_learners"][
+        "row_count"
+    ] == 0
+    assert not checks_by_name["protected_answer_keys_not_available_to_learners"][
+        "passed"
+    ]
+
+
+def test_progressive_view_health_checks_report_build_errors_without_crashing() -> None:
+    """Progressive-view health should report broken inputs instead of raising."""
+    tables = generate_minimal_banking_world(seed=42)
+    tables.pop(ALERTS)
+
+    checks = _progressive_view_health_checks(tables)
+    source_checks = {
+        check["view"]: check
+        for check in checks
+        if check["check"] == "source_tables_present"
+    }
+    build_checks = [
+        check for check in checks if check["check"] == "builds_from_source_tables"
+    ]
+    build_checks_by_view = {check["view"]: check for check in build_checks}
+
+    assert source_checks["foundation_client_relationships"]["passed"]
+    assert not source_checks["foundation_alert_lifecycle"]["passed"]
+    assert build_checks_by_view["foundation_client_relationships"]["passed"]
+    assert not build_checks_by_view["foundation_alert_lifecycle"]["passed"]
+    assert (
+        "requires source tables"
+        in build_checks_by_view["foundation_alert_lifecycle"]["error"]
+    )
+
+
 def test_dataset_quality_cli_writes_markdown_for_tiny_and_larger_scale(
     tmp_path: Path,
 ) -> None:
@@ -114,6 +163,9 @@ def test_dataset_quality_report_documentation_covers_generation_and_interpretati
     assert "uv run python -m banking_fraud_lab.data_quality" in report_doc
     assert "--scale tiny" in report_doc
     assert "--scale small" in report_doc
+    assert "data/generated/reports/dataset-quality.md" in report_doc
+    assert "data/generated/` directory is ignored by git" in report_doc
+    assert "--output reports/" not in report_doc
     assert "Protected answer keys" in report_doc
     assert "Progressive data views" in report_doc
     assert "No external infrastructure" in report_doc

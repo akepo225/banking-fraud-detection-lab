@@ -12,9 +12,11 @@ from banking_fraud_lab import (
     load_tables_to_sqlite,
 )
 from banking_fraud_lab.progressive_views import FOUNDATION_PROGRESSIVE_VIEW_SPECS
+from banking_fraud_lab.run_sql import main as run_sql_main
 from banking_fraud_lab.schema import (
     LEARNER_FACING_TABLE_NAMES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
+    ROLES,
     TABLE_NAMES,
 )
 
@@ -166,6 +168,36 @@ def test_loader_recreates_stale_progressive_views_when_replace_is_false() -> Non
         connection.close()
 
 
+def test_loader_recreates_progressive_views_from_existing_tables_on_staged_load() -> None:
+    """No-replace staged loads must rebuild views from all tables already in SQLite."""
+    tables = generate_minimal_banking_world(seed=42)
+    first_batch = {
+        table_name: frame
+        for table_name, frame in tables.items()
+        if table_name not in {ROLES, "partner_roles", PROTECTED_SCENARIO_ANSWER_KEYS}
+    }
+    connection = sqlite3.connect(":memory:")
+
+    try:
+        load_tables_to_sqlite(first_batch, connection)
+        assert _sqlite_view_names(connection) == {
+            spec.name for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS
+        }
+
+        load_tables_to_sqlite({ROLES: tables[ROLES]}, connection, replace=False)
+
+        assert ROLES in _sqlite_table_names(connection)
+        assert _sqlite_view_names(connection) == {
+            spec.name for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS
+        }
+        row_count = connection.execute(
+            "SELECT COUNT(*) FROM " + _quote_identifier("foundation_alert_lifecycle")
+        ).fetchone()[0]
+        assert row_count > 0
+    finally:
+        connection.close()
+
+
 def test_loader_rejects_active_transaction_without_foreign_keys() -> None:
     """Caller-owned active transactions must already have SQLite FK checks enabled."""
     connection = sqlite3.connect(":memory:")
@@ -226,6 +258,62 @@ def test_representative_sql_examples_execute_successfully(tmp_path: Path) -> Non
             assert rows, f"{sql_file} returned no rows"
     finally:
         connection.close()
+
+
+def test_run_sql_module_executes_example_without_external_sqlite_cli(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Learners should be able to run SQL examples through the Python environment."""
+    database_path = tmp_path / "learner_world.sqlite"
+    connection = create_minimal_banking_world_sqlite(database_path, seed=42)
+    connection.close()
+
+    exit_code = run_sql_main(
+        [
+            str(database_path),
+            str(Path("sql/examples/00_smoke_tables.sql")),
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "table_name" in output
+    assert "transactions" in output
+
+
+def test_run_sql_module_preserves_comment_token_boundaries(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """SQL comments should behave like whitespace between adjacent tokens."""
+    database_path = tmp_path / "learner_world.sqlite"
+    sqlite3.connect(database_path).close()
+    sql_path = tmp_path / "comment_between_tokens.sql"
+    sql_path.write_text("SELECT/* learner note */1 AS value;\n", encoding="utf-8")
+
+    exit_code = run_sql_main([str(database_path), str(sql_path)])
+
+    assert exit_code == 0
+    assert capsys.readouterr().out.splitlines() == ["value", "1"]
+
+
+def test_run_sql_module_rejects_multi_statement_files(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The SQL runner should fail clearly for scripts outside its single-query scope."""
+    database_path = tmp_path / "learner_world.sqlite"
+    connection = create_minimal_banking_world_sqlite(database_path, seed=42)
+    connection.close()
+    sql_path = tmp_path / "multi_statement.sql"
+    sql_path.write_text("SELECT 1;\nSELECT 2;\n", encoding="utf-8")
+
+    with pytest.raises(SystemExit) as error:
+        run_sql_main([str(database_path), str(sql_path)])
+
+    assert error.value.code == 2
+    assert "one SQL statement per file" in capsys.readouterr().err
 
 
 def _sqlite_table_names(connection: sqlite3.Connection) -> set[str]:

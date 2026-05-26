@@ -180,9 +180,25 @@ def build_foundation_progressive_views(
 ) -> dict[str, pd.DataFrame]:
     """Build foundation-level Progressive data views from canonical tables."""
     return {
-        FOUNDATION_CLIENT_RELATIONSHIPS.name: _build_foundation_client_relationships(tables),
-        FOUNDATION_ALERT_LIFECYCLE.name: _build_foundation_alert_lifecycle(tables),
+        spec.name: build_foundation_progressive_view(spec.name, tables)
+        for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS
     }
+
+
+def build_foundation_progressive_view(
+    view_name: str,
+    tables: Mapping[str, pd.DataFrame],
+) -> pd.DataFrame:
+    """Build one foundation-level Progressive data view by name."""
+    view_builders = {
+        FOUNDATION_CLIENT_RELATIONSHIPS.name: _build_foundation_client_relationships,
+        FOUNDATION_ALERT_LIFECYCLE.name: _build_foundation_alert_lifecycle,
+    }
+    try:
+        builder = view_builders[view_name]
+    except KeyError as error:
+        raise ValueError(f"Unknown foundation Progressive data view: {view_name}") from error
+    return builder(tables)
 
 
 def _build_foundation_client_relationships(
@@ -300,10 +316,10 @@ def _build_foundation_alert_lifecycle(
             alerts,
             on="suspicious_activity_id",
             how="left",
-            validate="one_to_one",
+            validate="one_to_many",
         )
-        .merge(cases, on="alert_id", how="left", validate="one_to_one")
-        .merge(case_outcomes, on="case_id", how="left", validate="many_to_one")
+        .merge(cases, on="alert_id", how="left", validate="one_to_many")
+        .merge(case_outcomes, on="case_id", how="left", validate="many_to_many")
     )
 
     return view.loc[:, FOUNDATION_ALERT_LIFECYCLE.columns].copy()
@@ -327,5 +343,6 @@ __all__ = [
     "FOUNDATION_PROGRESSIVE_VIEW_SPECS",
     "FOUNDATION_PROGRESSIVE_VIEW_SQL",
     "ProgressiveViewSpec",
+    "build_foundation_progressive_view",
     "build_foundation_progressive_views",
 ]

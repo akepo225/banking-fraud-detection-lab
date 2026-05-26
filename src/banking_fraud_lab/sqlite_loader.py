@@ -79,7 +79,7 @@ def load_tables_to_sqlite(
         _insert_tables(connection, tables, table_order)
         if include_progressive_views:
             _drop_progressive_views(connection)
-            _create_progressive_views(connection, set(tables))
+            _create_progressive_views(connection, _sqlite_table_names(connection))
         if owns_connection or not initial_in_transaction:
             connection.commit()
     except Exception:
@@ -227,6 +227,14 @@ def _create_progressive_views(
     for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS:
         if set(spec.source_tables) <= loaded_table_names:
             connection.execute(FOUNDATION_PROGRESSIVE_VIEW_SQL[spec.name])
+
+
+def _sqlite_table_names(connection: sqlite3.Connection) -> set[str]:
+    """Return table names currently present in the SQLite database."""
+    rows = connection.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
+    ).fetchall()
+    return {str(row[0]) for row in rows}
 
 
 def _sqlite_column_definition(column_name: str, dtype: str, nullable: bool) -> str:

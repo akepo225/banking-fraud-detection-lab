@@ -19,7 +19,7 @@ from banking_fraud_lab.generators import (
 from banking_fraud_lab.generators.minimal_world import DATASET_AS_OF
 from banking_fraud_lab.progressive_views import (
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
-    build_foundation_progressive_views,
+    build_foundation_progressive_view,
 )
 from banking_fraud_lab.schema import (
     COLUMN_NAMES,
@@ -440,7 +440,7 @@ def _prevalence_checks(tables: Mapping[str, pd.DataFrame]) -> list[dict[str, Any
     alert_count = len(tables["alerts"])
     case_count = len(tables["cases"])
     confirmed_fraud_count = int(tables["case_outcomes"]["confirmed_fraud"].sum())
-    protected_key_count = len(tables[PROTECTED_SCENARIO_ANSWER_KEYS])
+    protected_key_count = len(tables.get(PROTECTED_SCENARIO_ANSWER_KEYS, ()))
 
     return [
         _rate_check(
@@ -486,7 +486,11 @@ def _protected_key_exclusion_checks(
 ) -> list[dict[str, Any]]:
     """Verify protected answer keys remain outside learner-facing tables."""
     learner_tables = build_learner_facing_views(tables)
-    protected = tables[PROTECTED_SCENARIO_ANSWER_KEYS]
+    protected = tables.get(
+        PROTECTED_SCENARIO_ANSWER_KEYS,
+        pd.DataFrame(columns=COLUMN_NAMES[PROTECTED_SCENARIO_ANSWER_KEYS]),
+    )
+    protected_present_internal = not protected.empty
     protected_columns_in_learner_tables = sorted(
         {
             column
@@ -499,7 +503,8 @@ def _protected_key_exclusion_checks(
     return [
         {
             "check": "protected_table_present_internal",
-            "passed": PROTECTED_SCENARIO_ANSWER_KEYS in tables and not protected.empty,
+            "passed": PROTECTED_SCENARIO_ANSWER_KEYS in tables
+            and protected_present_internal,
         },
         {
             "check": "protected_table_excluded_from_learner_tables",
@@ -509,7 +514,8 @@ def _protected_key_exclusion_checks(
             "check": "protected_answer_keys_not_available_to_learners",
             "false_count": int((~protected["available_to_learners"]).sum()),
             "row_count": int(len(protected)),
-            "passed": bool((~protected["available_to_learners"]).all()),
+            "passed": protected_present_internal
+            and bool((~protected["available_to_learners"]).all()),
         },
         {
             "check": "protected_answer_key_columns_absent_from_learner_tables",
@@ -523,17 +529,35 @@ def _progressive_view_health_checks(
     tables: Mapping[str, pd.DataFrame],
 ) -> list[dict[str, Any]]:
     """Check foundation Progressive data views against their contracts."""
-    views = build_foundation_progressive_views(tables)
     checks: list[dict[str, Any]] = []
     for spec in FOUNDATION_PROGRESSIVE_VIEW_SPECS:
-        view = views[spec.name]
+        source_tables_present = set(spec.source_tables) <= set(tables)
+        checks.append(
+            {
+                "view": spec.name,
+                "check": "source_tables_present",
+                "source_tables": list(spec.source_tables),
+                "passed": source_tables_present,
+            }
+        )
+        try:
+            view = build_foundation_progressive_view(spec.name, tables)
+        except Exception as error:
+            checks.append(
+                {
+                    "view": spec.name,
+                    "check": "builds_from_source_tables",
+                    "error": f"{type(error).__name__}: {error}",
+                    "passed": False,
+                }
+            )
+            continue
         checks.extend(
             [
                 {
                     "view": spec.name,
-                    "check": "source_tables_present",
-                    "source_tables": list(spec.source_tables),
-                    "passed": set(spec.source_tables) <= set(tables),
+                    "check": "builds_from_source_tables",
+                    "passed": True,
                 },
                 {
                     "view": spec.name,

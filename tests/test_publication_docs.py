@@ -33,6 +33,8 @@ def test_readme_covers_publication_readiness_contract() -> None:
         "uv run ruff check .",
         "uv run pytest",
         "uv run python -m banking_fraud_lab.create_sqlite data/sample/minimal_world.sqlite",
+        "works in Bash and PowerShell",
+        "uv run python -c",
     ]
     for term in required_terms:
         assert term in readme
@@ -106,6 +108,7 @@ def test_publication_checklist_reflects_v0_1_prd_gate() -> None:
 def test_public_facing_docs_avoid_personal_or_real_bank_framing() -> None:
     docs = {
         "README.md": _read("README.md"),
+        "data/sample/README.md": _read("data/sample/README.md"),
         "docs/ROADMAP.md": _read("docs/ROADMAP.md"),
         "docs/release/v0.1-publication-checklist.md": _read(
             "docs/release/v0.1-publication-checklist.md"
@@ -125,6 +128,8 @@ def test_public_facing_docs_avoid_personal_or_real_bank_framing() -> None:
     readme = docs["README.md"]
     assert "create_sqlite data/sample banking_fraud_lab.sqlite" not in readme
     assert "create_sqlite data/sample/minimal_world.sqlite" in readme
+    assert "<<'PY'" not in readme
+    assert "<<'PY'" not in docs["data/sample/README.md"]
 
     audit = _read("docs/release/v0.1-publication-gate-audit.md")
     assert "README SQLite command used two positional arguments" in audit
@@ -166,7 +171,9 @@ def test_notebook_and_sql_guides_are_actionable_for_end_users() -> None:
         assert term in notebook_guide
 
     sql_terms = [
-        'sqlite3 data/sample/minimal_world.sqlite ".read sql/examples/00_smoke_tables.sql"',
+        "uv run python -m banking_fraud_lab.run_sql data/sample/minimal_world.sqlite sql/examples/04_progressive_alert_queue.sql",
+        "does not require a separate `sqlite3` command-line install",
+        'sqlite3 data/sample/minimal_world.sqlite ".read sql/examples/04_progressive_alert_queue.sql"',
         "uv run pytest tests/test_sqlite_loader.py::test_representative_sql_examples_execute_successfully",
     ]
     for term in sql_terms:

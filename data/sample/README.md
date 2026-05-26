@@ -18,13 +18,7 @@ The generator supports named scale profiles through the `scale` parameter:
 Use the larger profiles for local experimentation only, for example:
 
 ```bash
-uv run python - <<'PY'
-from pathlib import Path
-
-from banking_fraud_lab import generate_minimal_banking_world
-
-generate_minimal_banking_world(seed=42, scale="small", output_dir=Path("data/local/small"))
-PY
+uv run python -c "from pathlib import Path; from banking_fraud_lab import generate_minimal_banking_world; generate_minimal_banking_world(seed=42, scale='small', output_dir=Path('data/local/small'))"
 ```
 
 ## Canonical Sample
@@ -52,11 +46,5 @@ These CSV files were generated with `generate_minimal_banking_world(seed=42, sca
 Regenerate the sample data from the repository root with:
 
 ```bash
-uv run python - <<'PY'
-from pathlib import Path
-
-from banking_fraud_lab import generate_minimal_banking_world
-
-generate_minimal_banking_world(seed=42, scale="tiny", output_dir=Path("data/sample"))
-PY
+uv run python -c "from pathlib import Path; from banking_fraud_lab import generate_minimal_banking_world; generate_minimal_banking_world(seed=42, scale='tiny', output_dir=Path('data/sample'))"
 ```

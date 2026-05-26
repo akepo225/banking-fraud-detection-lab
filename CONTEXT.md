@@ -212,3 +212,11 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 4 Progressive-view contract/documentation tests, 2 SQLite view-exposure/regression tests, and package import coverage; all local tests passing
 - Key files changed: `src/banking_fraud_lab/progressive_views.py`, `src/banking_fraud_lab/sqlite_loader.py`, `tests/test_progressive_views.py`, `tests/test_sqlite_loader.py`, `docs/schema/progressive_views.md`, `notebooks/00_foundations/foundations_data_tour.ipynb`
 - Notes: Added first-class foundation `ProgressiveViewSpec` contracts and Python builders for `foundation_client_relationships` and `foundation_alert_lifecycle`. The SQLite loader now creates matching queryable views and safely recreates stale views for caller-managed no-replace loads. Documented view source tables, columns, learner purpose, and the stable future v0.5 case-pack cross-reference surface, and introduced the views in the foundations notebook without replacing canonical table explanations. Local `uv run ruff check .`, local CodeRabbit review after fixes, notebook smoke coverage, and full `uv run pytest` (141 passed) succeeded. GitHub CI, Socket, and CodeRabbit status checks passed on PR #71 before the progress-log commit.
+
+### Issue #62: Add ERD-Backed Schema Tour — DONE
+
+- Branch: feat/issue-62-erd-schema-tour
+- PR: #72
+- Tests added: 5 schema-tour documentation contract tests; all local tests passing
+- Key files changed: `docs/schema/erd.md`, `docs/schema/module_view_maps.md`, `tests/test_schema_tour_docs.py`, `docs/schema/README.md`, `notebooks/README.md`, `README.md`
+- Notes: Added an ERD-backed schema tour for the canonical v0.2 foundation tables, key foreign-key relationships, and glossary-aligned learner path through Partner, Client, User, Banking relationship, Detection pattern, and Alert lifecycle concepts. Added `00_foundations` module view maps that trace foundation Progressive data views to canonical source tables and columns. New doc tests verify table primary keys, documented foreign keys, Mermaid ERD table coverage, view names, view columns, source columns, glossary terms, and learner-doc links. Local `uv run ruff check .`, local CodeRabbit review, and full `uv run pytest` (146 passed) succeeded. GitHub CI, Socket, and CodeRabbit status checks passed on PR #72 before the progress-log commit.

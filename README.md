@@ -120,6 +120,8 @@ SQLite databases.
 
 - [Schema overview](docs/schema/README.md) and
   [data dictionary](docs/schema/data_dictionary.md)
+- [ERD-backed schema tour](docs/schema/erd.md) and
+  [module view maps](docs/schema/module_view_maps.md)
 - [Progressive data views](docs/schema/progressive_views.md)
 - [SQLite examples](sql/README.md)
 - [Evaluation metrics guide](docs/evaluation/metrics.md)

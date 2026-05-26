@@ -236,3 +236,11 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 9 dataset-quality report tests plus package import export coverage; all local tests passing
 - Key files changed: `src/banking_fraud_lab/data_quality.py`, `tests/test_dataset_quality_report.py`, `docs/data_quality/dataset_quality_report.md`, `src/banking_fraud_lab/progressive_views.py`, `src/banking_fraud_lab/__init__.py`, `README.md`, `tests/test_package_import.py`
 - Notes: Added a deterministic dataset quality report API and module CLI covering row counts, key nullability, referential integrity, temporal ranges and ordering, prevalence ranges, protected-key exclusion, and foundation Progressive data view health across all supported scale profiles. Added learner-facing Markdown/JSON generation docs and fixed the foundation Alert lifecycle Progressive view builder so larger scale profiles with multiple alerts that do not yet have cases still build cleanly. Local `uv run ruff check .`, `uv run pytest` (158 passed), and `uv run python -m banking_fraud_lab.data_quality --scale tiny` succeeded. Hosted CodeRabbit completed with no actionable findings before the docstring follow-up; the follow-up addressed its docstring-coverage warning, and GitHub CI, Socket, and CodeRabbit status checks passed on PR #74 before the progress-log commit.
+
+### Issue #65: Add Optional Canonical-Data Warmups — DONE
+
+- Branch: feat/issue-65-canonical-data-warmups
+- PR: #75
+- Tests added: 4 optional warm-up notebook smoke tests plus 2 warm-up documentation/data-surface tests and expanded publication-doc coverage; all local tests passing
+- Key files changed: `notebooks/00_foundations/warmups/`, `tests/test_warmup_notebooks.py`, `notebooks/README.md`, `README.md`, `tests/test_publication_docs.py`
+- Notes: Added optional Python, pandas, SQL, and sklearn warm-up notebooks that use tiny seed-42 canonical generated data, learner-facing tables, foundation Progressive data views, the SQLite learner path, and alert-aware evaluation. The warm-ups are clearly marked outside the required core module sequence and not a separate beginner curriculum. Local `uv sync --extra dev`, `uv run ruff check .`, focused warm-up/publication-doc tests, and `uv run pytest` (164 passed) succeeded before PR #75 was opened.

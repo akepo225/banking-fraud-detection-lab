@@ -18,12 +18,13 @@ def test_v02_acceptance_review_has_hitl_boundary_and_evidence() -> None:
         "uv run ruff check .",
         "git diff --check",
         "uv run pytest tests/test_sqlite_loader.py tests/test_progressive_views.py tests/test_dataset_quality_report.py tests/test_publication_docs.py",
-        "34 passed",
+        # Point-in-time acceptance snapshots; update only when refreshing this review.
+        "35 passed",
         "uv run python -m banking_fraud_lab.create_sqlite data/generated/end_user_minimal.sqlite",
         "uv run python -m banking_fraud_lab.run_sql data/generated/end_user_minimal.sqlite sql/examples/04_progressive_alert_queue.sql",
         "uv run python -m banking_fraud_lab.data_quality --scale tiny --scale small --output data/generated/reports/dataset-quality.md",
         "uv run pytest",
-        "174 passed",
+        "175 passed",
         "PR #77 remote checks",
     ]
     for term in required_terms:
@@ -61,7 +62,7 @@ def test_v02_acceptance_review_tracks_deferred_scope_and_label_hygiene() -> None
     normalized_review = " ".join(review.split())
 
     for follow_up_issue in range(46, 59):
-        assert f"#{follow_up_issue}" in review
+        assert f"#{follow_up_issue}" in normalized_review
 
     required_terms = [
         "#78",

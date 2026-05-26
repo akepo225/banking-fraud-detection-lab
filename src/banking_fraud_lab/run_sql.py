@@ -93,12 +93,16 @@ def _split_sql_statements(sql: str) -> tuple[str, ...]:
             continue
 
         if char == "-" and next_char == "-":
+            if current and not current[-1].isspace():
+                current.append(" ")
             index += 2
             while index < len(sql) and sql[index] not in "\r\n":
                 index += 1
             continue
 
         if char == "/" and next_char == "*":
+            if current and not current[-1].isspace():
+                current.append(" ")
             index += 2
             while index + 1 < len(sql) and not (
                 sql[index] == "*" and sql[index + 1] == "/"

@@ -282,6 +282,22 @@ def test_run_sql_module_executes_example_without_external_sqlite_cli(
     assert "transactions" in output
 
 
+def test_run_sql_module_preserves_comment_token_boundaries(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """SQL comments should behave like whitespace between adjacent tokens."""
+    database_path = tmp_path / "learner_world.sqlite"
+    sqlite3.connect(database_path).close()
+    sql_path = tmp_path / "comment_between_tokens.sql"
+    sql_path.write_text("SELECT/* learner note */1 AS value;\n", encoding="utf-8")
+
+    exit_code = run_sql_main([str(database_path), str(sql_path)])
+
+    assert exit_code == 0
+    assert capsys.readouterr().out.splitlines() == ["value", "1"]
+
+
 def test_run_sql_module_rejects_multi_statement_files(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

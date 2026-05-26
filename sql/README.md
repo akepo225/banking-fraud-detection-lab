@@ -32,10 +32,11 @@ connection = create_minimal_banking_world_sqlite(
 )
 ```
 
-Inspect the tables with any SQLite client:
+Inspect the tables through the project SQL runner, which uses Python's built-in
+SQLite support and does not require a separate `sqlite3` command-line install:
 
 ```bash
-sqlite3 data/sample/minimal_world.sqlite ".tables"
+uv run python -m banking_fraud_lab.run_sql data/sample/minimal_world.sqlite sql/examples/00_smoke_tables.sql
 ```
 
 Generated SQLite databases also expose foundation Progressive data views:
@@ -64,10 +65,17 @@ The `sql/examples/` directory contains representative learner queries:
 These examples are smoke-tested against the generated SQLite database and return
 meaningful rows against the default learner-facing tiny data.
 
-Run one example with the SQLite CLI:
+Run one example with the cross-platform project SQL runner:
 
 ```bash
-sqlite3 data/sample/minimal_world.sqlite ".read sql/examples/00_smoke_tables.sql"
+uv run python -m banking_fraud_lab.run_sql data/sample/minimal_world.sqlite sql/examples/04_progressive_alert_queue.sql
+```
+
+If the SQLite CLI is installed locally, the same example can also be run with
+`sqlite3`:
+
+```bash
+sqlite3 data/sample/minimal_world.sqlite ".read sql/examples/04_progressive_alert_queue.sql"
 ```
 
 Or verify all representative examples through the project test suite:

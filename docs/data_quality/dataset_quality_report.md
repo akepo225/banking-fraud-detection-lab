@@ -20,14 +20,17 @@ uv run python -m banking_fraud_lab.data_quality --scale tiny
 Generate tiny and one larger local scale profile into a Markdown file:
 
 ```bash
-uv run python -m banking_fraud_lab.data_quality --scale tiny --scale small --output reports/dataset-quality.md
+uv run python -m banking_fraud_lab.data_quality --scale tiny --scale small --output data/generated/reports/dataset-quality.md
 ```
 
 Use JSON when another validation script needs structured output:
 
 ```bash
-uv run python -m banking_fraud_lab.data_quality --scale medium --format json --output reports/dataset-quality-medium.json
+uv run python -m banking_fraud_lab.data_quality --scale medium --format json --output data/generated/reports/dataset-quality-medium.json
 ```
+
+The `data/generated/` directory is ignored by git, so local report files do not
+become accidental repository changes.
 
 ## Interpret The Dimensions
 

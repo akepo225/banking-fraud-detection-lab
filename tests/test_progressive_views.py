@@ -2,12 +2,22 @@
 
 from pathlib import Path
 
+import pandas as pd
+
 from banking_fraud_lab import generate_minimal_banking_world
 from banking_fraud_lab.progressive_views import (
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
     build_foundation_progressive_views,
 )
-from banking_fraud_lab.schema import COLUMN_NAMES, PROTECTED_SCENARIO_ANSWER_KEYS, TABLE_NAMES
+from banking_fraud_lab.schema import (
+    ALERTS,
+    CASE_OUTCOMES,
+    CASES,
+    COLUMN_NAMES,
+    PROTECTED_SCENARIO_ANSWER_KEYS,
+    SUSPICIOUS_ACTIVITIES,
+    TABLE_NAMES,
+)
 
 
 FOUNDATION_PROGRESSIVE_VIEW_SPECS_BY_NAME = {
@@ -79,6 +89,39 @@ def test_foundation_alert_lifecycle_view_excludes_protected_answer_keys() -> Non
     assert set(view["case_outcome_id"].dropna()) <= set(
         tables["case_outcomes"]["case_outcome_id"]
     )
+
+
+def test_foundation_alert_lifecycle_allows_schema_valid_child_multiplicity() -> None:
+    """The Python view builder must match SQLite joins for schema-valid child rows."""
+    tables = generate_minimal_banking_world(seed=42)
+    original_view = build_foundation_progressive_views(tables)["foundation_alert_lifecycle"]
+
+    extra_alert = tables[ALERTS].iloc[[0]].copy()
+    extra_alert.loc[:, "alert_id"] = "alert_extra_multi_001"
+    tables[ALERTS] = pd.concat([tables[ALERTS], extra_alert], ignore_index=True)
+
+    extra_case = tables[CASES].iloc[[0]].copy()
+    extra_case.loc[:, "case_id"] = "case_extra_multi_001"
+    extra_case.loc[:, "alert_id"] = tables[ALERTS].iloc[0]["alert_id"]
+    tables[CASES] = pd.concat([tables[CASES], extra_case], ignore_index=True)
+
+    extra_outcome = tables[CASE_OUTCOMES].iloc[[0]].copy()
+    extra_outcome.loc[:, "case_outcome_id"] = "outcome_extra_multi_001"
+    extra_outcome.loc[:, "case_id"] = tables[CASE_OUTCOMES].iloc[0]["case_id"]
+    tables[CASE_OUTCOMES] = pd.concat(
+        [tables[CASE_OUTCOMES], extra_outcome],
+        ignore_index=True,
+    )
+
+    view = build_foundation_progressive_views(tables)["foundation_alert_lifecycle"]
+
+    assert len(view) == len(original_view) + 2
+    assert set(view["suspicious_activity_id"]) == set(
+        tables[SUSPICIOUS_ACTIVITIES]["suspicious_activity_id"]
+    )
+    assert "alert_extra_multi_001" in set(view["alert_id"])
+    assert "case_extra_multi_001" in set(view["case_id"])
+    assert "outcome_extra_multi_001" in set(view["case_outcome_id"])
 
 
 def test_foundation_progressive_view_specs_use_canonical_unprotected_sources() -> None:

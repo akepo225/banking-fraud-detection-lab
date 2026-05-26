@@ -178,6 +178,7 @@ def _build_flow_rows(
             {
                 "account_id": account.account_id,
                 "opened_at": incoming_at - pd.Timedelta(days=2),
+                "status_effective_from": incoming_at - pd.Timedelta(days=2),
             }
         )
 
@@ -298,6 +299,7 @@ def _build_flow_rows(
                 "generated_at": pass_through_at + pd.Timedelta(minutes=8),
                 "alert_type": DIGITAL_SCAM_TO_MULE_ACTIVITY_TYPE,
                 "alert_status": "closed",
+                "status_updated_at": pass_through_at + pd.Timedelta(minutes=38),
                 "severity": "high",
                 "reason": "Scam-to-mule flow with rapid pass-through and shared device signals.",
             }
@@ -316,6 +318,7 @@ def _build_flow_rows(
                 "opened_at": pass_through_at + pd.Timedelta(hours=2),
                 "assigned_team": "digital investigations",
                 "case_status": "closed",
+                "closed_at": pass_through_at + pd.Timedelta(days=1),
                 "investigation_summary": (
                     "Case reviewed Client, User, device, beneficiary, session, and "
                     "pass-through transaction context."
@@ -327,6 +330,7 @@ def _build_flow_rows(
                 "case_outcome_id": outcome_id,
                 "case_id": case_id,
                 "decided_at": pass_through_at + pd.Timedelta(days=1),
+                "recorded_at": pass_through_at + pd.Timedelta(days=1, hours=1),
                 "outcome_type": "confirmed-fraud",
                 "confirmed_fraud": True,
                 "loss_amount_original": pass_through_amount,
@@ -371,6 +375,9 @@ def _apply_early_life_account_updates(
     for update in account_updates:
         account_mask = tables[ACCOUNTS]["account_id"] == update["account_id"]
         tables[ACCOUNTS].loc[account_mask, "opened_at"] = update["opened_at"]
+        tables[ACCOUNTS].loc[account_mask, "status_effective_from"] = update[
+            "status_effective_from"
+        ]
 
 
 def _primary_users_by_client(users: pd.DataFrame) -> pd.DataFrame:

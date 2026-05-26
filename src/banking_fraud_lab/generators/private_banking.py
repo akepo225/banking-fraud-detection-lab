@@ -194,6 +194,7 @@ def _private_fraud_alert_rows(
     start_index = _next_identifier_index(tables[ALERTS], "alert_id")
     rows = []
     for offset, activity in enumerate(activity_rows):
+        generated_at = pd.Timestamp(activity["detected_at"]) + pd.Timedelta(minutes=5)
         rows.append(
             {
                 "alert_id": _identifier("AL", start_index + offset),
@@ -205,9 +206,10 @@ def _private_fraud_alert_rows(
                 "session_id": None,
                 "payment_beneficiary_id": None,
                 "institution_name": ALPINE_CREST,
-                "generated_at": pd.Timestamp(activity["detected_at"]) + pd.Timedelta(minutes=5),
+                "generated_at": generated_at,
                 "alert_type": PRIVATE_BANKING_ACTIVITY_TYPE,
                 "alert_status": "closed",
+                "status_updated_at": generated_at + pd.Timedelta(minutes=30),
                 "severity": "high",
                 "reason": activity["detection_signal"],
             }
@@ -223,6 +225,7 @@ def _private_fraud_case_rows(
     start_index = _next_identifier_index(tables[CASES], "case_id")
     rows = []
     for offset, alert in enumerate(alert_rows):
+        opened_at = pd.Timestamp(alert["generated_at"]) + pd.Timedelta(hours=4)
         rows.append(
             {
                 "case_id": _identifier("CASE", start_index + offset),
@@ -234,9 +237,10 @@ def _private_fraud_case_rows(
                 "user_id": None,
                 "session_id": None,
                 "payment_beneficiary_id": None,
-                "opened_at": pd.Timestamp(alert["generated_at"]) + pd.Timedelta(hours=4),
+                "opened_at": opened_at,
                 "assigned_team": "private banking investigations",
                 "case_status": "closed",
+                "closed_at": opened_at + pd.Timedelta(days=2),
                 "investigation_summary": (
                     "Case reviewed relationship-manager context, relationship roles, "
                     "account balance, and transaction amount."
@@ -257,11 +261,13 @@ def _private_fraud_outcome_rows(
     rows = []
     for offset, case in enumerate(case_rows):
         transaction = selected_by_id.loc[case["transaction_id"]]
+        decided_at = pd.Timestamp(case["opened_at"]) + pd.Timedelta(days=2)
         rows.append(
             {
                 "case_outcome_id": _identifier("OUT", start_index + offset),
                 "case_id": case["case_id"],
-                "decided_at": pd.Timestamp(case["opened_at"]) + pd.Timedelta(days=2),
+                "decided_at": decided_at,
+                "recorded_at": decided_at + pd.Timedelta(hours=1),
                 "outcome_type": "confirmed-fraud",
                 "confirmed_fraud": True,
                 "loss_amount_original": transaction["amount_original"],
@@ -319,8 +325,12 @@ def _add_private_false_positive_case(
     alert = candidate_alerts.iloc[0]
     alert_id = str(alert["alert_id"])
     tables[ALERTS].loc[tables[ALERTS]["alert_id"] == alert_id, "alert_status"] = "closed"
+    tables[ALERTS].loc[tables[ALERTS]["alert_id"] == alert_id, "status_updated_at"] = (
+        pd.Timestamp(alert["generated_at"]) + pd.Timedelta(minutes=30)
+    )
 
     case_id = _identifier("CASE", _next_identifier_index(tables[CASES], "case_id"))
+    opened_at = pd.Timestamp(alert["generated_at"]) + pd.Timedelta(hours=4)
     case_row = {
         "case_id": case_id,
         "alert_id": alert_id,
@@ -331,20 +341,23 @@ def _add_private_false_positive_case(
         "user_id": None,
         "session_id": None,
         "payment_beneficiary_id": None,
-        "opened_at": pd.Timestamp(alert["generated_at"]) + pd.Timedelta(hours=4),
+        "opened_at": opened_at,
         "assigned_team": "private banking investigations",
         "case_status": "closed",
+        "closed_at": opened_at + pd.Timedelta(days=1),
         "investigation_summary": (
             "Case reviewed the high-value movement and closed without fraud confirmation."
         ),
     }
+    decided_at = pd.Timestamp(case_row["opened_at"]) + pd.Timedelta(days=1)
     outcome_row = {
         "case_outcome_id": _identifier(
             "OUT",
             _next_identifier_index(tables[CASE_OUTCOMES], "case_outcome_id"),
         ),
         "case_id": case_id,
-        "decided_at": pd.Timestamp(case_row["opened_at"]) + pd.Timedelta(days=1),
+        "decided_at": decided_at,
+        "recorded_at": decided_at + pd.Timedelta(hours=1),
         "outcome_type": "false-positive",
         "confirmed_fraud": False,
         "loss_amount_original": MONEY_ZERO,

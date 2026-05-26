@@ -41,10 +41,28 @@ Approximate row counts for `seed=42`:
 | `medium` | 90 | 600 | 120 |
 | `large` | 240 | 2,400 | 480 |
 
+## Temporal Semantics
+
+v0.2 generated data is bounded by a fixed dataset snapshot timestamp and keeps
+foundation lifecycle timestamps ordered:
+
+- KYC risk dates start with `partners.kyc_risk_effective_from` and are reviewed
+  at `partners.kyc_risk_reviewed_at`.
+- Relationship-manager assignment is effective at
+  `banking_relationships.relationship_manager_assigned_at`.
+- User authorization windows use `users.authorized_from` and
+  `users.authorized_to`.
+- Account status windows use `accounts.status_effective_from` and
+  `accounts.status_effective_to`.
+- Alert, case, and outcome ordering follows transaction booking, suspicious
+  activity detection, alert generation, case opening, case closure, outcome
+  decision, and outcome recording.
+
 ## Design Rules
 
 - Use exact decimal precision for money.
 - Store original amount and currency plus CHF-normalized amount where relevant.
 - Model the alert lifecycle explicitly.
+- Keep historical timestamps on or before the dataset snapshot timestamp.
 - Keep scenario answer keys out of learner-facing views by default.
 - Use SQLite-first SQL exercises, with optional PostgreSQL later.

@@ -196,3 +196,11 @@ _Avoid_: treating scams and mule accounts as unrelated modules
 - Tests added: 9 scale-profile pytest cases; all local tests passing
 - Key files changed: `src/banking_fraud_lab/generators/minimal_world.py`, `src/banking_fraud_lab/generators/private_banking.py`, `src/banking_fraud_lab/generators/digital_banking.py`, `src/banking_fraud_lab/sqlite_loader.py`, `src/banking_fraud_lab/create_sqlite.py`, `tests/test_generator_determinism.py`, `README.md`, `data/sample/README.md`, `docs/schema/README.md`, `docs/schema/data_dictionary.md`, `sql/README.md`
 - Notes: Added named `tiny`, `small`, `medium`, and `large` scale profiles while preserving the default tiny seed-42 committed sample output. Scale support now flows through learner-facing generation, scenario generators, SQLite creation, and the CLI. Local `uv run ruff check .`, local CodeRabbit review, focused generator/schema/SQLite/scenario checks, and full `uv run pytest` (120 passed) succeeded. GitHub CI and Socket checks passed on PR #69 before the progress-log commit.
+
+### Issue #60: Add Time-Aware Foundation Semantics — DONE
+
+- Branch: feat/issue-60-temporal-semantics
+- PR: #70
+- Tests added: 15 temporal-semantics pytest cases; all local tests passing
+- Key files changed: `src/banking_fraud_lab/schema/tables.py`, `src/banking_fraud_lab/generators/minimal_world.py`, `src/banking_fraud_lab/generators/private_banking.py`, `src/banking_fraud_lab/generators/digital_banking.py`, `tests/test_temporal_semantics.py`, `docs/schema/README.md`, `docs/schema/data_dictionary.md`, `data/sample/`
+- Notes: Added additive temporal fields for KYC risk, relationship-manager assignment, User authorization, account status, alert status updates, case closure, and outcome recording. Bounded generated timestamps to a fixed dataset snapshot and verified effective-date and Alert lifecycle ordering across all scale profiles plus scenario injection. Regenerated committed tiny sample CSVs for the new schema. Local `uv run ruff check .`, local CodeRabbit review, focused temporal/schema/generator/SQLite/scenario checks, and full `uv run pytest` (135 passed) succeeded. GitHub CI and Socket checks passed on PR #70 before the progress-log commit.

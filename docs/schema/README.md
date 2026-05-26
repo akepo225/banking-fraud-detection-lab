@@ -24,8 +24,14 @@ The v0.1 tracer bullets implement the following generated CSV tables and the mat
 
 See `data_dictionary.md` for the v0.1 table purposes, columns, types, and relationships.
 
+See `erd.md` for the v0.2 ERD-backed schema tour across canonical tables and
+key relationships.
+
 See `progressive_views.md` for the foundation Progressive data view contracts,
 learner purposes, source tables, and SQLite view surfaces.
+
+See `module_view_maps.md` for the `00_foundations` view map that traces
+Progressive data views back to canonical tables.
 
 ## Generator Scale Profiles
 

@@ -14,7 +14,9 @@ from banking_fraud_lab.schema.detection_patterns import (
     PatternSpec,
 )
 
-PATTERNS_DOC = Path("docs/schema/detection_patterns.md")
+ROOT = Path(__file__).resolve().parents[1]
+
+PATTERNS_DOC = ROOT / "docs" / "schema" / "detection_patterns.md"
 
 REQUIRED_ACTIVITY_TYPES = {
     "private_banking_high_value",

@@ -1,5 +1,16 @@
 """Schema contract for generated banking fraud lab datasets."""
 
+from banking_fraud_lab.schema.detection_patterns import (
+    ACTIVITY_TYPE_TO_PATTERN,
+    DIGITAL_SCAM_TO_MULE,
+    FOUNDATION_DETECTION_PATTERNS,
+    NEW_BENEFICIARY_PAYMENT,
+    PB_HIGH_VALUE_MOVEMENT,
+    PB_TRANSACTION_FRAUD,
+    PATTERN_IDS,
+    SESSION_PAYMENT_VELOCITY,
+    PatternSpec,
+)
 from banking_fraud_lab.schema.tables import (
     ACCOUNTS,
     ALERTS,
@@ -27,13 +38,21 @@ from banking_fraud_lab.schema.tables import (
 
 __all__ = [
     "ACCOUNTS",
+    "ACTIVITY_TYPE_TO_PATTERN",
     "ALERTS",
     "BANKING_RELATIONSHIPS",
     "CASES",
     "CASE_OUTCOMES",
     "CLIENTS",
     "COLUMN_NAMES",
+    "DIGITAL_SCAM_TO_MULE",
+    "FOUNDATION_DETECTION_PATTERNS",
     "LEARNER_FACING_TABLE_NAMES",
+    "NEW_BENEFICIARY_PAYMENT",
+    "PATTERN_IDS",
+    "PB_HIGH_VALUE_MOVEMENT",
+    "PB_TRANSACTION_FRAUD",
+    "SESSION_PAYMENT_VELOCITY",
     "TABLE_NAMES",
     "TABLE_SPECS",
     "ColumnSpec",
@@ -48,4 +67,5 @@ __all__ = [
     "TRANSACTIONS",
     "TableSpec",
     "USERS",
+    "PatternSpec",
 ]

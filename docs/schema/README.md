@@ -37,6 +37,10 @@ learner purposes, source tables, and SQLite view surfaces.
 See `module_view_maps.md` for the `00_foundations` view map that traces
 Progressive data views back to canonical tables.
 
+See `detection_patterns.md` for the stable detection pattern identifiers
+used across the curriculum for cross-module references, case-pack linking,
+and Progressive data view grouping.
+
 ## Generator Scale Profiles
 
 The canonical generator accepts named `tiny`, `small`, `medium`, and `large`

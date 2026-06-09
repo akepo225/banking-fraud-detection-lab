@@ -46,6 +46,35 @@ Columns:
 | `relationship_manager_code` | Synthetic relationship manager assignment code. |
 | `relationship_manager_assigned_at` | When the relationship manager assignment became effective. |
 
+## `pb_relationship_context`
+
+Exposes one row per Banking relationship with current relationship-manager
+history for private-banking relationship-context exercises.
+
+This view supports private-banking lessons that need relationship-manager
+context before learners work directly with effective-dated history tables. It
+is module-specific and is not marked as a stable cross-module case-reference
+surface.
+
+Source tables:
+
+- `banking_relationships`
+- `relationship_manager_history`
+
+Columns:
+
+| Column | Learner purpose |
+| --- | --- |
+| `banking_relationship_id` | Banking relationship container identifier. |
+| `primary_client_id` | Primary legal Client for the relationship. |
+| `institution_name` | Fictional institution owning the relationship. |
+| `relationship_name` | Learner-readable relationship label. |
+| `relationship_opened_at` | Banking relationship opening timestamp. |
+| `relationship_status` | Current Banking relationship status. |
+| `relationship_manager_code` | Current synthetic relationship manager assignment code. |
+| `rm_effective_from` | When the current relationship manager assignment became effective. |
+| `rm_effective_to` | When the current relationship manager assignment ended, if superseded. |
+
 ## `foundation_alert_lifecycle`
 
 Shows the Alert lifecycle from suspicious activity through alert, case, and case

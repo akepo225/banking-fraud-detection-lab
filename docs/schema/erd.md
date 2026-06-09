@@ -34,6 +34,13 @@ erDiagram
         string banking_relationship_id PK
         string primary_client_id FK
     }
+    relationship_manager_history {
+        string rm_history_id PK
+        string banking_relationship_id FK
+        string relationship_manager_code
+        datetime64 effective_from
+        datetime64 effective_to
+    }
     accounts {
         string account_id PK
         string banking_relationship_id FK
@@ -99,6 +106,7 @@ erDiagram
     roles ||--o{ partner_roles : assigned_as
     clients ||--o{ banking_relationships : primary_client
     banking_relationships ||--o{ partner_roles : contains_role
+    banking_relationships ||--o{ relationship_manager_history : manager_history
     banking_relationships ||--o{ accounts : owns
     accounts ||--o{ transactions : books
     clients ||--o{ users : authenticates_as
@@ -153,6 +161,7 @@ erDiagram
 | `roles` | `role_id` | None |
 | `partner_roles` | `partner_role_id` | `partners.partner_id`, `roles.role_id`, `banking_relationships.banking_relationship_id` |
 | `banking_relationships` | `banking_relationship_id` | `clients.client_id` |
+| `relationship_manager_history` | `rm_history_id` | `banking_relationships.banking_relationship_id` |
 | `accounts` | `account_id` | `banking_relationships.banking_relationship_id` |
 | `transactions` | `transaction_id` | `accounts.account_id`, `payment_beneficiaries.payment_beneficiary_id` |
 | `users` | `user_id` | `clients.client_id` |
@@ -168,8 +177,8 @@ erDiagram
 
 Start with `foundation_client_relationships` when the lesson needs a compact
 Client, Partner, and Banking relationship anchor. Move to canonical tables when
-the lesson needs role history, account detail, transaction detail, or digital
-User/session context.
+the lesson needs role history, relationship-manager history, account detail,
+transaction detail, or digital User/session context.
 
 Start with `foundation_alert_lifecycle` when the lesson needs the Alert lifecycle
 in one surface. Move to `suspicious_activities`, `alerts`, `cases`, and

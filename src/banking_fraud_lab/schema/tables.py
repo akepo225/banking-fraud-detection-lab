@@ -31,6 +31,7 @@ CLIENTS = "clients"
 ROLES = "roles"
 PARTNER_ROLES = "partner_roles"
 BANKING_RELATIONSHIPS = "banking_relationships"
+RELATIONSHIP_MANAGER_HISTORY = "relationship_manager_history"
 ACCOUNTS = "accounts"
 TRANSACTIONS = "transactions"
 USERS = "users"
@@ -188,6 +189,41 @@ TABLE_SPECS: dict[str, TableSpec] = {
                 "datetime64[ns]",
                 False,
                 "Timestamp when the current relationship manager assignment became effective.",
+            ),
+        ),
+    ),
+    RELATIONSHIP_MANAGER_HISTORY: TableSpec(
+        name=RELATIONSHIP_MANAGER_HISTORY,
+        purpose=(
+            "Effective-dated history of relationship manager assignments within a "
+            "banking relationship."
+        ),
+        columns=(
+            ColumnSpec("rm_history_id", "string", False, "Stable synthetic RM-history identifier."),
+            ColumnSpec(
+                "banking_relationship_id",
+                "string",
+                False,
+                "Banking relationship where the relationship-manager assignment applies.",
+                references="banking_relationships.banking_relationship_id",
+            ),
+            ColumnSpec(
+                "relationship_manager_code",
+                "string",
+                False,
+                "Synthetic relationship manager assignment code.",
+            ),
+            ColumnSpec(
+                "effective_from",
+                "datetime64[ns]",
+                False,
+                "Timestamp when the relationship manager assignment became effective.",
+            ),
+            ColumnSpec(
+                "effective_to",
+                "datetime64[ns]",
+                True,
+                "Timestamp when the relationship manager assignment ended, if superseded.",
             ),
         ),
     ),
@@ -663,6 +699,7 @@ __all__ = [
     "PAYMENT_BENEFICIARIES",
     "PROTECTED_SCENARIO_ANSWER_KEYS",
     "PROTECTED_TABLE_NAMES",
+    "RELATIONSHIP_MANAGER_HISTORY",
     "ROLES",
     "SESSIONS",
     "SUSPICIOUS_ACTIVITIES",

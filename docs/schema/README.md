@@ -1,19 +1,20 @@
 # Schema Notes
 
-The v0.1/v0.2 foundation data model is realistic enough to teach durable
-banking analytics habits while remaining approachable through Progressive data
-views.
+The canonical data model builds on the v0.1/v0.2 foundation and adds v0.3
+private-banking relationship context while remaining approachable through
+Progressive data views.
 
 ## Core Tables
 
-The v0.1/v0.2 foundation implements the following generated CSV tables and the
-matching schema contract in `src/banking_fraud_lab/schema/tables.py`.
+The generated CSV tables and matching schema contract in
+`src/banking_fraud_lab/schema/tables.py` are:
 
 - `partners`
 - `clients`
 - `roles`
 - `partner_roles`
 - `banking_relationships`
+- `relationship_manager_history`
 - `accounts`
 - `transactions`
 - `users`
@@ -25,8 +26,9 @@ matching schema contract in `src/banking_fraud_lab/schema/tables.py`.
 - `case_outcomes`
 - `protected_scenario_answer_keys`
 
-See `data_dictionary.md` for the v0.1/v0.2 foundation table purposes, columns,
-types, and relationships.
+See `data_dictionary.md` for the v0.1/v0.2 foundation table purposes and the
+v0.3 private-banking relationship-context extension columns, types, and
+relationships.
 
 See `erd.md` for the v0.2 ERD-backed schema tour across canonical tables and
 key relationships.
@@ -71,6 +73,9 @@ foundation lifecycle timestamps ordered:
   at `partners.kyc_risk_reviewed_at`.
 - Relationship-manager assignment is effective at
   `banking_relationships.relationship_manager_assigned_at`.
+- Relationship-manager history windows use
+  `relationship_manager_history.effective_from` and
+  `relationship_manager_history.effective_to`.
 - User authorization windows use `users.authorized_from` and
   `users.authorized_to`.
 - Account status windows use `accounts.status_effective_from` and

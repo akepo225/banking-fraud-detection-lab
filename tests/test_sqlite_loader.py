@@ -296,6 +296,39 @@ def test_representative_sql_examples_execute_successfully(tmp_path: Path) -> Non
         connection.close()
 
 
+def test_sqlite_private_banking_transaction_context_is_queryable(tmp_path: Path) -> None:
+    """SQLite learner path should expose AUM and counterparty transaction context."""
+    connection = create_minimal_banking_world_sqlite(
+        tmp_path / "learner_world.sqlite",
+        seed=42,
+    )
+
+    try:
+        row = connection.execute(
+            """
+            SELECT
+              COUNT(DISTINCT t.transaction_type) AS private_typologies,
+              SUM(CASE WHEN t.payment_beneficiary_id IS NOT NULL THEN 1 ELSE 0 END)
+                AS linked_counterparty_rows,
+              MIN(CAST(br.aum_chf AS REAL)) AS min_aum_chf
+            FROM transactions AS t
+            JOIN accounts AS a
+              ON a.account_id = t.account_id
+            JOIN banking_relationships AS br
+              ON br.banking_relationship_id = a.banking_relationship_id
+            LEFT JOIN payment_beneficiaries AS pb
+              ON pb.payment_beneficiary_id = t.payment_beneficiary_id
+            WHERE a.institution_name = 'Alpine Crest Private Bank'
+            """
+        ).fetchone()
+
+        assert row[0] >= 6
+        assert row[1] > 0
+        assert row[2] > 0
+    finally:
+        connection.close()
+
+
 def test_run_sql_module_executes_example_without_external_sqlite_cli(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

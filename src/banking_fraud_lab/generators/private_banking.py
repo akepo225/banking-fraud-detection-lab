@@ -19,9 +19,11 @@ from banking_fraud_lab.generators.minimal_world import (
 from banking_fraud_lab.schema import (
     ACCOUNTS,
     ALERTS,
+    BANKING_RELATIONSHIPS,
     CASE_OUTCOMES,
     CASES,
     COLUMN_NAMES,
+    PAYMENT_BENEFICIARIES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
     SUSPICIOUS_ACTIVITIES,
     TABLE_NAMES,
@@ -111,10 +113,14 @@ def inject_private_banking_transaction_fraud(
     _append_rows(scenario_tables, CASES, fraud_case_rows)
     _append_rows(scenario_tables, CASE_OUTCOMES, fraud_outcome_rows)
     _append_rows(scenario_tables, PROTECTED_SCENARIO_ANSWER_KEYS, answer_key_rows)
-    _add_private_false_positive_case(
+    false_positive_rows = _generate_private_false_positives(
         scenario_tables,
         selected_transaction_ids=set(selected_transactions["transaction_id"]),
     )
+    _append_rows(scenario_tables, SUSPICIOUS_ACTIVITIES, false_positive_rows["activities"])
+    _append_rows(scenario_tables, ALERTS, false_positive_rows["alerts"])
+    _append_rows(scenario_tables, CASES, false_positive_rows["cases"])
+    _append_rows(scenario_tables, CASE_OUTCOMES, false_positive_rows["outcomes"])
 
     return scenario_tables
 
@@ -164,6 +170,7 @@ def _private_fraud_activity_rows(
     )
     rows = []
     for offset, transaction in enumerate(selected_transactions.itertuples(index=False)):
+        beneficiary_id = _normalize_beneficiary_id(transaction.payment_beneficiary_id)
         rows.append(
             {
                 "suspicious_activity_id": _identifier("SA", start_index + offset),
@@ -173,11 +180,12 @@ def _private_fraud_activity_rows(
                 "transaction_id": transaction.transaction_id,
                 "user_id": None,
                 "session_id": None,
-                "payment_beneficiary_id": None,
+                "payment_beneficiary_id": beneficiary_id,
                 "activity_type": PRIVATE_BANKING_ACTIVITY_TYPE,
                 "detected_at": pd.Timestamp(transaction.booked_at) + pd.Timedelta(minutes=20),
                 "detection_signal": (
-                    "Large private-banking debit relative to account and relationship context."
+                    "Large private-banking debit relative to account, counterparty, "
+                    "and relationship context."
                 ),
                 "suspected_amount_chf": transaction.amount_chf,
                 "review_priority": "high",
@@ -204,7 +212,7 @@ def _private_fraud_alert_rows(
                 "triggered_transaction_id": activity["transaction_id"],
                 "user_id": None,
                 "session_id": None,
-                "payment_beneficiary_id": None,
+                "payment_beneficiary_id": activity["payment_beneficiary_id"],
                 "institution_name": ALPINE_CREST,
                 "generated_at": generated_at,
                 "alert_type": PRIVATE_BANKING_ACTIVITY_TYPE,
@@ -236,14 +244,14 @@ def _private_fraud_case_rows(
                 "transaction_id": alert["triggered_transaction_id"],
                 "user_id": None,
                 "session_id": None,
-                "payment_beneficiary_id": None,
+                "payment_beneficiary_id": alert["payment_beneficiary_id"],
                 "opened_at": opened_at,
                 "assigned_team": "private banking investigations",
                 "case_status": "closed",
                 "closed_at": opened_at + pd.Timedelta(days=2),
                 "investigation_summary": (
                     "Case reviewed relationship-manager context, relationship roles, "
-                    "account balance, and transaction amount."
+                    "AUM, account balance, counterparty context, and transaction amount."
                 ),
             }
         )
@@ -307,66 +315,286 @@ def _private_fraud_answer_key_rows(
     return rows
 
 
-def _add_private_false_positive_case(
-    tables: dict[str, pd.DataFrame],
+def _generate_private_false_positives(
+    tables: Mapping[str, pd.DataFrame],
     *,
     selected_transaction_ids: set[str],
-) -> None:
-    """Close one existing Alpine Crest alert as a non-fraud operational outcome."""
-    alerts = tables[ALERTS]
-    candidate_alerts = alerts[
-        (alerts["institution_name"] == ALPINE_CREST)
-        & (alerts["alert_type"] == PRIVATE_BANKING_FALSE_POSITIVE_TYPE)
-        & (~alerts["triggered_transaction_id"].isin(selected_transaction_ids))
-    ]
-    if candidate_alerts.empty:
-        return
+) -> dict[str, list[dict[str, object]]]:
+    """Build legitimate high-net-worth false positives with cases and outcomes."""
+    selected = _select_false_positive_transactions(
+        tables,
+        selected_transaction_ids=selected_transaction_ids,
+    )
+    rows = {
+        "activities": [],
+        "alerts": [],
+        "cases": [],
+        "outcomes": [],
+    }
+    if selected.empty:
+        return rows
 
-    alert = candidate_alerts.iloc[0]
-    alert_id = str(alert["alert_id"])
-    tables[ALERTS].loc[tables[ALERTS]["alert_id"] == alert_id, "alert_status"] = "closed"
-    tables[ALERTS].loc[tables[ALERTS]["alert_id"] == alert_id, "status_updated_at"] = (
-        pd.Timestamp(alert["generated_at"]) + pd.Timedelta(minutes=30)
+    activity_index = _next_identifier_index(tables[SUSPICIOUS_ACTIVITIES], "suspicious_activity_id")
+    alert_index = _next_identifier_index(tables[ALERTS], "alert_id")
+    case_index = _next_identifier_index(tables[CASES], "case_id")
+    outcome_index = _next_identifier_index(tables[CASE_OUTCOMES], "case_outcome_id")
+
+    for offset, transaction in enumerate(selected.itertuples(index=False)):
+        activity_id = _identifier("SA", activity_index + offset)
+        alert_id = _identifier("AL", alert_index + offset)
+        case_id = _identifier("CASE", case_index + offset)
+        outcome_id = _identifier("OUT", outcome_index + offset)
+        beneficiary_id = _normalize_beneficiary_id(transaction.payment_beneficiary_id)
+        detected_at = pd.Timestamp(transaction.booked_at) + pd.Timedelta(minutes=18)
+        generated_at = detected_at + pd.Timedelta(minutes=5)
+        opened_at = generated_at + pd.Timedelta(hours=4)
+        decided_at = opened_at + pd.Timedelta(days=1)
+        detection_signal = _false_positive_signal(transaction.false_positive_pattern)
+
+        rows["activities"].append(
+            {
+                "suspicious_activity_id": activity_id,
+                "institution_name": ALPINE_CREST,
+                "banking_relationship_id": transaction.banking_relationship_id,
+                "account_id": transaction.account_id,
+                "transaction_id": transaction.transaction_id,
+                "user_id": None,
+                "session_id": None,
+                "payment_beneficiary_id": beneficiary_id,
+                "activity_type": PRIVATE_BANKING_FALSE_POSITIVE_TYPE,
+                "detected_at": detected_at,
+                "detection_signal": detection_signal,
+                "suspected_amount_chf": transaction.amount_chf,
+                "review_priority": "medium",
+            }
+        )
+        rows["alerts"].append(
+            {
+                "alert_id": alert_id,
+                "suspicious_activity_id": activity_id,
+                "banking_relationship_id": transaction.banking_relationship_id,
+                "account_id": transaction.account_id,
+                "triggered_transaction_id": transaction.transaction_id,
+                "user_id": None,
+                "session_id": None,
+                "payment_beneficiary_id": beneficiary_id,
+                "institution_name": ALPINE_CREST,
+                "generated_at": generated_at,
+                "alert_type": PRIVATE_BANKING_FALSE_POSITIVE_TYPE,
+                "alert_status": "closed",
+                "status_updated_at": generated_at + pd.Timedelta(minutes=30),
+                "severity": "medium",
+                "reason": detection_signal,
+            }
+        )
+        rows["cases"].append(
+            {
+                "case_id": case_id,
+                "alert_id": alert_id,
+                "suspicious_activity_id": activity_id,
+                "banking_relationship_id": transaction.banking_relationship_id,
+                "account_id": transaction.account_id,
+                "transaction_id": transaction.transaction_id,
+                "user_id": None,
+                "session_id": None,
+                "payment_beneficiary_id": beneficiary_id,
+                "opened_at": opened_at,
+                "assigned_team": "private banking investigations",
+                "case_status": "closed",
+                "closed_at": opened_at + pd.Timedelta(days=1),
+                "investigation_summary": _false_positive_investigation_summary(transaction),
+            }
+        )
+        rows["outcomes"].append(
+            {
+                "case_outcome_id": outcome_id,
+                "case_id": case_id,
+                "decided_at": decided_at,
+                "recorded_at": decided_at + pd.Timedelta(hours=1),
+                "outcome_type": "false-positive",
+                "confirmed_fraud": False,
+                "loss_amount_original": MONEY_ZERO,
+                "loss_currency": transaction.currency,
+                "loss_amount_chf": MONEY_ZERO,
+                "notes": "Private-banking review closed without a fraud confirmation.",
+            }
+        )
+
+    return rows
+
+
+def _select_false_positive_transactions(
+    tables: Mapping[str, pd.DataFrame],
+    *,
+    selected_transaction_ids: set[str],
+) -> pd.DataFrame:
+    """Select deterministic legitimate high-net-worth false-positive examples."""
+    transactions = tables[TRANSACTIONS]
+    accounts = tables[ACCOUNTS][
+        ["account_id", "banking_relationship_id", "institution_name", "balance_chf"]
+    ]
+    relationships = tables[BANKING_RELATIONSHIPS][
+        ["banking_relationship_id", "primary_client_id", "aum_chf"]
+    ]
+    beneficiaries = tables[PAYMENT_BENEFICIARIES][
+        [
+            "payment_beneficiary_id",
+            "beneficiary_name",
+            "beneficiary_account_country",
+            "beneficiary_change_event",
+            "created_at",
+        ]
+    ]
+    used_transaction_ids = set(tables[SUSPICIOUS_ACTIVITIES]["transaction_id"]) | set(
+        selected_transaction_ids
+    )
+    candidates = (
+        transactions.merge(accounts, on="account_id", how="inner", validate="many_to_one")
+        .merge(
+            relationships,
+            on="banking_relationship_id",
+            how="left",
+            validate="many_to_one",
+        )
+        .merge(
+            beneficiaries,
+            on="payment_beneficiary_id",
+            how="left",
+            validate="many_to_one",
+        )
+    )
+    candidates = candidates[
+        (candidates["institution_name"] == ALPINE_CREST)
+        & (~candidates["transaction_id"].isin(used_transaction_ids))
+    ].copy()
+    if candidates.empty:
+        return candidates
+
+    candidates["amount_chf_numeric"] = candidates["amount_chf"].map(float)
+    candidates["false_positive_pattern"] = "relationship_context"
+    selected_frames = [
+        _first_false_positive_pattern(
+            candidates,
+            pattern_name="large_repatriation",
+            mask=(
+                (candidates["transaction_type"] == "wire_transfer")
+                & (candidates["payment_beneficiary_id"].notna())
+                & (candidates["beneficiary_change_event"] == "established_beneficiary")
+            ),
+        ),
+        _first_false_positive_pattern(
+            candidates,
+            pattern_name="routine_fx",
+            mask=candidates["transaction_type"] == "fx_trade",
+        ),
+        _first_false_positive_pattern(
+            candidates,
+            pattern_name="expected_fee",
+            mask=candidates["transaction_type"].isin(("management_fee", "custody_fee")),
+        ),
+    ]
+    non_empty_selected_frames = [frame for frame in selected_frames if not frame.empty]
+    selected = (
+        pd.concat(non_empty_selected_frames, ignore_index=True)
+        if non_empty_selected_frames
+        else candidates.iloc[0:0].copy()
+    )
+    target_count = _false_positive_target_count(len(candidates))
+    if len(selected) < target_count:
+        remaining = candidates[~candidates["transaction_id"].isin(selected["transaction_id"])]
+        remaining = remaining.sort_values(
+            ["amount_chf_numeric", "transaction_id"],
+            ascending=[False, True],
+            kind="stable",
+        ).head(target_count - len(selected))
+        selected = pd.concat([selected, remaining], ignore_index=True)
+
+    return selected.head(target_count)
+
+
+def _first_false_positive_pattern(
+    candidates: pd.DataFrame,
+    *,
+    pattern_name: str,
+    mask: pd.Series,
+) -> pd.DataFrame:
+    """Return one highest-amount candidate tagged with a false-positive pattern."""
+    pattern_candidates = candidates[mask].copy()
+    if pattern_candidates.empty:
+        return pattern_candidates
+    pattern_candidates = pattern_candidates.sort_values(
+        ["amount_chf_numeric", "transaction_id"],
+        ascending=[False, True],
+        kind="stable",
+    ).head(1)
+    pattern_candidates.loc[:, "false_positive_pattern"] = pattern_name
+    return pattern_candidates
+
+
+def _false_positive_target_count(candidate_count: int) -> int:
+    """Scale false positives to 3-5 examples when enough candidates exist."""
+    if candidate_count == 0:
+        return 0
+    return min(candidate_count, min(5, max(3, math.ceil(candidate_count * 0.02))))
+
+
+def _false_positive_signal(pattern_name: str) -> str:
+    """Return the alert signal for a legitimate private-banking review pattern."""
+    signals = {
+        "large_repatriation": "High-value wire matched established counterparty context.",
+        "routine_fx": "FX trade reviewed against documented relationship activity.",
+        "expected_fee": "Private-banking fee amount matched the relationship AUM tier.",
+    }
+    return signals.get(
+        pattern_name,
+        "High-value private-banking movement matched expected relationship context.",
     )
 
-    case_id = _identifier("CASE", _next_identifier_index(tables[CASES], "case_id"))
-    opened_at = pd.Timestamp(alert["generated_at"]) + pd.Timedelta(hours=4)
-    case_row = {
-        "case_id": case_id,
-        "alert_id": alert_id,
-        "suspicious_activity_id": alert["suspicious_activity_id"],
-        "banking_relationship_id": alert["banking_relationship_id"],
-        "account_id": alert["account_id"],
-        "transaction_id": alert["triggered_transaction_id"],
-        "user_id": None,
-        "session_id": None,
-        "payment_beneficiary_id": None,
-        "opened_at": opened_at,
-        "assigned_team": "private banking investigations",
-        "case_status": "closed",
-        "closed_at": opened_at + pd.Timedelta(days=1),
-        "investigation_summary": (
-            "Case reviewed the high-value movement and closed without fraud confirmation."
-        ),
-    }
-    decided_at = pd.Timestamp(case_row["opened_at"]) + pd.Timedelta(days=1)
-    outcome_row = {
-        "case_outcome_id": _identifier(
-            "OUT",
-            _next_identifier_index(tables[CASE_OUTCOMES], "case_outcome_id"),
-        ),
-        "case_id": case_id,
-        "decided_at": decided_at,
-        "recorded_at": decided_at + pd.Timedelta(hours=1),
-        "outcome_type": "false-positive",
-        "confirmed_fraud": False,
-        "loss_amount_original": MONEY_ZERO,
-        "loss_currency": "CHF",
-        "loss_amount_chf": MONEY_ZERO,
-        "notes": "Private-banking review closed without a fraud confirmation.",
-    }
-    _append_rows(tables, CASES, [case_row])
-    _append_rows(tables, CASE_OUTCOMES, [outcome_row])
+
+def _false_positive_investigation_summary(transaction: object) -> str:
+    """Return a distinct learner-readable rationale for clearing a false positive."""
+    if transaction.false_positive_pattern == "large_repatriation":
+        beneficiary_name = (
+            "known counterparty"
+            if pd.isna(transaction.beneficiary_name)
+            else transaction.beneficiary_name
+        )
+        country = (
+            "documented country"
+            if pd.isna(transaction.beneficiary_account_country)
+            else transaction.beneficiary_account_country
+        )
+        created_at = (
+            "relationship history"
+            if pd.isna(transaction.created_at)
+            else pd.Timestamp(transaction.created_at).date().isoformat()
+        )
+        return (
+            f"High-value wire involving {country} reviewed. Counterparty "
+            f"{beneficiary_name} is an established relationship since {created_at}. "
+            "Movement consistent with the Client's repatriation pattern."
+        )
+    if transaction.false_positive_pattern == "routine_fx":
+        return (
+            "FX trade reviewed. Client has documented FX activity history. "
+            "Trade size within established limits."
+        )
+    if transaction.false_positive_pattern == "expected_fee":
+        return (
+            "Management fee reviewed. Amount consistent with relationship AUM tier "
+            "and fee schedule."
+        )
+    return (
+        "High-value movement reviewed with Banking relationship, AUM, and counterparty "
+        "context; no fraud confirmation was recorded."
+    )
+
+
+def _normalize_beneficiary_id(value: object) -> object | None:
+    """Return None for pandas null beneficiary values."""
+    if pd.isna(value):
+        return None
+    return value
 
 
 def _append_rows(
@@ -413,6 +641,7 @@ def _write_tables(tables: Mapping[str, pd.DataFrame], output_dir: Path) -> None:
 
 __all__ = [
     "PRIVATE_BANKING_ACTIVITY_TYPE",
+    "PRIVATE_BANKING_FALSE_POSITIVE_TYPE",
     "PRIVATE_BANKING_SCENARIO_NAME",
     "generate_learner_facing_private_banking_transaction_fraud_world",
     "generate_private_banking_transaction_fraud_world",

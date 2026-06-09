@@ -4,9 +4,10 @@ This data dictionary defines the stable output contract for the datasets
 produced by `generate_minimal_banking_world(seed=42, scale="tiny")` and the
 larger deterministic `small`, `medium`, and `large` scale profiles. The
 v0.1/v0.2 foundation tables are extended additively in v0.3 by
-relationship-manager history for private-banking relationship context. The
-tables are synthetic, deterministic, and educational. They do not contain real
-client data and do not reconstruct real events.
+relationship-manager history, relationship AUM context, private-banking
+counterparty context, and richer Alpine Crest transaction typologies. The tables
+are synthetic, deterministic, and educational. They do not contain real client
+data and do not reconstruct real events.
 
 Money fields use exact decimal values. Where money is relevant, the model stores original amount and currency plus a CHF-normalized amount. Protected answer keys are intentionally separate from learner-facing lifecycle tables and are excluded from learner-facing generated outputs by default.
 
@@ -24,7 +25,7 @@ Money fields use exact decimal values. Where money is relevant, the model stores
 | `transactions` | Money movement events used by both private-banking and digital-banking tracks. |
 | `users` | Digital login identities that authenticate sessions for clients. |
 | `sessions` | Digital session telemetry for e-banking and app behavior. |
-| `payment_beneficiaries` | Saved payment beneficiaries used by digital-banking payments. |
+| `payment_beneficiaries` | Saved payment beneficiaries and private-banking counterparties used by payment and transaction-context features. |
 | `suspicious_activities` | Suspicious activity observations before alert generation. |
 | `alerts` | Alerts generated from suspicious activities that may trigger case investigations. |
 | `cases` | Investigation cases opened from alerts in the alert lifecycle. |
@@ -112,6 +113,7 @@ Swiss-bank-style containers grouping clients, partners, and accounts.
 | `status` | string | no |  | Relationship status. |
 | `relationship_manager_code` | string | no |  | Synthetic relationship manager assignment code. |
 | `relationship_manager_assigned_at` | datetime64[ns] | no |  | Timestamp when the current relationship manager assignment became effective. |
+| `aum_chf` | Decimal | no |  | Total assets under management for this relationship in CHF. |
 
 ## `relationship_manager_history`
 
@@ -152,15 +154,20 @@ Money movement events used by both private-banking and digital-banking tracks.
 | --- | --- | --- | --- | --- |
 | `transaction_id` | string | no |  | Stable synthetic transaction identifier. |
 | `account_id` | string | no | `accounts.account_id` | Account where the transaction is booked. |
-| `payment_beneficiary_id` | string | yes | `payment_beneficiaries.payment_beneficiary_id` | Payment beneficiary for outbound digital payments. |
+| `payment_beneficiary_id` | string | yes | `payment_beneficiaries.payment_beneficiary_id` | Payment beneficiary or private-banking counterparty for outbound flows. |
 | `booked_at` | datetime64[ns] | no |  | Transaction booking timestamp. |
-| `transaction_type` | string | no |  | Wire, card, cash, FX, or fee type. |
+| `transaction_type` | string | no |  | Wire, card, instant-payment, FX, fee, or investment-related type. |
 | `channel` | string | no |  | Branch, relationship manager, web, app, or batch channel. |
 | `direction` | string | no |  | Debit or credit from the account perspective. |
 | `amount_original` | Decimal | no |  | Exact transaction amount in original currency. |
 | `currency` | string | no |  | Original transaction currency. |
 | `amount_chf` | Decimal | no |  | Exact CHF-normalized transaction amount. |
 | `description` | string | no |  | Synthetic transaction description. |
+
+Alpine Crest private-banking transactions include `wire_transfer`, `fx_trade`,
+`management_fee`, `custody_fee`, `securities_purchase`, and
+`securities_sale`. NovaBank Digital foundation transactions continue to use
+`card_payment` and `instant_payment`.
 
 ## `users`
 
@@ -199,7 +206,7 @@ Digital session telemetry for e-banking and app behavior.
 
 ## `payment_beneficiaries`
 
-Saved payment beneficiaries used by digital-banking payments.
+Saved payment beneficiaries and private-banking counterparties used by payment and transaction-context features.
 
 | Column | Type | Nullable | References | Description |
 | --- | --- | --- | --- | --- |

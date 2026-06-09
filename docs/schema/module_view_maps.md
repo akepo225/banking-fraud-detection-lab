@@ -52,8 +52,8 @@ Columns:
 
 ## `pb_relationship_context`
 
-Exposes one row per Banking relationship with current relationship-manager
-history for private-banking relationship-context exercises.
+Exposes one row per Banking relationship with relationship AUM and current
+relationship-manager history for private-banking relationship-context exercises.
 
 Module path:
 
@@ -81,6 +81,7 @@ Columns:
 | `relationship_name` | `banking_relationships.relationship_name` |
 | `relationship_opened_at` | `banking_relationships.opened_at` |
 | `relationship_status` | `banking_relationships.status` |
+| `aum_chf` | `banking_relationships.aum_chf` |
 | `relationship_manager_code` | `relationship_manager_history.relationship_manager_code` |
 | `rm_effective_from` | `relationship_manager_history.effective_from` |
 | `rm_effective_to` | `relationship_manager_history.effective_to` |

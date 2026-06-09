@@ -1,13 +1,13 @@
 transaction_id,account_id,payment_beneficiary_id,booked_at,transaction_type,channel,direction,amount_original,currency,amount_chf,description
-T-0001,A-0001,,2025-12-31 23:59:00,wire_transfer,relationship_manager,debit,9151.00,GBP,10249.12,Private banking account movement
-T-0002,A-0002,,2026-01-08 17:27:00,wire_transfer,relationship_manager,debit,16012.00,EUR,15371.52,Private banking account movement
-T-0003,A-0003,,2026-01-16 10:54:00,wire_transfer,relationship_manager,credit,7510.00,CHF,7510.00,Private banking account movement
-T-0004,A-0004,,2026-01-24 04:21:00,wire_transfer,relationship_manager,debit,28616.00,USD,26040.56,Private banking account movement
-T-0005,A-0005,,2026-01-31 21:49:00,wire_transfer,relationship_manager,debit,43471.00,CHF,43471.00,Private banking account movement
-T-0006,A-0006,,2026-02-08 15:16:00,wire_transfer,relationship_manager,credit,42563.00,EUR,40860.48,Private banking account movement
+T-0001,A-0001,B-0001,2025-12-31 23:59:00,wire_transfer,relationship_manager,debit,28066.00,GBP,31433.92,Private banking wire transfer
+T-0002,A-0002,B-0001,2026-01-08 17:27:00,wire_transfer,relationship_manager,debit,45504.00,EUR,43683.84,Private banking wire transfer
+T-0003,A-0003,B-0003,2026-01-16 10:54:00,fx_trade,relationship_manager,debit,29470.00,CHF,29470.00,Private banking FX trade
+T-0004,A-0004,,2026-01-24 04:21:00,management_fee,batch,debit,3797.00,USD,3455.27,Private banking management fee
+T-0005,A-0005,B-0007,2026-01-31 21:49:00,wire_transfer,relationship_manager,debit,115286.00,CHF,115286.00,Private banking wire transfer
+T-0006,A-0006,,2026-02-08 15:16:00,custody_fee,batch,debit,2660.00,EUR,2553.60,Private banking custody fee
 T-0007,A-0007,,2026-02-16 08:43:00,card_payment,web,debit,30660.00,USD,27900.60,Digital banking account activity
-T-0008,A-0008,B-0004,2026-02-24 02:10:00,instant_payment,mobile_app,debit,55591.00,GBP,62261.92,Outbound payment to saved beneficiary
-T-0009,A-0001,,2026-03-03 19:38:00,wire_transfer,relationship_manager,credit,36772.00,GBP,41184.64,Private banking account movement
-T-0010,A-0002,,2026-03-11 13:05:00,wire_transfer,relationship_manager,debit,5216.00,EUR,5007.36,Private banking account movement
-T-0011,A-0003,,2026-03-19 06:32:00,wire_transfer,relationship_manager,debit,49742.00,CHF,49742.00,Private banking account movement
-T-0012,A-0004,,2026-03-26 23:59:00,wire_transfer,relationship_manager,credit,37380.00,USD,34015.80,Private banking account movement
+T-0008,A-0008,B-0010,2026-02-24 02:10:00,instant_payment,mobile_app,debit,55591.00,GBP,62261.92,Outbound payment to saved beneficiary
+T-0009,A-0001,B-0002,2026-03-03 19:38:00,securities_purchase,relationship_manager,debit,157830.00,GBP,176769.60,Private banking securities purchase
+T-0010,A-0002,B-0001,2026-03-11 13:05:00,wire_transfer,relationship_manager,debit,18067.00,EUR,17344.32,Private banking wire transfer
+T-0011,A-0003,B-0003,2026-03-19 06:32:00,fx_trade,relationship_manager,debit,140049.00,CHF,140049.00,Private banking FX trade
+T-0012,A-0004,,2026-03-26 23:59:00,securities_sale,relationship_manager,credit,160031.00,USD,145628.21,Private banking securities sale

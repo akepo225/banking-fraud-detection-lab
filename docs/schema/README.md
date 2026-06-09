@@ -1,8 +1,8 @@
 # Schema Notes
 
 The canonical data model builds on the v0.1/v0.2 foundation and adds v0.3
-private-banking relationship context while remaining approachable through
-Progressive data views.
+private-banking relationship, counterparty, AUM, and transaction context while
+remaining approachable through Progressive data views.
 
 ## Core Tables
 
@@ -27,8 +27,8 @@ The generated CSV tables and matching schema contract in
 - `protected_scenario_answer_keys`
 
 See `data_dictionary.md` for the v0.1/v0.2 foundation table purposes and the
-v0.3 private-banking relationship-context extension columns, types, and
-relationships.
+v0.3 private-banking relationship, counterparty, AUM, and transaction-context
+extension columns, types, and relationships.
 
 See `erd.md` for the v0.2 ERD-backed schema tour across canonical tables and
 key relationships.

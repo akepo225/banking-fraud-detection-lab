@@ -102,8 +102,8 @@ FOUNDATION_ALERT_LIFECYCLE = ProgressiveViewSpec(
 PB_RELATIONSHIP_CONTEXT = ProgressiveViewSpec(
     name="pb_relationship_context",
     purpose=(
-        "Exposes one row per Banking relationship with current relationship-manager "
-        "history for private-banking relationship-context exercises."
+        "Exposes one row per Banking relationship with relationship AUM and current "
+        "relationship-manager history for private-banking relationship-context exercises."
     ),
     source_tables=(BANKING_RELATIONSHIPS, RELATIONSHIP_MANAGER_HISTORY),
     columns=(
@@ -113,6 +113,7 @@ PB_RELATIONSHIP_CONTEXT = ProgressiveViewSpec(
         "relationship_name",
         "relationship_opened_at",
         "relationship_status",
+        "aum_chf",
         "relationship_manager_code",
         "rm_effective_from",
         "rm_effective_to",
@@ -162,6 +163,7 @@ SELECT
   br."relationship_name" AS "relationship_name",
   br."opened_at" AS "relationship_opened_at",
   br."status" AS "relationship_status",
+  br."aum_chf" AS "aum_chf",
   rmh."relationship_manager_code" AS "relationship_manager_code",
   rmh."effective_from" AS "rm_effective_from",
   rmh."effective_to" AS "rm_effective_to"
@@ -328,6 +330,7 @@ def _build_pb_relationship_context(
             "relationship_name",
             "opened_at",
             "status",
+            "aum_chf",
         ]
     ].rename(
         columns={

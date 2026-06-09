@@ -1,7 +1,7 @@
-banking_relationship_id,primary_client_id,institution_name,relationship_name,opened_at,status,relationship_manager_code,relationship_manager_assigned_at
-BR-0001,C-0001,Alpine Crest Private Bank,PB Bernard Relationship,2025-01-16 10:00:00,active,RM-505,2025-01-16 09:00:00
-BR-0002,C-0002,Alpine Crest Private Bank,PB Rogers Relationship,2025-01-04 11:00:00,active,RM-305,2025-01-04 10:00:00
-BR-0003,C-0003,Alpine Crest Private Bank,PB Davis Relationship,2024-12-23 12:00:00,active,RM-183,2024-12-23 11:00:00
-BR-0004,C-0004,Alpine Crest Private Bank,PB Davis Relationship,2024-12-11 13:00:00,active,RM-599,2024-12-11 12:00:00
-BR-0005,C-0005,NovaBank Digital,DB Abbott Relationship,2024-11-29 14:00:00,active,RM-899,2024-11-29 13:00:00
-BR-0006,C-0006,NovaBank Digital,DB Munoz Relationship,2024-11-17 15:00:00,active,RM-158,2024-11-17 14:00:00
+banking_relationship_id,primary_client_id,institution_name,relationship_name,opened_at,status,relationship_manager_code,relationship_manager_assigned_at,aum_chf
+BR-0001,C-0001,Alpine Crest Private Bank,PB Bernard Relationship,2025-01-16 10:00:00,active,RM-505,2025-01-16 09:00:00,4280277.56
+BR-0002,C-0002,Alpine Crest Private Bank,PB Rogers Relationship,2025-01-04 11:00:00,active,RM-305,2025-01-04 10:00:00,2926899.00
+BR-0003,C-0003,Alpine Crest Private Bank,PB Davis Relationship,2024-12-23 12:00:00,active,RM-183,2024-12-23 11:00:00,1661229.80
+BR-0004,C-0004,Alpine Crest Private Bank,PB Davis Relationship,2024-12-11 13:00:00,active,RM-599,2024-12-11 12:00:00,11289526.29
+BR-0005,C-0005,NovaBank Digital,DB Abbott Relationship,2024-11-29 14:00:00,active,RM-899,2024-11-29 13:00:00,607121.06
+BR-0006,C-0006,NovaBank Digital,DB Munoz Relationship,2024-11-17 15:00:00,active,RM-158,2024-11-17 14:00:00,207845.12

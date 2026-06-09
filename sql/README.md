@@ -61,6 +61,15 @@ The `sql/examples/` directory contains representative learner queries:
 - `05_transaction_feature_extraction.sql` covers feature extraction by building
   transaction-level features from canonical tables plus foundation Progressive
   data views.
+- `06_private_banking_value_features.sql` calculates Alpine Crest Private Bank
+  amount-to-AUM and amount-to-relationship-baseline features for the
+  `pb_high_value_movement` Detection pattern.
+- `07_private_banking_context_features.sql` calculates off-hours,
+  cross-border, and velocity features for `pb_transaction_fraud` and
+  `pb_high_value_movement` Detection patterns.
+- `08_private_banking_relationship_features.sql` calculates new-counterparty
+  and relationship-manager concentration features for the
+  `pb_transaction_fraud` Detection pattern.
 
 These examples are smoke-tested against the generated SQLite database and return
 meaningful rows against the default learner-facing tiny data.

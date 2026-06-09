@@ -29,6 +29,9 @@ EXAMPLE_SQL_FILES = (
     Path("sql/examples/03_client_relationship_cohorts.sql"),
     Path("sql/examples/04_progressive_alert_queue.sql"),
     Path("sql/examples/05_transaction_feature_extraction.sql"),
+    Path("sql/examples/06_private_banking_value_features.sql"),
+    Path("sql/examples/07_private_banking_context_features.sql"),
+    Path("sql/examples/08_private_banking_relationship_features.sql"),
 )
 
 

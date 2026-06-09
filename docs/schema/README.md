@@ -36,6 +36,10 @@ key relationships.
 See `progressive_views.md` for the foundation Progressive data view contracts,
 learner purposes, source tables, and SQLite view surfaces.
 
+See `features.md` for the v0.3 private-banking feature-family metadata,
+Detection pattern mappings, Python calculators, and matching SQLite exercise
+surface.
+
 See `module_view_maps.md` for the `00_foundations` view map that traces
 Progressive data views back to canonical tables.
 

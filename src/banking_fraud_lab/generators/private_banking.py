@@ -170,9 +170,7 @@ def _private_fraud_activity_rows(
     )
     rows = []
     for offset, transaction in enumerate(selected_transactions.itertuples(index=False)):
-        beneficiary_id = transaction.payment_beneficiary_id
-        if pd.isna(beneficiary_id):
-            beneficiary_id = None
+        beneficiary_id = _normalize_beneficiary_id(transaction.payment_beneficiary_id)
         rows.append(
             {
                 "suspicious_activity_id": _identifier("SA", start_index + offset),
@@ -346,9 +344,7 @@ def _generate_private_false_positives(
         alert_id = _identifier("AL", alert_index + offset)
         case_id = _identifier("CASE", case_index + offset)
         outcome_id = _identifier("OUT", outcome_index + offset)
-        beneficiary_id = transaction.payment_beneficiary_id
-        if pd.isna(beneficiary_id):
-            beneficiary_id = None
+        beneficiary_id = _normalize_beneficiary_id(transaction.payment_beneficiary_id)
         detected_at = pd.Timestamp(transaction.booked_at) + pd.Timedelta(minutes=18)
         generated_at = detected_at + pd.Timedelta(minutes=5)
         opened_at = generated_at + pd.Timedelta(hours=4)
@@ -592,6 +588,13 @@ def _false_positive_investigation_summary(transaction: object) -> str:
         "High-value movement reviewed with Banking relationship, AUM, and counterparty "
         "context; no fraud confirmation was recorded."
     )
+
+
+def _normalize_beneficiary_id(value: object) -> object | None:
+    """Return None for pandas null beneficiary values."""
+    if pd.isna(value):
+        return None
+    return value
 
 
 def _append_rows(

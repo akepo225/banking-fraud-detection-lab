@@ -119,10 +119,15 @@ case-library validator adds that field. Existing human-readable
 private-banking v0.3 entries must also reference `pb_high_value_movement` or
 `pb_transaction_fraud` wherever the contract requires an identifier.
 
-The `linked_modules` metadata field must contain paths that exist in the
-repository, such as:
+The `linked_modules` metadata field must contain only paths that exist in the
+repository at the time the case pack or regulatory note is added. Current
+metadata can safely link to the existing v0.1 baseline:
 
 - `notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb`
+
+After #84 creates the v0.3 module, downstream v0.3 case and regulatory notes may
+add the feature-engineering notebook path:
+
 - `notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
 
 Validators should build on `tests/test_case_library_metadata.py` and

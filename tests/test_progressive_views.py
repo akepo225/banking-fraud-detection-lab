@@ -148,6 +148,30 @@ def test_pb_relationship_context_view_uses_current_rm_history() -> None:
     assert view["rm_effective_to"].isna().all()
 
 
+def test_pb_relationship_context_view_selects_latest_current_rm_history() -> None:
+    """Duplicate current RM-history rows should collapse to the latest assignment."""
+    tables = generate_minimal_banking_world(seed=42)
+    first_history = tables[RELATIONSHIP_MANAGER_HISTORY].iloc[[0]].copy()
+    first_relationship_id = str(first_history.iloc[0]["banking_relationship_id"])
+    latest_effective_from = pd.Timestamp(first_history.iloc[0]["effective_from"]) + pd.Timedelta(
+        minutes=30
+    )
+    first_history.loc[:, "rm_history_id"] = "RMH-9999"
+    first_history.loc[:, "relationship_manager_code"] = "RM-999"
+    first_history.loc[:, "effective_from"] = latest_effective_from
+    tables[RELATIONSHIP_MANAGER_HISTORY] = pd.concat(
+        [tables[RELATIONSHIP_MANAGER_HISTORY], first_history],
+        ignore_index=True,
+    )
+
+    view = build_foundation_progressive_views(tables)["pb_relationship_context"]
+    selected_row = view[view["banking_relationship_id"] == first_relationship_id].iloc[0]
+
+    assert len(view) == len(tables[BANKING_RELATIONSHIPS])
+    assert selected_row["relationship_manager_code"] == "RM-999"
+    assert selected_row["rm_effective_from"] == latest_effective_from
+
+
 def test_foundation_alert_lifecycle_allows_schema_valid_child_multiplicity() -> None:
     """The Python view builder must match SQLite joins for schema-valid child rows."""
     tables = generate_minimal_banking_world(seed=42)

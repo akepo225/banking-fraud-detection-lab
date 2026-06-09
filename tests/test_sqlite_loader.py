@@ -4,6 +4,7 @@ from pathlib import Path
 
 import sqlite3
 
+import pandas as pd
 import pytest
 
 from banking_fraud_lab import (
@@ -16,6 +17,7 @@ from banking_fraud_lab.run_sql import main as run_sql_main
 from banking_fraud_lab.schema import (
     LEARNER_FACING_TABLE_NAMES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
+    RELATIONSHIP_MANAGER_HISTORY,
     ROLES,
     TABLE_NAMES,
 )
@@ -112,6 +114,40 @@ def test_default_sqlite_database_exposes_foundation_progressive_views(
         )
         assert "available_to_learners" not in protected_view_columns
         assert PROTECTED_SCENARIO_ANSWER_KEYS not in view_names
+    finally:
+        connection.close()
+
+
+def test_sqlite_pb_relationship_context_selects_latest_current_rm_history(
+    tmp_path: Path,
+) -> None:
+    """SQLite pb_relationship_context must match Python latest-current RM selection."""
+    tables = generate_minimal_banking_world(seed=42)
+    first_history = tables[RELATIONSHIP_MANAGER_HISTORY].iloc[[0]].copy()
+    first_relationship_id = str(first_history.iloc[0]["banking_relationship_id"])
+    latest_effective_from = pd.Timestamp(first_history.iloc[0]["effective_from"]) + pd.Timedelta(
+        minutes=30
+    )
+    first_history.loc[:, "rm_history_id"] = "RMH-9999"
+    first_history.loc[:, "relationship_manager_code"] = "RM-999"
+    first_history.loc[:, "effective_from"] = latest_effective_from
+    tables[RELATIONSHIP_MANAGER_HISTORY] = pd.concat(
+        [tables[RELATIONSHIP_MANAGER_HISTORY], first_history],
+        ignore_index=True,
+    )
+    connection = load_tables_to_sqlite(tables, tmp_path / "world.sqlite")
+
+    try:
+        row = connection.execute(
+            """
+            SELECT COUNT(*), MAX("relationship_manager_code"), MAX("rm_effective_from")
+            FROM "pb_relationship_context"
+            WHERE "banking_relationship_id" = ?
+            """,
+            (first_relationship_id,),
+        ).fetchone()
+
+        assert row == (1, "RM-999", latest_effective_from.isoformat(sep=" "))
     finally:
         connection.close()
 

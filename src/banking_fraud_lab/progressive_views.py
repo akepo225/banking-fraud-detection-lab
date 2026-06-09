@@ -166,9 +166,28 @@ SELECT
   rmh."effective_from" AS "rm_effective_from",
   rmh."effective_to" AS "rm_effective_to"
 FROM "banking_relationships" AS br
-LEFT JOIN "relationship_manager_history" AS rmh
+LEFT JOIN (
+  SELECT
+    ranked_rmh."banking_relationship_id",
+    ranked_rmh."relationship_manager_code",
+    ranked_rmh."effective_from",
+    ranked_rmh."effective_to"
+  FROM (
+    SELECT
+      rmh_source."banking_relationship_id" AS "banking_relationship_id",
+      rmh_source."relationship_manager_code" AS "relationship_manager_code",
+      rmh_source."effective_from" AS "effective_from",
+      rmh_source."effective_to" AS "effective_to",
+      ROW_NUMBER() OVER (
+        PARTITION BY rmh_source."banking_relationship_id"
+        ORDER BY rmh_source."effective_from" DESC, rmh_source."rm_history_id" DESC
+      ) AS "current_rank"
+    FROM "relationship_manager_history" AS rmh_source
+    WHERE rmh_source."effective_to" IS NULL
+  ) AS ranked_rmh
+  WHERE ranked_rmh."current_rank" = 1
+) AS rmh
   ON rmh."banking_relationship_id" = br."banking_relationship_id"
- AND rmh."effective_to" IS NULL
 """,
     FOUNDATION_ALERT_LIFECYCLE.name: """
 CREATE VIEW "foundation_alert_lifecycle" AS
@@ -318,17 +337,28 @@ def _build_pb_relationship_context(
     )
     current_rm_history = tables[RELATIONSHIP_MANAGER_HISTORY][
         [
+            "rm_history_id",
             "banking_relationship_id",
             "relationship_manager_code",
             "effective_from",
             "effective_to",
         ]
     ]
-    current_rm_history = current_rm_history[current_rm_history["effective_to"].isna()].rename(
-        columns={
-            "effective_from": "rm_effective_from",
-            "effective_to": "rm_effective_to",
-        }
+    current_rm_history = (
+        current_rm_history[current_rm_history["effective_to"].isna()]
+        .sort_values(
+            ["banking_relationship_id", "effective_from", "rm_history_id"],
+            ascending=[True, False, False],
+            kind="mergesort",
+        )
+        .drop_duplicates("banking_relationship_id", keep="first")
+        .drop(columns="rm_history_id")
+        .rename(
+            columns={
+                "effective_from": "rm_effective_from",
+                "effective_to": "rm_effective_to",
+            }
+        )
     )
 
     view = relationships.merge(

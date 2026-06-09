@@ -63,6 +63,9 @@ def test_effective_date_ordering_holds_for_foundation_entities(scale: str) -> No
         relationship_manager_history["effective_to"].isna()
     ]
     assert current_rm_history["banking_relationship_id"].is_unique
+    assert set(current_rm_history["banking_relationship_id"]) == set(
+        relationships["banking_relationship_id"]
+    )
     rm_history_ends = relationship_manager_history.dropna(subset=["effective_to"])
     assert (relationship_manager_history["effective_from"] <= DATASET_AS_OF).all()
     assert (rm_history_ends["effective_from"] <= rm_history_ends["effective_to"]).all()

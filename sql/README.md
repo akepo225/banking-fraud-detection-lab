@@ -71,6 +71,11 @@ The `sql/examples/` directory contains representative learner queries:
   and relationship-manager concentration features for the
   `pb_transaction_fraud` Detection pattern.
 
+The v0.3 feature-engineering notebook at
+`../notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
+loads examples 06-08 into an in-memory learner-facing SQLite database and
+compares representative SQL outputs with the Python feature library.
+
 These examples are smoke-tested against the generated SQLite database and return
 meaningful rows against the default learner-facing tiny data.
 

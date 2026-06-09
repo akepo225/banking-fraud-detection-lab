@@ -131,7 +131,11 @@ def test_regulatory_notes_link_existing_exercises() -> None:
         assert linked_modules
         for linked_module in linked_modules:
             assert linked_module.startswith("notebooks/")
-            assert Path(linked_module).exists(), f"{note_path} links missing {linked_module}"
+            linked_path = Path(linked_module)
+            assert linked_path.is_file(), f"{note_path} links missing file {linked_module}"
+            assert linked_path.suffix == ".ipynb", (
+                f"{note_path} must link notebook files, got {linked_module}"
+            )
 
 
 def test_regulatory_note_pattern_ids_are_valid_when_present() -> None:

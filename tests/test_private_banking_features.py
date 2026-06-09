@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from banking_fraud_lab import (
     build_private_banking_features,
@@ -178,6 +179,62 @@ def test_legitimate_private_banking_false_positives_have_feature_values() -> Non
     assert false_positive_features["amount_to_relationship_baseline_ratio"].ge(0).all()
     assert false_positive_features["rm_alert_share"].ge(0).all()
     assert false_positive_features["payment_beneficiary_id"].notna().any()
+
+
+def test_velocity_features_order_same_timestamp_transactions_by_id() -> None:
+    """Velocity windows should use deterministic transaction_id ties."""
+    transactions = pd.DataFrame(
+        [
+            {
+                "transaction_id": "tx_003",
+                "account_id": "acct_1",
+                "booked_at": "2026-01-15T10:00:00",
+                "amount_chf": 300.0,
+            },
+            {
+                "transaction_id": "tx_001",
+                "account_id": "acct_1",
+                "booked_at": "2026-01-15T10:00:00",
+                "amount_chf": 100.0,
+            },
+            {
+                "transaction_id": "tx_002",
+                "account_id": "acct_1",
+                "booked_at": "2026-01-15T10:00:00",
+                "amount_chf": 200.0,
+            },
+        ]
+    )
+    accounts = pd.DataFrame(
+        [
+            {
+                "account_id": "acct_1",
+                "banking_relationship_id": "rel_1",
+            },
+        ]
+    )
+    banking_relationships = pd.DataFrame(
+        [
+            {
+                "banking_relationship_id": "rel_1",
+                "institution_name": ALPINE_CREST,
+            },
+        ]
+    )
+
+    features = calculate_velocity_features(transactions, accounts, banking_relationships)
+    features_by_id = features.set_index("transaction_id")
+
+    assert features_by_id.loc["tx_001", "relationship_txn_count_7d"] == 1
+    assert features_by_id.loc["tx_001", "relationship_amount_sum_7d_chf"] == 100.0
+    assert features_by_id.loc["tx_002", "relationship_txn_count_7d"] == 2
+    assert features_by_id.loc["tx_002", "relationship_amount_sum_7d_chf"] == 300.0
+    assert features_by_id.loc["tx_003", "relationship_txn_count_7d"] == 3
+    assert features_by_id.loc["tx_003", "relationship_amount_sum_7d_chf"] == 600.0
+    assert (
+        features_by_id["relationship_txn_count_30d"]
+        == features_by_id["relationship_txn_count_7d"]
+    ).all()
 
 
 def test_feature_documentation_mentions_all_specs() -> None:

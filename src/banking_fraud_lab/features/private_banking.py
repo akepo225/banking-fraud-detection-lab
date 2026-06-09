@@ -260,13 +260,19 @@ def calculate_velocity_features(
             booked_at = pd.Timestamp(row.booked_at)
             seven_day_start = booked_at - pd.Timedelta(days=7)
             thirty_day_start = booked_at - pd.Timedelta(days=30)
+            current_or_prior = (
+                relationship_transactions["booked_at"] < booked_at
+            ) | (
+                (relationship_transactions["booked_at"] == booked_at)
+                & (relationship_transactions["transaction_id"] <= row.transaction_id)
+            )
             window_7d = relationship_transactions[
                 (relationship_transactions["booked_at"] >= seven_day_start)
-                & (relationship_transactions["booked_at"] <= booked_at)
+                & current_or_prior
             ]
             window_30d = relationship_transactions[
                 (relationship_transactions["booked_at"] >= thirty_day_start)
-                & (relationship_transactions["booked_at"] <= booked_at)
+                & current_or_prior
             ]
             count_7d = int(len(window_7d))
             count_30d = int(len(window_30d))

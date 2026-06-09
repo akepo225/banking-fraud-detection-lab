@@ -8,12 +8,14 @@ from urllib.parse import urlparse
 import yaml
 
 from banking_fraud_lab.schema import PATTERN_IDS
+from private_banking_test_constants import (
+    PRIVATE_BANKING_V0_3_MODULE_PREFIX,
+    PRIVATE_BANKING_V0_3_PATTERN_IDS,
+)
 
 
 REGULATORY_INDEX = Path("docs/regulation/index.md")
 SOURCE_NOTE_DIR = Path("docs/regulation/source_notes")
-PRIVATE_BANKING_V0_3_MODULE_PREFIX = "notebooks/04_private_banking_feature_engineering/"
-PRIVATE_BANKING_V0_3_PATTERN_IDS = {"pb_high_value_movement", "pb_transaction_fraud"}
 
 REQUIRED_SOURCE_FAMILIES = {
     "swiss_amla",
@@ -170,6 +172,7 @@ def test_private_banking_v0_3_regulatory_notes_reference_required_pattern_ids() 
                 f"{note_path} must define pattern_ids metadata"
             )
             assert isinstance(pattern_ids, list), f"{note_path} pattern_ids must be a list"
+            assert pattern_ids, f"{note_path} pattern_ids must not be empty"
             invalid_pattern_ids = sorted(set(pattern_ids) - PRIVATE_BANKING_V0_3_PATTERN_IDS)
             assert not invalid_pattern_ids, (
                 f"{note_path} must use v0.3 private-banking pattern_ids from "

@@ -6,13 +6,15 @@ from pathlib import Path
 import re
 
 from banking_fraud_lab.schema import PATTERN_IDS
+from private_banking_test_constants import (
+    PRIVATE_BANKING_V0_3_MODULE_PREFIX,
+    PRIVATE_BANKING_V0_3_PATTERN_IDS,
+)
 
 CASE_SOURCE_PACK_DIR = Path("docs/cases/source_packs")
 CASE_LIBRARY_INDEX = Path("docs/cases/index.md")
 HITL_MARKER = "<!-- HITL-REVIEW-REQUIRED -->"
 PRIVATE_BANKING_TRACK = "Private-banking fraud detection"
-PRIVATE_BANKING_V0_3_MODULE_PREFIX = "notebooks/04_private_banking_feature_engineering/"
-PRIVATE_BANKING_V0_3_PATTERN_IDS = {"pb_high_value_movement", "pb_transaction_fraud"}
 REQUIRED_METADATA_FIELDS = {
     "title",
     "status",

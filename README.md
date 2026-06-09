@@ -112,6 +112,7 @@ SQLite databases.
 - [ERD-backed schema tour](docs/schema/erd.md) and
   [module view maps](docs/schema/module_view_maps.md)
 - [Progressive data views](docs/schema/progressive_views.md)
+- [Private-banking feature library](docs/schema/features.md)
 - [Optional canonical-data warm-ups](notebooks/00_foundations/warmups/)
 - [Dataset quality report](docs/data_quality/dataset_quality_report.md)
 - [SQLite examples](sql/README.md)

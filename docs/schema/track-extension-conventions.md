@@ -118,6 +118,12 @@ matter for backward compatibility. Private-banking source packs that link to
 the v0.3 module must also include a structured `pattern_id` metadata field with
 `pb_high_value_movement` or `pb_transaction_fraud`.
 
+Regulatory source notes that link to the v0.3 private-banking module must
+include a structured `pattern_ids` metadata list whose values are Detection
+pattern identifiers from `PATTERN_IDS`. v0.3 private-banking notes may use only
+`pb_high_value_movement` or `pb_transaction_fraud` unless a later issue extends
+the registry first.
+
 The `linked_modules` metadata field must contain only paths that exist in the
 repository at the time the case pack or regulatory note is added. Current
 metadata can safely link to the existing v0.1 baseline:

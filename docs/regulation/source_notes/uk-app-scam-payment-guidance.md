@@ -43,7 +43,7 @@ The reimbursement policy context also gives governance exercises a stakeholder l
 that only ranks outbound payments may miss receiving-side mule risk, while a model that flags
 too broadly may overwhelm investigators and produce weak explanations for legitimate Clients.
 
-## Linked v0.1 Exercises
+## Linked Exercises
 
 - `notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb`: uses NovaBank
   Digital sessions, beneficiary changes, incoming victim payments, and onward transfers to

@@ -41,7 +41,7 @@ For governance exercises, the learning implication is that a high-risk network p
 clear evidence and limitations. The notebook memo should explain what is observed in NovaBank
 Digital synthetic data and avoid claims about criminal intent.
 
-## Linked v0.1 Exercises
+## Linked Exercises
 
 - `notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb`: introduces mule
   behavior through account age, beneficiary novelty, shared-device signals, and payment velocity.

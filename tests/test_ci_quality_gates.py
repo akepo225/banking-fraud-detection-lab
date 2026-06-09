@@ -45,7 +45,7 @@ QUALITY_GATE_TEST_IDS = {
     "tests/test_case_library_metadata.py::test_case_library_index_links_all_source_packs",
     "tests/test_regulatory_source_index.py::test_regulatory_index_declares_educational_non_advice_scope",
     "tests/test_regulatory_source_index.py::test_regulatory_notes_cover_required_source_families_and_official_links",
-    "tests/test_regulatory_source_index.py::test_regulatory_notes_link_existing_v0_1_exercises",
+    "tests/test_regulatory_source_index.py::test_regulatory_notes_link_existing_exercises",
     "tests/test_foundations_notebook.py::test_foundations_notebook_executes",
     "tests/test_private_banking_notebook.py::test_private_banking_notebook_executes",
     "tests/test_digital_scam_to_mule_notebook.py::test_digital_scam_to_mule_notebook_executes",

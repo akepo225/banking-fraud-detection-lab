@@ -133,6 +133,7 @@ def test_private_banking_v0_3_source_packs_reference_required_pattern_ids() -> N
 
         if is_private_banking_v0_3:
             pattern_id = metadata.get("pattern_id")
+            assert pattern_id is not None, f"{path} must define pattern_id metadata"
             assert pattern_id in PRIVATE_BANKING_V0_3_PATTERN_IDS, (
                 f"{path} must use a v0.3 private-banking pattern_id from "
                 f"{sorted(PRIVATE_BANKING_V0_3_PATTERN_IDS)}"

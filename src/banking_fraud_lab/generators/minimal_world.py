@@ -555,8 +555,11 @@ def _generate_sessions(
     """Generate login and activity sessions for digital users."""
     rows = []
     events = ("login", "view_accounts", "add_beneficiary", "payment_authorized")
+    session_users = users[users["institution_name"] == NOVABANK]
+    if session_users.empty:
+        session_users = users
     for index in range(1, profile.session_count + 1):
-        user = users.iloc[(index - 1) % len(users)]
+        user = session_users.iloc[(index - 1) % len(session_users)]
         channel = str(rng.choice(("web", "mobile_app")))
         started_at = _bounded_timestamp(
             index,

@@ -230,6 +230,12 @@ def test_session_telemetry_matches_declared_channel() -> None:
     """Session user-agent families and versions must agree with the declared channel."""
     tables = generate_minimal_banking_world(seed=42)
     sessions = tables["sessions"]
+    session_user_context = sessions.merge(
+        tables["users"][["user_id", "institution_name"]],
+        on="user_id",
+        how="left",
+        validate="many_to_one",
+    )
     expected = {
         "mobile_app": {
             "user_agents": {"NovaBankMobile/iOS", "NovaBankMobile/Android"},
@@ -241,6 +247,7 @@ def test_session_telemetry_matches_declared_channel() -> None:
         },
     }
 
+    assert set(session_user_context["institution_name"]) == {"NovaBank Digital"}
     assert set(sessions["channel"]) <= set(expected)
     for channel, telemetry in expected.items():
         channel_sessions = sessions[sessions["channel"] == channel]

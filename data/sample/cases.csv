@@ -1,3 +1,3 @@
 case_id,alert_id,suspicious_activity_id,banking_relationship_id,account_id,transaction_id,user_id,session_id,payment_beneficiary_id,opened_at,assigned_team,case_status,closed_at,investigation_summary
-CASE-0001,AL-0002,SA-0002,BR-0006,A-0008,T-0008,U-0006,S-0006,B-0010,2026-02-24 08:30:00,digital investigations,closed,2026-02-26 08:30:00,"Case reviewed payment, User, session, and beneficiary context."
-CASE-0002,AL-0003,SA-0003,BR-0005,A-0007,T-0007,U-0005,S-0005,,2026-02-16 15:03:00,digital investigations,closed,2026-02-18 15:03:00,Case reviewed digital telemetry and closed without fraud confirmation.
+CASE-0001,AL-0002,SA-0002,BR-0006,A-0008,T-0008,U-0006,S-0002,B-0010,2026-02-24 08:30:00,digital investigations,closed,2026-02-26 08:30:00,"Case reviewed payment, User, session, and beneficiary context."
+CASE-0002,AL-0003,SA-0003,BR-0005,A-0007,T-0007,U-0005,S-0001,,2026-02-16 15:03:00,digital investigations,closed,2026-02-18 15:03:00,Case reviewed digital telemetry and closed without fraud confirmation.

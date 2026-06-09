@@ -18,6 +18,11 @@ The utility joins scores to the alert lifecycle through `cases` and
 `case_outcomes`; it does not train a model or expose protected scenario answer
 keys.
 
+The v0.3 Alpine Crest supervised-baseline notebook at
+`../notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb`
+uses this report shape for threshold tuning over private-banking feature-library
+outputs.
+
 ## Report Fields
 
 The returned report includes:

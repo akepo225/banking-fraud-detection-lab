@@ -130,6 +130,11 @@ add the feature-engineering notebook path:
 
 - `notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
 
+After #85 creates the supervised baseline, downstream v0.3 case and regulatory
+notes may also add:
+
+- `notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb`
+
 Validators should build on `tests/test_case_library_metadata.py` and
 `tests/test_regulatory_source_index.py` rather than creating one-off checks.
 Source notes must keep facts, interpretation, learning implications, and human

@@ -162,9 +162,10 @@ def test_private_banking_v0_3_regulatory_notes_reference_required_pattern_ids() 
 
         if is_private_banking_v0_3:
             pattern_ids = metadata.get("pattern_ids")
-            assert isinstance(pattern_ids, list), (
+            assert pattern_ids is not None, (
                 f"{note_path} must define pattern_ids metadata"
             )
+            assert isinstance(pattern_ids, list), f"{note_path} pattern_ids must be a list"
             invalid_pattern_ids = sorted(set(pattern_ids) - PRIVATE_BANKING_V0_3_PATTERN_IDS)
             assert not invalid_pattern_ids, (
                 f"{note_path} must use v0.3 private-banking pattern_ids from "

@@ -71,6 +71,9 @@ and excludes `protected_scenario_answer_keys`.
 The featured notebook at
 `notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
 uses this builder as the Python path for private-banking feature engineering.
+The supervised-baseline notebook at
+`notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb`
+uses the same builder as its model input path.
 
 ## SQLite Path
 

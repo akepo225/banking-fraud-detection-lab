@@ -41,6 +41,10 @@ See `detection_patterns.md` for the stable detection pattern identifiers
 used across the curriculum for cross-module references, case-pack linking,
 and Progressive data view grouping.
 
+See `track-extension-conventions.md` for the v0.3/v0.4 track extension
+conventions for feature naming, notebook layout, evaluation output shape, and
+case/regulatory linking.
+
 ## Generator Scale Profiles
 
 The canonical generator accepts named `tiny`, `small`, `medium`, and `large`

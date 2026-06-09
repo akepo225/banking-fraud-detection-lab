@@ -2,6 +2,9 @@
 
 Featured notebooks are organized by module.
 
+Track extension notebook naming and module-layout conventions are defined in
+[`../docs/schema/track-extension-conventions.md`](../docs/schema/track-extension-conventions.md).
+
 - `00_foundations/`: setup, data tour, schema, SQL feature extraction. Start with `00_foundations/foundations_data_tour.ipynb`, with the ERD-backed schema tour in `../docs/schema/erd.md`.
 - `01_private_banking_transaction_fraud/`: private-banking transaction fraud baseline. Start with `01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb`.
 - `02_digital_scam_to_mule/`: digital scam-to-mule fraud detection baseline. Start with `02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb`.

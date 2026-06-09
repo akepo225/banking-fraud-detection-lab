@@ -80,6 +80,12 @@ New detection patterns should follow these conventions:
    existing synthetic institution constants.
 6. Add corresponding tests to `tests/test_detection_patterns.py`.
 
+Track-specific feature, notebook, case, and regulatory extensions should follow
+the shared contract in `track-extension-conventions.md`. That contract defines
+how v0.3 private-banking and future v0.4 digital-banking work should reference
+`PatternSpec`, `PATTERN_IDS`, and `ACTIVITY_TYPE_TO_PATTERN` without creating a
+parallel Detection pattern metadata layer.
+
 ## Glossary Alignment
 
 - **Detection pattern**: A recurring observable signal that can be translated

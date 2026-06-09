@@ -68,6 +68,10 @@ amount_features = calculate_amount_to_aum_features(
 The merged private-banking feature frame is scoped to Alpine Crest Private Bank
 and excludes `protected_scenario_answer_keys`.
 
+The featured notebook at
+`notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
+uses this builder as the Python path for private-banking feature engineering.
+
 ## SQLite Path
 
 The SQLite examples calculate representative private-banking features directly
@@ -86,3 +90,7 @@ Create a learner database and run an exercise with:
 uv run python -m banking_fraud_lab.create_sqlite data/sample/minimal_world.sqlite
 uv run python -m banking_fraud_lab.run_sql data/sample/minimal_world.sqlite sql/examples/06_private_banking_value_features.sql
 ```
+
+The feature-engineering notebook also runs these SQL examples against an
+in-memory learner-facing SQLite database so the Python and SQL paths remain
+aligned.

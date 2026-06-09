@@ -32,25 +32,65 @@ WITH transaction_context AS (
 velocity_windows AS (
   SELECT
     transaction_context.*,
-    COUNT(*) OVER (
-      PARTITION BY banking_relationship_id
-      ORDER BY booked_at, transaction_id
-      ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+    (
+      SELECT COUNT(*)
+      FROM transaction_context AS history
+      WHERE history.banking_relationship_id =
+        transaction_context.banking_relationship_id
+        AND julianday(history.booked_at) >=
+          julianday(transaction_context.booked_at) - 7
+        AND (
+          history.booked_at < transaction_context.booked_at
+          OR (
+            history.booked_at = transaction_context.booked_at
+            AND history.transaction_id <= transaction_context.transaction_id
+          )
+        )
     ) AS relationship_txn_count_7d,
-    SUM(amount_chf) OVER (
-      PARTITION BY banking_relationship_id
-      ORDER BY booked_at, transaction_id
-      ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+    (
+      SELECT SUM(history.amount_chf)
+      FROM transaction_context AS history
+      WHERE history.banking_relationship_id =
+        transaction_context.banking_relationship_id
+        AND julianday(history.booked_at) >=
+          julianday(transaction_context.booked_at) - 7
+        AND (
+          history.booked_at < transaction_context.booked_at
+          OR (
+            history.booked_at = transaction_context.booked_at
+            AND history.transaction_id <= transaction_context.transaction_id
+          )
+        )
     ) AS relationship_amount_sum_7d_chf,
-    COUNT(*) OVER (
-      PARTITION BY banking_relationship_id
-      ORDER BY booked_at, transaction_id
-      ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
+    (
+      SELECT COUNT(*)
+      FROM transaction_context AS history
+      WHERE history.banking_relationship_id =
+        transaction_context.banking_relationship_id
+        AND julianday(history.booked_at) >=
+          julianday(transaction_context.booked_at) - 30
+        AND (
+          history.booked_at < transaction_context.booked_at
+          OR (
+            history.booked_at = transaction_context.booked_at
+            AND history.transaction_id <= transaction_context.transaction_id
+          )
+        )
     ) AS relationship_txn_count_30d,
-    SUM(amount_chf) OVER (
-      PARTITION BY banking_relationship_id
-      ORDER BY booked_at, transaction_id
-      ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
+    (
+      SELECT SUM(history.amount_chf)
+      FROM transaction_context AS history
+      WHERE history.banking_relationship_id =
+        transaction_context.banking_relationship_id
+        AND julianday(history.booked_at) >=
+          julianday(transaction_context.booked_at) - 30
+        AND (
+          history.booked_at < transaction_context.booked_at
+          OR (
+            history.booked_at = transaction_context.booked_at
+            AND history.transaction_id <= transaction_context.transaction_id
+          )
+        )
     ) AS relationship_amount_sum_30d_chf
   FROM transaction_context
 )

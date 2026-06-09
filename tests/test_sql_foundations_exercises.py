@@ -60,7 +60,7 @@ def test_private_banking_sql_exercises_cover_feature_topics() -> None:
     assert "balance_chf" in sql_by_topic["pb_value_features"]
     assert "OVER (" in sql_by_topic["pb_value_features"]
     assert "strftime" in sql_by_topic["pb_context_features"]
-    assert "ROWS BETWEEN" in sql_by_topic["pb_context_features"]
+    assert "julianday" in sql_by_topic["pb_context_features"]
     assert "is_cross_border" in sql_by_topic["pb_context_features"]
     assert "relationship_manager_code" in sql_by_topic["pb_relationship_features"]
     assert "ROW_NUMBER() OVER" in sql_by_topic["pb_relationship_features"]

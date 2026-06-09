@@ -162,6 +162,69 @@ def test_minimal_world_preserves_semantic_join_integrity() -> None:
         == rm_history_context["relationship_manager_assigned_at"]
     ).all()
 
+    account_balances = (
+        accounts.groupby("banking_relationship_id", as_index=False)["balance_chf"]
+        .sum()
+        .rename(columns={"balance_chf": "relationship_balance_chf"})
+    )
+    relationship_balances = relationships.merge(
+        account_balances,
+        on="banking_relationship_id",
+        how="left",
+        validate="one_to_one",
+    )
+    assert relationship_balances["aum_chf"].notna().all()
+    assert (relationship_balances["aum_chf"] > 0).all()
+    alpine_relationships = relationship_balances[
+        relationship_balances["institution_name"] == "Alpine Crest Private Bank"
+    ]
+    assert (alpine_relationships["aum_chf"] > alpine_relationships["relationship_balance_chf"]).all()
+
+
+def test_minimal_world_private_banking_transaction_context_is_populated() -> None:
+    """Private-banking rows should include AUM-ready typologies and counterparties."""
+    tables = generate_minimal_banking_world(seed=42)
+    transactions = tables["transactions"]
+    accounts = tables["accounts"]
+    clients = tables["clients"]
+    beneficiaries = tables["payment_beneficiaries"]
+    private_transactions = transactions.merge(
+        accounts[["account_id", "banking_relationship_id", "institution_name"]],
+        on="account_id",
+        how="inner",
+        validate="many_to_one",
+    )
+    private_transactions = private_transactions[
+        private_transactions["institution_name"] == "Alpine Crest Private Bank"
+    ]
+    private_beneficiaries = beneficiaries.merge(
+        clients[["client_id", "institution_name"]],
+        on="client_id",
+        how="left",
+        validate="many_to_one",
+    )
+    private_beneficiaries = private_beneficiaries[
+        private_beneficiaries["institution_name"] == "Alpine Crest Private Bank"
+    ]
+
+    assert {
+        "wire_transfer",
+        "fx_trade",
+        "management_fee",
+        "custody_fee",
+        "securities_purchase",
+        "securities_sale",
+    }.issubset(set(private_transactions["transaction_type"]))
+    assert private_transactions["payment_beneficiary_id"].notna().any()
+    assert {"established_beneficiary", "new_beneficiary_added"}.issubset(
+        set(private_beneficiaries["beneficiary_change_event"])
+    )
+    assert set(
+        private_transactions.dropna(subset=["payment_beneficiary_id"])[
+            "payment_beneficiary_id"
+        ]
+    ).issubset(set(private_beneficiaries["payment_beneficiary_id"]))
+
 
 def test_session_telemetry_matches_declared_channel() -> None:
     """Session user-agent families and versions must agree with the declared channel."""

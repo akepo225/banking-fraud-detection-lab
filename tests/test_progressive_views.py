@@ -112,6 +112,7 @@ def test_pb_relationship_context_view_uses_current_rm_history() -> None:
         "relationship_name",
         "relationship_opened_at",
         "relationship_status",
+        "aum_chf",
         "relationship_manager_code",
         "rm_effective_from",
         "rm_effective_to",
@@ -122,6 +123,12 @@ def test_pb_relationship_context_view_uses_current_rm_history() -> None:
         tables[RELATIONSHIP_MANAGER_HISTORY]["effective_to"].isna()
     ]
     view_context = view.merge(
+        tables[BANKING_RELATIONSHIPS][["banking_relationship_id", "aum_chf"]],
+        on="banking_relationship_id",
+        how="left",
+        validate="one_to_one",
+        suffixes=("_view", "_relationship"),
+    ).merge(
         current_rm_history[
             [
                 "banking_relationship_id",
@@ -144,6 +151,7 @@ def test_pb_relationship_context_view_uses_current_rm_history() -> None:
         view_context["relationship_manager_code_view"]
         == view_context["relationship_manager_code_history"]
     ).all()
+    assert (view_context["aum_chf_view"] == view_context["aum_chf_relationship"]).all()
     assert (view_context["rm_effective_from"] == view_context["effective_from"]).all()
     assert view["rm_effective_to"].isna().all()
 

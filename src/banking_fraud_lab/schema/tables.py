@@ -190,6 +190,12 @@ TABLE_SPECS: dict[str, TableSpec] = {
                 False,
                 "Timestamp when the current relationship manager assignment became effective.",
             ),
+            ColumnSpec(
+                "aum_chf",
+                "Decimal",
+                False,
+                "Total assets under management for this relationship in CHF.",
+            ),
         ),
     ),
     RELATIONSHIP_MANAGER_HISTORY: TableSpec(
@@ -284,11 +290,16 @@ TABLE_SPECS: dict[str, TableSpec] = {
                 "payment_beneficiary_id",
                 "string",
                 True,
-                "Payment beneficiary for outbound digital payments.",
+                "Payment beneficiary or private-banking counterparty for outbound flows.",
                 references="payment_beneficiaries.payment_beneficiary_id",
             ),
             ColumnSpec("booked_at", "datetime64[ns]", False, "Transaction booking timestamp."),
-            ColumnSpec("transaction_type", "string", False, "Wire, card, cash, FX, or fee type."),
+            ColumnSpec(
+                "transaction_type",
+                "string",
+                False,
+                "Wire, card, instant-payment, FX, fee, or investment-related type.",
+            ),
             ColumnSpec("channel", "string", False, "Branch, relationship manager, web, app, or batch channel."),
             ColumnSpec("direction", "string", False, "Debit or credit from the account perspective."),
             ColumnSpec("amount_original", "Decimal", False, "Exact transaction amount in original currency."),
@@ -369,7 +380,10 @@ TABLE_SPECS: dict[str, TableSpec] = {
     ),
     PAYMENT_BENEFICIARIES: TableSpec(
         name=PAYMENT_BENEFICIARIES,
-        purpose="Saved payment beneficiaries used by digital-banking payments.",
+        purpose=(
+            "Saved payment beneficiaries and private-banking counterparties used by "
+            "payment and transaction-context features."
+        ),
         columns=(
             ColumnSpec(
                 "payment_beneficiary_id",

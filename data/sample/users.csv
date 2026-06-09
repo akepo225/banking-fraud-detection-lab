@@ -1,5 +1,7 @@
 user_id,client_id,institution_name,username_hash,created_at,status,authorized_from,authorized_to
-U-0001,C-0003,Alpine Crest Private Bank,usr_79155484ba,2025-01-03 12:00:00,active,2025-01-03 13:00:00,
-U-0002,C-0004,Alpine Crest Private Bank,usr_2076481618,2024-12-22 13:00:00,active,2024-12-22 14:00:00,
-U-0003,C-0005,NovaBank Digital,usr_379d32a38c,2024-12-10 14:00:00,active,2024-12-10 15:00:00,
-U-0004,C-0006,NovaBank Digital,usr_a66a10d03e,2024-11-28 15:00:00,active,2024-11-28 16:00:00,
+U-0001,C-0001,Alpine Crest Private Bank,usr_79155484ba,2025-01-27 10:00:00,active,2025-01-27 11:00:00,
+U-0002,C-0002,Alpine Crest Private Bank,usr_2076481618,2025-01-15 11:00:00,active,2025-01-15 12:00:00,
+U-0003,C-0003,Alpine Crest Private Bank,usr_379d32a38c,2025-01-03 12:00:00,active,2025-01-03 13:00:00,
+U-0004,C-0004,Alpine Crest Private Bank,usr_a66a10d03e,2024-12-22 13:00:00,active,2024-12-22 14:00:00,
+U-0005,C-0005,NovaBank Digital,usr_b3589eae5d,2024-12-10 14:00:00,active,2024-12-10 15:00:00,
+U-0006,C-0006,NovaBank Digital,usr_e205bb2316,2024-11-28 15:00:00,active,2024-11-28 16:00:00,

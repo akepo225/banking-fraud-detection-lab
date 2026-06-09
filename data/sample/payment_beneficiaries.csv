@@ -1,5 +1,11 @@
 payment_beneficiary_id,client_id,added_by_user_id,beneficiary_name,beneficiary_account_country,beneficiary_bank_country,beneficiary_change_event,created_at,status
-B-0001,C-0003,U-0001,Blair PLC,IT,DE,beneficiary_created,2025-01-04 12:00:00,active
-B-0002,C-0004,U-0002,Dudley Group,IT,FR,beneficiary_created,2024-12-24 13:00:00,active
-B-0003,C-0005,U-0003,Arnold Ltd,FR,FR,beneficiary_created,2024-12-13 14:00:00,active
-B-0004,C-0006,U-0004,"Mcclure, Ward and Lee",FR,CH,beneficiary_created,2024-12-02 15:00:00,active
+B-0001,C-0001,U-0001,Blair PLC,CH,CH,established_beneficiary,2025-03-19 10:00:00,active
+B-0002,C-0001,U-0001,Dudley Group,DE,GB,new_beneficiary_added,2026-02-21 23:59:59,active
+B-0003,C-0002,U-0002,Arnold Ltd,DE,DE,established_beneficiary,2025-03-07 11:00:00,active
+B-0004,C-0002,U-0002,"Mcclure, Ward and Lee",FR,GB,established_beneficiary,2025-03-27 11:00:00,active
+B-0005,C-0002,U-0002,Williams and Sons,IT,CH,new_beneficiary_added,2026-02-19 23:59:59,active
+B-0006,C-0003,U-0003,Galloway-Wyatt,FR,FR,new_beneficiary_added,2026-02-20 23:59:59,active
+B-0007,C-0004,U-0004,James Group,IT,IT,established_beneficiary,2025-02-11 13:00:00,active
+B-0008,C-0004,U-0004,"Flowers, Martin and Kelly",LI,GB,new_beneficiary_added,2026-02-18 23:59:59,active
+B-0009,C-0005,U-0005,"Adams, Zuniga and Wong",FR,FR,beneficiary_created,2024-12-15 14:00:00,active
+B-0010,C-0006,U-0006,"Reid, Ferguson and Sanchez",FR,CH,beneficiary_created,2024-12-04 15:00:00,active

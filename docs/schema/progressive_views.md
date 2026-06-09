@@ -48,8 +48,8 @@ Columns:
 
 ## `pb_relationship_context`
 
-Exposes one row per Banking relationship with current relationship-manager
-history for private-banking relationship-context exercises.
+Exposes one row per Banking relationship with relationship AUM and current
+relationship-manager history for private-banking relationship-context exercises.
 
 This view supports private-banking lessons that need relationship-manager
 context before learners work directly with effective-dated history tables. It
@@ -71,6 +71,7 @@ Columns:
 | `relationship_name` | Learner-readable relationship label. |
 | `relationship_opened_at` | Banking relationship opening timestamp. |
 | `relationship_status` | Current Banking relationship status. |
+| `aum_chf` | Relationship-level CHF assets under management context. |
 | `relationship_manager_code` | Current synthetic relationship manager assignment code. |
 | `rm_effective_from` | When the current relationship manager assignment became effective. |
 | `rm_effective_to` | When the current relationship manager assignment ended, if superseded. |

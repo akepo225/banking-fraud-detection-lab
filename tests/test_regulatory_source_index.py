@@ -7,9 +7,13 @@ from urllib.parse import urlparse
 
 import yaml
 
+from banking_fraud_lab.schema import PATTERN_IDS
+
 
 REGULATORY_INDEX = Path("docs/regulation/index.md")
 SOURCE_NOTE_DIR = Path("docs/regulation/source_notes")
+PRIVATE_BANKING_V0_3_MODULE_PREFIX = "notebooks/04_private_banking_feature_engineering/"
+PRIVATE_BANKING_V0_3_PATTERN_IDS = {"pb_high_value_movement", "pb_transaction_fraud"}
 
 REQUIRED_SOURCE_FAMILIES = {
     "swiss_amla",
@@ -23,7 +27,7 @@ REQUIRED_SECTIONS = (
     "## Source Scope",
     "## Official Sources",
     "## Learning Implications",
-    "## Linked v0.1 Exercises",
+    "## Linked Exercises",
     "## Human Review",
 )
 ALLOWED_OFFICIAL_DOMAINS = {
@@ -118,16 +122,55 @@ def test_regulatory_learning_implications_are_substantive() -> None:
         assert word_count >= 40, f"{note_path} has thin learning implications"
 
 
-def test_regulatory_notes_link_existing_v0_1_exercises() -> None:
-    """Regulatory notes must connect source material to real v0.1 notebooks."""
+def test_regulatory_notes_link_existing_exercises() -> None:
+    """Regulatory notes must connect source material to real notebooks."""
     for note_path in _source_note_paths():
         metadata, _body = _read_note(note_path)
-        linked_modules = metadata["linked_modules"]
+        linked_modules = _linked_modules(metadata)
 
         assert linked_modules
         for linked_module in linked_modules:
             assert linked_module.startswith("notebooks/")
             assert Path(linked_module).exists(), f"{note_path} links missing {linked_module}"
+
+
+def test_regulatory_note_pattern_ids_are_valid_when_present() -> None:
+    """Structured pattern_ids metadata must reference the shared Detection pattern registry."""
+    for note_path in _source_note_paths():
+        metadata, _body = _read_note(note_path)
+        pattern_ids = metadata.get("pattern_ids")
+
+        if pattern_ids is None:
+            continue
+        assert isinstance(pattern_ids, list), f"{note_path} pattern_ids must be a list"
+        assert pattern_ids, f"{note_path} pattern_ids must not be empty"
+        invalid_pattern_ids = sorted(set(pattern_ids) - set(PATTERN_IDS))
+        assert not invalid_pattern_ids, (
+            f"{note_path} has unknown pattern_ids: {invalid_pattern_ids}"
+        )
+
+
+def test_private_banking_v0_3_regulatory_notes_reference_required_pattern_ids() -> None:
+    """v0.3 private-banking regulatory notes must carry approved pattern IDs."""
+    for note_path in _source_note_paths():
+        metadata, _body = _read_note(note_path)
+        linked_modules = _linked_modules(metadata)
+        is_private_banking_v0_3 = any(
+            linked_module.startswith(PRIVATE_BANKING_V0_3_MODULE_PREFIX)
+            for linked_module in linked_modules
+        )
+
+        if is_private_banking_v0_3:
+            pattern_ids = metadata.get("pattern_ids")
+            assert pattern_ids is not None, (
+                f"{note_path} must define pattern_ids metadata"
+            )
+            assert isinstance(pattern_ids, list), f"{note_path} pattern_ids must be a list"
+            invalid_pattern_ids = sorted(set(pattern_ids) - PRIVATE_BANKING_V0_3_PATTERN_IDS)
+            assert not invalid_pattern_ids, (
+                f"{note_path} must use v0.3 private-banking pattern_ids from "
+                f"{sorted(PRIVATE_BANKING_V0_3_PATTERN_IDS)}; got {invalid_pattern_ids}"
+            )
 
 
 def test_regulatory_notes_avoid_imperative_compliance_wording() -> None:
@@ -151,6 +194,13 @@ def test_regulatory_notes_do_not_include_direct_quote_blocks() -> None:
 def _source_note_paths() -> tuple[Path, ...]:
     """Return regulatory source notes in deterministic order."""
     return tuple(sorted(SOURCE_NOTE_DIR.glob("*.md")))
+
+
+def _linked_modules(metadata: dict[str, str | list[str]]) -> tuple[str, ...]:
+    """Return linked module paths from source-note metadata."""
+    linked_modules = metadata["linked_modules"]
+    assert isinstance(linked_modules, list), "linked_modules must be a list"
+    return tuple(linked_modules)
 
 
 def _read_note(note_path: Path) -> tuple[dict[str, str | list[str]], str]:

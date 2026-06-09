@@ -52,6 +52,14 @@ private-banking source packs that link to the
 `04_private_banking_feature_engineering` module also carry a structured
 `pattern_id` field validated against the `PATTERN_IDS` registry.
 
+### Regulatory source notes
+
+Regulatory source notes in `docs/regulation/source_notes/` may carry a
+`pattern_ids` list when they connect official-source context to feature,
+threshold, or governance exercises. v0.3 private-banking notes that link to the
+`04_private_banking_feature_engineering` module validate those IDs against
+`PATTERN_IDS`.
+
 ### Progressive data views
 
 Progressive data views may filter or group by detection pattern to expose

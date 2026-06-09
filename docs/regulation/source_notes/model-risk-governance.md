@@ -4,6 +4,9 @@ status: draft-hitl
 hitl_review_required: true
 source_families:
   - model_risk_governance
+pattern_ids:
+  - pb_high_value_movement
+  - pb_transaction_fraud
 track: cross-track governance
 primary_official_sources:
   - https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm
@@ -12,6 +15,8 @@ linked_modules:
   - notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb
   - notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb
   - notebooks/03_alert_governance/alert_governance_memo.ipynb
+  - notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb
+  - notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb
 ---
 
 # Model-Risk Governance For Fraud Scoring
@@ -42,7 +47,7 @@ This source note connects directly to alert-aware metrics. Precision, recall, PR
 capacity, and cost summaries are not just performance numbers; they provide evidence for model
 review, threshold rationale, and stakeholder communication.
 
-## Linked v0.1 Exercises
+## Linked Exercises
 
 - `notebooks/00_foundations/foundations_data_tour.ipynb`: introduces alert-aware metrics and
   limitation-aware summaries.
@@ -52,6 +57,11 @@ review, threshold rationale, and stakeholder communication.
   digital scam-to-mule threshold choice for NovaBank Digital.
 - `notebooks/03_alert_governance/alert_governance_memo.ipynb`: converts model outputs and
   threshold tradeoffs into a governance memo draft.
+- `notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`:
+  documents private-banking feature families, source columns, and Detection pattern mappings as
+  model inputs.
+- `notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb`:
+  applies PR-AUC, threshold, capacity, cost, and limitation summaries to a supervised baseline.
 
 ## Human Review
 

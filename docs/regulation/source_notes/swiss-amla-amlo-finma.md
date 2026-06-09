@@ -6,6 +6,9 @@ source_families:
   - swiss_amla
   - swiss_amlo
   - finma
+pattern_ids:
+  - pb_high_value_movement
+  - pb_transaction_fraud
 track: private-banking fraud detection
 primary_official_sources:
   - https://www.finma.ch/en/documentation/legal-basis/laws-and-ordinances/anti-money-laundering-act-%28amla%29/
@@ -16,6 +19,8 @@ linked_modules:
   - notebooks/00_foundations/foundations_data_tour.ipynb
   - notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb
   - notebooks/03_alert_governance/alert_governance_memo.ipynb
+  - notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb
+  - notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb
 ---
 
 # Swiss AMLA, AMLO, And FINMA AML Anchors
@@ -33,6 +38,12 @@ Anti-Money Laundering Ordinance. No direct quotations are needed for the v0.1 ex
 The source family is useful for **Private-banking fraud detection** because Swiss private
 banking scenarios often require learners to distinguish analytics evidence from control,
 documentation, and escalation context.
+
+In v0.3, the same source family anchors deeper Alpine Crest Private Bank feature
+engineering and threshold-tuning questions. The regulatory note connects relationship-manager
+responsibility, beneficial-ownership and signatory context, counterparty novelty, cross-border
+movement, alert capacity, and false-positive explanation boundaries to observable analytics
+evidence rather than to legal conclusions.
 
 ## Official Sources
 
@@ -53,7 +64,14 @@ This source note should also reinforce that model outputs are decision support. 
 learner habit is to connect a score to observable data signals and case notes, not to present
 the score as a legal finding.
 
-## Linked v0.1 Exercises
+For v0.3 private-banking analytics, learners should connect `pb_high_value_movement` and
+`pb_transaction_fraud` features to documented review questions. Relationship-manager context,
+beneficial-ownership signals, authorized-signatory joins, and amount-to-relationship baselines
+help explain why an alert is reviewable. Threshold rationale, alert capacity, and false-positive
+examples help learners document limits without treating legitimate high-net-worth behaviour as
+evidence of wrongdoing.
+
+## Linked Exercises
 
 - `notebooks/00_foundations/foundations_data_tour.ipynb`: introduces the Alert lifecycle and
   protected answer keys so learners separate operational labels from hidden ground truth.
@@ -61,6 +79,12 @@ the score as a legal finding.
   Crest Private Bank data to connect private-banking transaction signals to a review queue.
 - `notebooks/03_alert_governance/alert_governance_memo.ipynb`: turns threshold and alert
   capacity analysis into a governance memo draft with limitations.
+- `notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`:
+  maps relationship, counterparty, cross-border, velocity, and relationship-manager features to
+  Detection pattern IDs and source columns.
+- `notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb`:
+  uses capacity-aware threshold summaries and limitation wording to keep Swiss regulatory context
+  separate from model conclusions.
 
 ## Human Review
 

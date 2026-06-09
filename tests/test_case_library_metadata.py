@@ -5,9 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
+from banking_fraud_lab.schema import PATTERN_IDS
+
 CASE_SOURCE_PACK_DIR = Path("docs/cases/source_packs")
 CASE_LIBRARY_INDEX = Path("docs/cases/index.md")
 HITL_MARKER = "<!-- HITL-REVIEW-REQUIRED -->"
+PRIVATE_BANKING_TRACK = "Private-banking fraud detection"
+PRIVATE_BANKING_V0_3_MODULE_PREFIX = "notebooks/04_private_banking_feature_engineering/"
+PRIVATE_BANKING_V0_3_PATTERN_IDS = {"pb_high_value_movement", "pb_transaction_fraud"}
 REQUIRED_METADATA_FIELDS = {
     "title",
     "status",
@@ -44,6 +49,14 @@ BANNED_IMPERATIVE_PATTERNS = (
     r"\bmust report\b",
     r"\brequired to comply\b",
     r"\blegal requirement for learners\b",
+)
+BANNED_RECONSTRUCTION_PHRASES = (
+    "reconstructs the",
+    "reproduces the",
+    "recreation of",
+    "based on actual",
+    "replicate the",
+    "exact case",
 )
 
 
@@ -95,6 +108,38 @@ def test_case_source_pack_metadata_links_existing_modules() -> None:
             assert Path(linked_module).exists(), f"{path} links missing module: {linked_module}"
 
 
+def test_case_source_pack_pattern_ids_are_valid_when_present() -> None:
+    """Structured pattern_id metadata must reference the shared Detection pattern registry."""
+    for path in _source_pack_paths():
+        metadata = _metadata(path)
+        pattern_id = metadata.get("pattern_id")
+
+        if pattern_id:
+            assert pattern_id in PATTERN_IDS, f"{path} has unknown pattern_id: {pattern_id}"
+
+
+def test_private_banking_v0_3_source_packs_reference_required_pattern_ids() -> None:
+    """v0.3 private-banking source packs must carry approved private-banking pattern IDs."""
+    for path in _source_pack_paths():
+        metadata = _metadata(path)
+        linked_modules = _linked_modules(metadata)
+        is_private_banking_v0_3 = (
+            metadata["track"] == PRIVATE_BANKING_TRACK
+            and any(
+                linked_module.startswith(PRIVATE_BANKING_V0_3_MODULE_PREFIX)
+                for linked_module in linked_modules
+            )
+        )
+
+        if is_private_banking_v0_3:
+            pattern_id = metadata.get("pattern_id")
+            assert pattern_id is not None, f"{path} must define pattern_id metadata"
+            assert pattern_id in PRIVATE_BANKING_V0_3_PATTERN_IDS, (
+                f"{path} must use a v0.3 private-banking pattern_id from "
+                f"{sorted(PRIVATE_BANKING_V0_3_PATTERN_IDS)}"
+            )
+
+
 def test_case_library_index_links_all_source_packs() -> None:
     """The case-library index must expose every draft source pack."""
     index_text = CASE_LIBRARY_INDEX.read_text(encoding="utf-8")
@@ -110,6 +155,14 @@ def test_case_source_packs_avoid_imperative_compliance_wording() -> None:
         text = path.read_text(encoding="utf-8").lower()
         for pattern in BANNED_IMPERATIVE_PATTERNS:
             assert not re.search(pattern, text), f"{path} contains banned wording: {pattern}"
+
+
+def test_case_source_packs_do_not_claim_reconstruction() -> None:
+    """Source packs must not claim to reproduce public matters in synthetic data."""
+    for path in _source_pack_paths():
+        text = path.read_text(encoding="utf-8").lower()
+        for phrase in BANNED_RECONSTRUCTION_PHRASES:
+            assert phrase not in text, f"{path} contains banned wording: {phrase}"
 
 
 def test_case_source_packs_do_not_include_direct_quote_blocks() -> None:
@@ -137,6 +190,15 @@ def _source_pack_paths() -> tuple[Path, ...]:
     paths = tuple(sorted(CASE_SOURCE_PACK_DIR.glob("*.md")))
     assert paths, f"No source packs found under {CASE_SOURCE_PACK_DIR}"
     return paths
+
+
+def _linked_modules(metadata: dict[str, str]) -> tuple[str, ...]:
+    """Return comma-separated linked modules from source-pack metadata."""
+    return tuple(
+        linked_module.strip()
+        for linked_module in metadata["linked_modules"].split(",")
+        if linked_module.strip()
+    )
 
 
 def _metadata(path: Path) -> dict[str, str]:

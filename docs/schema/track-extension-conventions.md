@@ -113,11 +113,10 @@ separation through `limitation_summary` instead of presenting headline accuracy.
 Case source-pack and regulatory-source metadata must link back to existing
 notebook paths and to Detection pattern identifiers from `PATTERN_IDS`.
 
-Case source packs should use a `pattern_id` metadata field when the approved
-case-library validator adds that field. Existing human-readable
-`detection_pattern` front matter may remain for backward compatibility, but new
-private-banking v0.3 entries must also reference `pb_high_value_movement` or
-`pb_transaction_fraud` wherever the contract requires an identifier.
+Case source packs use the existing human-readable `detection_pattern` front
+matter for backward compatibility. Private-banking source packs that link to
+the v0.3 module must also include a structured `pattern_id` metadata field with
+`pb_high_value_movement` or `pb_transaction_fraud`.
 
 The `linked_modules` metadata field must contain only paths that exist in the
 repository at the time the case pack or regulatory note is added. Current

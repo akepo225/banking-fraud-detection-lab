@@ -349,7 +349,7 @@ def _build_pb_relationship_context(
         .sort_values(
             ["banking_relationship_id", "effective_from", "rm_history_id"],
             ascending=[True, False, False],
-            kind="mergesort",
+            kind="stable",
         )
         .drop_duplicates("banking_relationship_id", keep="first")
         .drop(columns="rm_history_id")

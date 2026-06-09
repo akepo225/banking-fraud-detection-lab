@@ -7,14 +7,17 @@ import pandas as pd
 from banking_fraud_lab import generate_minimal_banking_world
 from banking_fraud_lab.progressive_views import (
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
+    PB_RELATIONSHIP_CONTEXT,
     build_foundation_progressive_views,
 )
 from banking_fraud_lab.schema import (
     ALERTS,
+    BANKING_RELATIONSHIPS,
     CASE_OUTCOMES,
     CASES,
     COLUMN_NAMES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
+    RELATIONSHIP_MANAGER_HISTORY,
     SUSPICIOUS_ACTIVITIES,
     TABLE_NAMES,
 )
@@ -89,6 +92,60 @@ def test_foundation_alert_lifecycle_view_excludes_protected_answer_keys() -> Non
     assert set(view["case_outcome_id"].dropna()) <= set(
         tables["case_outcomes"]["case_outcome_id"]
     )
+
+
+def test_pb_relationship_context_view_uses_current_rm_history() -> None:
+    """The private-banking relationship view must expose current RM history."""
+    tables = generate_minimal_banking_world(seed=42)
+
+    spec = FOUNDATION_PROGRESSIVE_VIEW_SPECS_BY_NAME["pb_relationship_context"]
+    assert spec is PB_RELATIONSHIP_CONTEXT
+    assert spec.source_tables == (
+        "banking_relationships",
+        "relationship_manager_history",
+    )
+    assert not spec.stable_for_case_references
+    assert spec.columns == (
+        "banking_relationship_id",
+        "primary_client_id",
+        "institution_name",
+        "relationship_name",
+        "relationship_opened_at",
+        "relationship_status",
+        "relationship_manager_code",
+        "rm_effective_from",
+        "rm_effective_to",
+    )
+
+    view = build_foundation_progressive_views(tables)[spec.name]
+    current_rm_history = tables[RELATIONSHIP_MANAGER_HISTORY][
+        tables[RELATIONSHIP_MANAGER_HISTORY]["effective_to"].isna()
+    ]
+    view_context = view.merge(
+        current_rm_history[
+            [
+                "banking_relationship_id",
+                "relationship_manager_code",
+                "effective_from",
+            ]
+        ],
+        on="banking_relationship_id",
+        how="left",
+        validate="one_to_one",
+        suffixes=("_view", "_history"),
+    )
+
+    assert tuple(view.columns) == spec.columns
+    assert len(view) == len(tables[BANKING_RELATIONSHIPS])
+    assert set(view["banking_relationship_id"]) == set(
+        tables[BANKING_RELATIONSHIPS]["banking_relationship_id"]
+    )
+    assert (
+        view_context["relationship_manager_code_view"]
+        == view_context["relationship_manager_code_history"]
+    ).all()
+    assert (view_context["rm_effective_from"] == view_context["effective_from"]).all()
+    assert view["rm_effective_to"].isna().all()
 
 
 def test_foundation_alert_lifecycle_allows_schema_valid_child_multiplicity() -> None:

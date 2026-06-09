@@ -24,6 +24,7 @@ from banking_fraud_lab.schema.tables import (
     PARTNER_ROLES,
     PAYMENT_BENEFICIARIES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
+    RELATIONSHIP_MANAGER_HISTORY,
     ROLES,
     SESSIONS,
     SUSPICIOUS_ACTIVITIES,
@@ -140,6 +141,7 @@ def generate_minimal_banking_world(
     clients = _generate_clients(rng, partners, profile)
     roles = _generate_roles()
     banking_relationships = _generate_banking_relationships(fake, rng, clients)
+    relationship_manager_history = _generate_relationship_manager_history(banking_relationships)
     partner_roles = _generate_partner_roles(clients, roles, banking_relationships, partners)
     accounts = _generate_accounts(rng, banking_relationships, profile)
     users = _generate_users(rng, clients)
@@ -175,6 +177,7 @@ def generate_minimal_banking_world(
         ROLES: roles,
         PARTNER_ROLES: partner_roles,
         BANKING_RELATIONSHIPS: banking_relationships,
+        RELATIONSHIP_MANAGER_HISTORY: relationship_manager_history,
         ACCOUNTS: accounts,
         TRANSACTIONS: transactions,
         USERS: users,
@@ -373,6 +376,22 @@ def _generate_banking_relationships(
             }
         )
     return _frame(BANKING_RELATIONSHIPS, rows)
+
+
+def _generate_relationship_manager_history(relationships: pd.DataFrame) -> pd.DataFrame:
+    """Create current effective-dated relationship-manager assignment rows."""
+    rows = []
+    for index, relationship in enumerate(relationships.itertuples(index=False), start=1):
+        rows.append(
+            {
+                "rm_history_id": _identifier("RMH", index),
+                "banking_relationship_id": relationship.banking_relationship_id,
+                "relationship_manager_code": relationship.relationship_manager_code,
+                "effective_from": relationship.relationship_manager_assigned_at,
+                "effective_to": pd.NaT,
+            }
+        )
+    return _frame(RELATIONSHIP_MANAGER_HISTORY, rows)
 
 
 def _generate_partner_roles(

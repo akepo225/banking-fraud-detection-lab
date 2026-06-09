@@ -1,6 +1,12 @@
-# v0.1/v0.2 Foundation Data Dictionary
+# Canonical Data Dictionary
 
-This data dictionary defines the stable output contract for the datasets produced by `generate_minimal_banking_world(seed=42, scale="tiny")` and the larger deterministic `small`, `medium`, and `large` scale profiles. The tables are synthetic, deterministic, and educational. They do not contain real client data and do not reconstruct real events.
+This data dictionary defines the stable output contract for the datasets
+produced by `generate_minimal_banking_world(seed=42, scale="tiny")` and the
+larger deterministic `small`, `medium`, and `large` scale profiles. The
+v0.1/v0.2 foundation tables are extended additively in v0.3 by
+relationship-manager history for private-banking relationship context. The
+tables are synthetic, deterministic, and educational. They do not contain real
+client data and do not reconstruct real events.
 
 Money fields use exact decimal values. Where money is relevant, the model stores original amount and currency plus a CHF-normalized amount. Protected answer keys are intentionally separate from learner-facing lifecycle tables and are excluded from learner-facing generated outputs by default.
 
@@ -13,6 +19,7 @@ Money fields use exact decimal values. Where money is relevant, the model stores
 | `roles` | Controlled vocabulary of relationship roles used by `partner_roles`. |
 | `partner_roles` | Effective-dated partner roles within a banking relationship. |
 | `banking_relationships` | Swiss-bank-style containers grouping clients, partners, and accounts. |
+| `relationship_manager_history` | Effective-dated history of relationship manager assignments within a banking relationship. |
 | `accounts` | Deposit, custody, and payment accounts under banking relationships. |
 | `transactions` | Money movement events used by both private-banking and digital-banking tracks. |
 | `users` | Digital login identities that authenticate sessions for clients. |
@@ -105,6 +112,18 @@ Swiss-bank-style containers grouping clients, partners, and accounts.
 | `status` | string | no |  | Relationship status. |
 | `relationship_manager_code` | string | no |  | Synthetic relationship manager assignment code. |
 | `relationship_manager_assigned_at` | datetime64[ns] | no |  | Timestamp when the current relationship manager assignment became effective. |
+
+## `relationship_manager_history`
+
+Effective-dated history of relationship manager assignments within a banking relationship.
+
+| Column | Type | Nullable | References | Description |
+| --- | --- | --- | --- | --- |
+| `rm_history_id` | string | no |  | Stable synthetic RM-history identifier. |
+| `banking_relationship_id` | string | no | `banking_relationships.banking_relationship_id` | Banking relationship where the relationship-manager assignment applies. |
+| `relationship_manager_code` | string | no |  | Synthetic relationship manager assignment code. |
+| `effective_from` | datetime64[ns] | no |  | Timestamp when the relationship manager assignment became effective. |
+| `effective_to` | datetime64[ns] | yes |  | Timestamp when the relationship manager assignment ended, if superseded. |
 
 ## `accounts`
 

@@ -16,12 +16,13 @@ from banking_fraud_lab.schema import (
     TABLE_SPECS,
 )
 
-REQUIRED_V0_1_TABLES = {
+REQUIRED_GENERATED_TABLES = {
     "partners",
     "clients",
     "roles",
     "partner_roles",
     "banking_relationships",
+    "relationship_manager_history",
     "accounts",
     "transactions",
     "users",
@@ -49,11 +50,11 @@ FK_RELATIONSHIPS = tuple(
 
 
 def test_minimal_world_includes_required_v0_1_entities() -> None:
-    """All v0.1 tables must be present with correct columns and non-empty rows where required."""
+    """All generated tables must be present with correct columns and required rows."""
     tables = generate_minimal_banking_world(seed=42)
 
-    assert set(TABLE_NAMES) == REQUIRED_V0_1_TABLES
-    assert set(tables) == REQUIRED_V0_1_TABLES
+    assert set(TABLE_NAMES) == REQUIRED_GENERATED_TABLES
+    assert set(tables) == REQUIRED_GENERATED_TABLES
     for table_name, frame in tables.items():
         assert tuple(frame.columns) == COLUMN_NAMES[table_name]
         if not TABLE_SPECS[table_name].allow_empty:
@@ -88,6 +89,7 @@ def test_minimal_world_preserves_semantic_join_integrity() -> None:
     alerts = tables["alerts"]
     partner_roles = tables["partner_roles"]
     partners = tables["partners"]
+    relationship_manager_history = tables["relationship_manager_history"]
 
     account_clients = accounts.merge(
         relationships[["banking_relationship_id", "primary_client_id"]],
@@ -137,6 +139,28 @@ def test_minimal_world_preserves_semantic_join_integrity() -> None:
         "Partner role institution_name must match relationship institution_name. "
         f"Found {len(mismatches)} mismatches:\n{mismatches.head()}"
     )
+
+    rm_history_context = relationship_manager_history.merge(
+        relationships[
+            [
+                "banking_relationship_id",
+                "relationship_manager_code",
+                "relationship_manager_assigned_at",
+            ]
+        ],
+        on="banking_relationship_id",
+        how="left",
+        validate="many_to_one",
+        suffixes=("_history", "_relationship"),
+    )
+    assert (
+        rm_history_context["relationship_manager_code_history"]
+        == rm_history_context["relationship_manager_code_relationship"]
+    ).all()
+    assert (
+        rm_history_context["effective_from"]
+        == rm_history_context["relationship_manager_assigned_at"]
+    ).all()
 
 
 def test_session_telemetry_matches_declared_channel() -> None:

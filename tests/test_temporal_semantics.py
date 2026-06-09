@@ -13,6 +13,7 @@ from banking_fraud_lab.schema import TABLE_SPECS
 REQUIRED_TEMPORAL_COLUMNS = {
     "partners": {"kyc_risk_effective_from", "kyc_risk_reviewed_at"},
     "banking_relationships": {"relationship_manager_assigned_at"},
+    "relationship_manager_history": {"effective_from", "effective_to"},
     "accounts": {"status_effective_from", "status_effective_to"},
     "users": {"authorized_from", "authorized_to"},
     "alerts": {"status_updated_at"},
@@ -56,6 +57,32 @@ def test_effective_date_ordering_holds_for_foundation_entities(scale: str) -> No
 
     relationships = tables["banking_relationships"]
     assert (relationships["relationship_manager_assigned_at"] <= relationships["opened_at"]).all()
+
+    relationship_manager_history = tables["relationship_manager_history"]
+    current_rm_history = relationship_manager_history[
+        relationship_manager_history["effective_to"].isna()
+    ]
+    assert current_rm_history["banking_relationship_id"].is_unique
+    rm_history_ends = relationship_manager_history.dropna(subset=["effective_to"])
+    assert (relationship_manager_history["effective_from"] <= DATASET_AS_OF).all()
+    assert (rm_history_ends["effective_from"] <= rm_history_ends["effective_to"]).all()
+    rm_history_context = relationship_manager_history.merge(
+        relationships[
+            [
+                "banking_relationship_id",
+                "opened_at",
+                "relationship_manager_assigned_at",
+            ]
+        ],
+        on="banking_relationship_id",
+        how="left",
+        validate="many_to_one",
+    )
+    assert (rm_history_context["effective_from"] <= rm_history_context["opened_at"]).all()
+    assert (
+        rm_history_context["effective_from"]
+        == rm_history_context["relationship_manager_assigned_at"]
+    ).all()
 
     partner_roles = tables["partner_roles"]
     role_ends = partner_roles.dropna(subset=["effective_to"])

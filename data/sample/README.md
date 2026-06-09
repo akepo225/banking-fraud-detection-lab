@@ -32,6 +32,7 @@ These CSV files were generated with `generate_minimal_banking_world(seed=42, sca
 | `roles.csv` | 4 | Controlled role vocabulary. |
 | `partner_roles.csv` | 12 | Effective-dated partner roles in banking relationships. |
 | `banking_relationships.csv` | 6 | Swiss-bank-style relationship containers. |
+| `relationship_manager_history.csv` | 6 | Effective-dated relationship-manager assignment history. |
 | `accounts.csv` | 8 | Accounts under banking relationships. |
 | `transactions.csv` | 12 | Money movement events. |
 | `users.csv` | 4 | Digital login identities. |

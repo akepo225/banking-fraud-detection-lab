@@ -47,7 +47,7 @@ def test_schema_contract_is_documented_in_data_dictionary() -> None:
     """Every schema table and column must appear in the foundation data dictionary."""
     data_dictionary = Path("docs/schema/data_dictionary.md").read_text(encoding="utf-8")
 
-    assert "# v0.1/v0.2 Foundation Data Dictionary" in data_dictionary
+    assert "# Canonical Data Dictionary" in data_dictionary
 
     for table_name, table_spec in TABLE_SPECS.items():
         section = _data_dictionary_section(data_dictionary, table_name)

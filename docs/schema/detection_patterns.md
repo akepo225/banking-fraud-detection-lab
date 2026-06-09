@@ -47,9 +47,10 @@ the pattern category across modules, case packs, and documentation.
 ### Case packs
 
 Case source packs in `docs/cases/source_packs/` carry a `detection_pattern`
-field in their YAML front matter. Future versions should validate this field
-against the `PATTERN_IDS` registry to ensure case packs reference known
-patterns.
+field in their YAML front matter for learner-readable pattern labels. v0.3
+private-banking source packs that link to the
+`04_private_banking_feature_engineering` module also carry a structured
+`pattern_id` field validated against the `PATTERN_IDS` registry.
 
 ### Progressive data views
 

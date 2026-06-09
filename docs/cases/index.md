@@ -28,6 +28,8 @@ The initial v0.1 source packs are draft HITL artifacts and require human review 
 
 - [Relationship and transaction monitoring control failure](source_packs/private-banking-transaction-monitoring.md):
   private-banking transaction fraud source pack for Alpine Crest Private Bank exercises.
+- [Private-banking high-value movement](source_packs/private-banking-high-value-movement.md):
+  private-banking source pack for relationship-scale movement, cross-border context, and v0.3 feature interpretation.
 - [Authorised scam payment to mule or fraudster account](source_packs/digital-scam-to-mule.md):
   digital scam-to-mule source pack for NovaBank Digital exercises.
 - [Model-output governance and threshold documentation](source_packs/model-governance-method.md):

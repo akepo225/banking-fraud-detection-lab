@@ -5,12 +5,13 @@ hitl_review_required: true
 v0_1_area: private_banking_transaction_fraud
 track: Private-banking fraud detection
 detection_pattern: relationship and transaction monitoring control failure
+pattern_id: pb_transaction_fraud
 institution_type: private bank
 source_authority: FINMA
 geography: Switzerland / cross-border
 product: private-banking transactions
 source_quality: official regulator source candidate
-linked_modules: notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb, notebooks/03_alert_governance/alert_governance_memo.ipynb
+linked_modules: notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb, notebooks/03_alert_governance/alert_governance_memo.ipynb, notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb, notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb
 ---
 
 # Private-Banking Transaction Monitoring Source Pack
@@ -42,6 +43,8 @@ This source pack supports a **Detection pattern** around private-banking transac
 
 - `notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb`
 - `notebooks/03_alert_governance/alert_governance_memo.ipynb`
+- `notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
+- `notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb`
 
 ## Regulatory Hooks
 

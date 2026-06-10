@@ -47,9 +47,18 @@ the pattern category across modules, case packs, and documentation.
 ### Case packs
 
 Case source packs in `docs/cases/source_packs/` carry a `detection_pattern`
-field in their YAML front matter. Future versions should validate this field
-against the `PATTERN_IDS` registry to ensure case packs reference known
-patterns.
+field in their YAML front matter for learner-readable pattern labels. v0.3
+private-banking source packs that link to the
+`04_private_banking_feature_engineering` module also carry a structured
+`pattern_id` field validated against the `PATTERN_IDS` registry.
+
+### Regulatory source notes
+
+Regulatory source notes in `docs/regulation/source_notes/` may carry a
+`pattern_ids` list when they connect official-source context to feature,
+threshold, or governance exercises. v0.3 private-banking notes that link to the
+`04_private_banking_feature_engineering` module validate those IDs against
+`PATTERN_IDS`.
 
 ### Progressive data views
 
@@ -79,6 +88,12 @@ New detection patterns should follow these conventions:
    `"digital_banking"` and the `institution` value matches one of the
    existing synthetic institution constants.
 6. Add corresponding tests to `tests/test_detection_patterns.py`.
+
+Track-specific feature, notebook, case, and regulatory extensions should follow
+the shared contract in `track-extension-conventions.md`. That contract defines
+how v0.3 private-banking and future v0.4 digital-banking work should reference
+`PatternSpec`, `PATTERN_IDS`, and `ACTIVITY_TYPE_TO_PATTERN` without creating a
+parallel Detection pattern metadata layer.
 
 ## Glossary Alignment
 

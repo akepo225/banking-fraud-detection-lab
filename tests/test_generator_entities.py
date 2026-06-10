@@ -16,12 +16,13 @@ from banking_fraud_lab.schema import (
     TABLE_SPECS,
 )
 
-REQUIRED_V0_1_TABLES = {
+REQUIRED_GENERATED_TABLES = {
     "partners",
     "clients",
     "roles",
     "partner_roles",
     "banking_relationships",
+    "relationship_manager_history",
     "accounts",
     "transactions",
     "users",
@@ -49,11 +50,11 @@ FK_RELATIONSHIPS = tuple(
 
 
 def test_minimal_world_includes_required_v0_1_entities() -> None:
-    """All v0.1 tables must be present with correct columns and non-empty rows where required."""
+    """All generated tables must be present with correct columns and required rows."""
     tables = generate_minimal_banking_world(seed=42)
 
-    assert set(TABLE_NAMES) == REQUIRED_V0_1_TABLES
-    assert set(tables) == REQUIRED_V0_1_TABLES
+    assert set(TABLE_NAMES) == REQUIRED_GENERATED_TABLES
+    assert set(tables) == REQUIRED_GENERATED_TABLES
     for table_name, frame in tables.items():
         assert tuple(frame.columns) == COLUMN_NAMES[table_name]
         if not TABLE_SPECS[table_name].allow_empty:
@@ -88,6 +89,7 @@ def test_minimal_world_preserves_semantic_join_integrity() -> None:
     alerts = tables["alerts"]
     partner_roles = tables["partner_roles"]
     partners = tables["partners"]
+    relationship_manager_history = tables["relationship_manager_history"]
 
     account_clients = accounts.merge(
         relationships[["banking_relationship_id", "primary_client_id"]],
@@ -138,11 +140,102 @@ def test_minimal_world_preserves_semantic_join_integrity() -> None:
         f"Found {len(mismatches)} mismatches:\n{mismatches.head()}"
     )
 
+    rm_history_context = relationship_manager_history.merge(
+        relationships[
+            [
+                "banking_relationship_id",
+                "relationship_manager_code",
+                "relationship_manager_assigned_at",
+            ]
+        ],
+        on="banking_relationship_id",
+        how="left",
+        validate="many_to_one",
+        suffixes=("_history", "_relationship"),
+    )
+    assert (
+        rm_history_context["relationship_manager_code_history"]
+        == rm_history_context["relationship_manager_code_relationship"]
+    ).all()
+    assert (
+        rm_history_context["effective_from"]
+        == rm_history_context["relationship_manager_assigned_at"]
+    ).all()
+
+    account_balances = (
+        accounts.groupby("banking_relationship_id", as_index=False)["balance_chf"]
+        .sum()
+        .rename(columns={"balance_chf": "relationship_balance_chf"})
+    )
+    relationship_balances = relationships.merge(
+        account_balances,
+        on="banking_relationship_id",
+        how="left",
+        validate="one_to_one",
+    )
+    assert relationship_balances["aum_chf"].notna().all()
+    assert (relationship_balances["aum_chf"] > 0).all()
+    alpine_relationships = relationship_balances[
+        relationship_balances["institution_name"] == "Alpine Crest Private Bank"
+    ]
+    assert (alpine_relationships["aum_chf"] > alpine_relationships["relationship_balance_chf"]).all()
+
+
+def test_minimal_world_private_banking_transaction_context_is_populated() -> None:
+    """Private-banking rows should include AUM-ready typologies and counterparties."""
+    tables = generate_minimal_banking_world(seed=42)
+    transactions = tables["transactions"]
+    accounts = tables["accounts"]
+    clients = tables["clients"]
+    beneficiaries = tables["payment_beneficiaries"]
+    private_transactions = transactions.merge(
+        accounts[["account_id", "banking_relationship_id", "institution_name"]],
+        on="account_id",
+        how="inner",
+        validate="many_to_one",
+    )
+    private_transactions = private_transactions[
+        private_transactions["institution_name"] == "Alpine Crest Private Bank"
+    ]
+    private_beneficiaries = beneficiaries.merge(
+        clients[["client_id", "institution_name"]],
+        on="client_id",
+        how="left",
+        validate="many_to_one",
+    )
+    private_beneficiaries = private_beneficiaries[
+        private_beneficiaries["institution_name"] == "Alpine Crest Private Bank"
+    ]
+
+    assert {
+        "wire_transfer",
+        "fx_trade",
+        "management_fee",
+        "custody_fee",
+        "securities_purchase",
+        "securities_sale",
+    }.issubset(set(private_transactions["transaction_type"]))
+    assert private_transactions["payment_beneficiary_id"].notna().any()
+    assert {"established_beneficiary", "new_beneficiary_added"}.issubset(
+        set(private_beneficiaries["beneficiary_change_event"])
+    )
+    assert set(
+        private_transactions.dropna(subset=["payment_beneficiary_id"])[
+            "payment_beneficiary_id"
+        ]
+    ).issubset(set(private_beneficiaries["payment_beneficiary_id"]))
+
 
 def test_session_telemetry_matches_declared_channel() -> None:
     """Session user-agent families and versions must agree with the declared channel."""
     tables = generate_minimal_banking_world(seed=42)
     sessions = tables["sessions"]
+    session_user_context = sessions.merge(
+        tables["users"][["user_id", "institution_name"]],
+        on="user_id",
+        how="left",
+        validate="many_to_one",
+    )
     expected = {
         "mobile_app": {
             "user_agents": {"NovaBankMobile/iOS", "NovaBankMobile/Android"},
@@ -154,6 +247,7 @@ def test_session_telemetry_matches_declared_channel() -> None:
         },
     }
 
+    assert set(session_user_context["institution_name"]) == {"NovaBank Digital"}
     assert set(sessions["channel"]) <= set(expected)
     for channel, telemetry in expected.items():
         channel_sessions = sessions[sessions["channel"] == channel]

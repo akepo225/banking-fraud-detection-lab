@@ -12,14 +12,14 @@ They are educational notes for the **Banking Fraud Detection Lab** curriculum an
 - Summarize learning implications in original wording.
 - Connect sources to modules and case patterns.
 
-## v0.1 Source Families
+## Source Families
 
 - Swiss AMLA, AMLO, FINMA, and MROS-related sources.
 - APP scam or payment guidance from EU or UK sources where relevant.
 - FATF typologies.
 - Model-risk, explainability, and governance references.
 
-## v0.1 Draft Source Notes
+## Draft Source Notes
 
 These notes are in draft HITL status. Human review is required before they are treated as
 publication-ready educational material.

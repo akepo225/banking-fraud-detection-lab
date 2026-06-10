@@ -31,6 +31,7 @@ CLIENTS = "clients"
 ROLES = "roles"
 PARTNER_ROLES = "partner_roles"
 BANKING_RELATIONSHIPS = "banking_relationships"
+RELATIONSHIP_MANAGER_HISTORY = "relationship_manager_history"
 ACCOUNTS = "accounts"
 TRANSACTIONS = "transactions"
 USERS = "users"
@@ -189,6 +190,47 @@ TABLE_SPECS: dict[str, TableSpec] = {
                 False,
                 "Timestamp when the current relationship manager assignment became effective.",
             ),
+            ColumnSpec(
+                "aum_chf",
+                "Decimal",
+                False,
+                "Total assets under management for this relationship in CHF.",
+            ),
+        ),
+    ),
+    RELATIONSHIP_MANAGER_HISTORY: TableSpec(
+        name=RELATIONSHIP_MANAGER_HISTORY,
+        purpose=(
+            "Effective-dated history of relationship manager assignments within a "
+            "banking relationship."
+        ),
+        columns=(
+            ColumnSpec("rm_history_id", "string", False, "Stable synthetic RM-history identifier."),
+            ColumnSpec(
+                "banking_relationship_id",
+                "string",
+                False,
+                "Banking relationship where the relationship-manager assignment applies.",
+                references="banking_relationships.banking_relationship_id",
+            ),
+            ColumnSpec(
+                "relationship_manager_code",
+                "string",
+                False,
+                "Synthetic relationship manager assignment code.",
+            ),
+            ColumnSpec(
+                "effective_from",
+                "datetime64[ns]",
+                False,
+                "Timestamp when the relationship manager assignment became effective.",
+            ),
+            ColumnSpec(
+                "effective_to",
+                "datetime64[ns]",
+                True,
+                "Timestamp when the relationship manager assignment ended, if superseded.",
+            ),
         ),
     ),
     ACCOUNTS: TableSpec(
@@ -248,11 +290,16 @@ TABLE_SPECS: dict[str, TableSpec] = {
                 "payment_beneficiary_id",
                 "string",
                 True,
-                "Payment beneficiary for outbound digital payments.",
+                "Payment beneficiary or private-banking counterparty for outbound flows.",
                 references="payment_beneficiaries.payment_beneficiary_id",
             ),
             ColumnSpec("booked_at", "datetime64[ns]", False, "Transaction booking timestamp."),
-            ColumnSpec("transaction_type", "string", False, "Wire, card, cash, FX, or fee type."),
+            ColumnSpec(
+                "transaction_type",
+                "string",
+                False,
+                "Wire, card, instant-payment, FX, fee, or investment-related type.",
+            ),
             ColumnSpec("channel", "string", False, "Branch, relationship manager, web, app, or batch channel."),
             ColumnSpec("direction", "string", False, "Debit or credit from the account perspective."),
             ColumnSpec("amount_original", "Decimal", False, "Exact transaction amount in original currency."),
@@ -333,7 +380,10 @@ TABLE_SPECS: dict[str, TableSpec] = {
     ),
     PAYMENT_BENEFICIARIES: TableSpec(
         name=PAYMENT_BENEFICIARIES,
-        purpose="Saved payment beneficiaries used by digital-banking payments.",
+        purpose=(
+            "Saved payment beneficiaries and private-banking counterparties used by "
+            "payment and transaction-context features."
+        ),
         columns=(
             ColumnSpec(
                 "payment_beneficiary_id",
@@ -663,6 +713,7 @@ __all__ = [
     "PAYMENT_BENEFICIARIES",
     "PROTECTED_SCENARIO_ANSWER_KEYS",
     "PROTECTED_TABLE_NAMES",
+    "RELATIONSHIP_MANAGER_HISTORY",
     "ROLES",
     "SESSIONS",
     "SUSPICIOUS_ACTIVITIES",

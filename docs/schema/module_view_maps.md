@@ -50,6 +50,42 @@ Columns:
 | `relationship_manager_code` | `banking_relationships.relationship_manager_code` |
 | `relationship_manager_assigned_at` | `banking_relationships.relationship_manager_assigned_at` |
 
+## `pb_relationship_context`
+
+Exposes one row per Banking relationship with relationship AUM and current
+relationship-manager history for private-banking relationship-context exercises.
+
+Module path:
+
+- `01_private_banking_transaction_fraud`
+
+Source tables:
+
+- `banking_relationships`
+- `relationship_manager_history`
+
+Learner use:
+
+- Inspect current relationship-manager context for private-banking relationship
+  analytics before querying effective-dated history directly.
+- Keep one row per Banking relationship so feature exercises can join accounts,
+  transactions, roles, and alerts deliberately.
+
+Columns:
+
+| Column | Canonical source |
+| --- | --- |
+| `banking_relationship_id` | `banking_relationships.banking_relationship_id` |
+| `primary_client_id` | `banking_relationships.primary_client_id` |
+| `institution_name` | `banking_relationships.institution_name` |
+| `relationship_name` | `banking_relationships.relationship_name` |
+| `relationship_opened_at` | `banking_relationships.opened_at` |
+| `relationship_status` | `banking_relationships.status` |
+| `aum_chf` | `banking_relationships.aum_chf` |
+| `relationship_manager_code` | `relationship_manager_history.relationship_manager_code` |
+| `rm_effective_from` | `relationship_manager_history.effective_from` |
+| `rm_effective_to` | `relationship_manager_history.effective_to` |
+
 ## `foundation_alert_lifecycle`
 
 Shows the Alert lifecycle from suspicious activity through alert, case, and case

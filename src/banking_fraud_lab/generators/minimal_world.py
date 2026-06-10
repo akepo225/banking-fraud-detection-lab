@@ -24,6 +24,7 @@ from banking_fraud_lab.schema.tables import (
     PARTNER_ROLES,
     PAYMENT_BENEFICIARIES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
+    RELATIONSHIP_MANAGER_HISTORY,
     ROLES,
     SESSIONS,
     SUSPICIOUS_ACTIVITIES,
@@ -121,6 +122,35 @@ DEFAULT_SUSPICIOUS_ACTIVITY_SPECS: tuple[ActivitySpec, ...] = (
         "add_beneficiary",
     ),
 )
+PRIVATE_BANKING_TRANSACTION_TYPE_SEQUENCE = (
+    "wire_transfer",
+    "wire_transfer",
+    "fx_trade",
+    "management_fee",
+    "wire_transfer",
+    "custody_fee",
+    "securities_purchase",
+    "wire_transfer",
+    "fx_trade",
+    "securities_sale",
+    "wire_transfer",
+    "wire_transfer",
+    "wire_transfer",
+    "management_fee",
+    "wire_transfer",
+    "fx_trade",
+    "wire_transfer",
+    "wire_transfer",
+    "wire_transfer",
+    "wire_transfer",
+)
+PRIVATE_AUM_MULTIPLIERS = (
+    Decimal("3.25"),
+    Decimal("4.50"),
+    Decimal("5.75"),
+    Decimal("7.25"),
+    Decimal("6.00"),
+)
 
 
 def generate_minimal_banking_world(
@@ -142,6 +172,8 @@ def generate_minimal_banking_world(
     banking_relationships = _generate_banking_relationships(fake, rng, clients)
     partner_roles = _generate_partner_roles(clients, roles, banking_relationships, partners)
     accounts = _generate_accounts(rng, banking_relationships, profile)
+    banking_relationships = _add_relationship_aum_context(banking_relationships, accounts)
+    relationship_manager_history = _generate_relationship_manager_history(banking_relationships)
     users = _generate_users(rng, clients)
     sessions = _generate_sessions(rng, users, profile)
     payment_beneficiaries = _generate_payment_beneficiaries(fake, rng, clients, users)
@@ -175,6 +207,7 @@ def generate_minimal_banking_world(
         ROLES: roles,
         PARTNER_ROLES: partner_roles,
         BANKING_RELATIONSHIPS: banking_relationships,
+        RELATIONSHIP_MANAGER_HISTORY: relationship_manager_history,
         ACCOUNTS: accounts,
         TRANSACTIONS: transactions,
         USERS: users,
@@ -247,12 +280,8 @@ def _validate_scale_profile(profile: DatasetScaleProfile) -> None:
         raise ValueError("Scale profile client_count must be at least 3")
     if profile.client_count > profile.partner_count:
         raise ValueError("Scale profile client_count cannot exceed partner_count")
-    # _generate_users creates one User for each Client after clients.iloc[2:].
-    if profile.session_count < profile.client_count - 2:
-        raise ValueError(
-            "Scale profile session_count must be at least client_count - 2 "
-            "(users created from clients.iloc[2:])"
-        )
+    if profile.session_count < 1:
+        raise ValueError("Scale profile session_count must be positive")
     if profile.transaction_count < 3:
         raise ValueError("Scale profile transaction_count must be at least 3")
     if profile.suspicious_activity_count < 1:
@@ -370,9 +399,47 @@ def _generate_banking_relationships(
                 "relationship_manager_assigned_at": (
                     pd.Timestamp(client.onboarded_at) + pd.Timedelta(days=3, hours=-1)
                 ),
+                "aum_chf": _money(0),
             }
         )
     return _frame(BANKING_RELATIONSHIPS, rows)
+
+
+def _add_relationship_aum_context(
+    relationships: pd.DataFrame,
+    accounts: pd.DataFrame,
+) -> pd.DataFrame:
+    """Add deterministic AUM context correlated with relationship account balances."""
+    balances = accounts.groupby("banking_relationship_id")["balance_chf"].apply(
+        lambda values: sum(values, Decimal("0.00"))
+    )
+    relationship_rows = relationships.copy()
+    aum_values = []
+    for index, relationship in enumerate(relationship_rows.itertuples(index=False), start=1):
+        relationship_balance = balances.get(relationship.banking_relationship_id, Decimal("0.00"))
+        if relationship.institution_name == ALPINE_CREST:
+            multiplier = PRIVATE_AUM_MULTIPLIERS[(index - 1) % len(PRIVATE_AUM_MULTIPLIERS)]
+            aum_values.append((relationship_balance * multiplier).quantize(MONEY_QUANT))
+        else:
+            aum_values.append(relationship_balance.quantize(MONEY_QUANT))
+    relationship_rows["aum_chf"] = aum_values
+    return relationship_rows.loc[:, COLUMN_NAMES[BANKING_RELATIONSHIPS]]
+
+
+def _generate_relationship_manager_history(relationships: pd.DataFrame) -> pd.DataFrame:
+    """Create current effective-dated relationship-manager assignment rows."""
+    rows = []
+    for index, relationship in enumerate(relationships.itertuples(index=False), start=1):
+        rows.append(
+            {
+                "rm_history_id": _identifier("RMH", index),
+                "banking_relationship_id": relationship.banking_relationship_id,
+                "relationship_manager_code": relationship.relationship_manager_code,
+                "effective_from": relationship.relationship_manager_assigned_at,
+                "effective_to": pd.NaT,
+            }
+        )
+    return _frame(RELATIONSHIP_MANAGER_HISTORY, rows)
 
 
 def _generate_partner_roles(
@@ -463,9 +530,9 @@ def _has_secondary_account(profile: DatasetScaleProfile, relationship_index: int
 
 
 def _generate_users(rng: np.random.Generator, clients: pd.DataFrame) -> pd.DataFrame:
-    """Create digital user identities for eligible generated clients."""
+    """Create digital user identities for generated clients."""
     rows = []
-    for index, client in enumerate(clients.iloc[2:].itertuples(index=False), start=1):
+    for index, client in enumerate(clients.itertuples(index=False), start=1):
         rows.append(
             {
                 "user_id": _identifier("U", index),
@@ -488,8 +555,11 @@ def _generate_sessions(
     """Generate login and activity sessions for digital users."""
     rows = []
     events = ("login", "view_accounts", "add_beneficiary", "payment_authorized")
+    session_users = users[users["institution_name"] == NOVABANK]
+    if session_users.empty:
+        session_users = users
     for index in range(1, profile.session_count + 1):
-        user = users.iloc[(index - 1) % len(users)]
+        user = session_users.iloc[(index - 1) % len(session_users)]
         channel = str(rng.choice(("web", "mobile_app")))
         started_at = _bounded_timestamp(
             index,
@@ -514,7 +584,7 @@ def _generate_sessions(
                 "coarse_geolocation": _coarse_geolocation(index),
                 "is_vpn_or_proxy": rng.choice((False, False, False, True)),
                 "auth_method": rng.choice(("password_sms", "passkey", "push_mfa")),
-                "session_event": events[(index - 1) % len(events)],
+                "session_event": _session_event(str(user["institution_name"]), events, index),
             }
         )
     return _frame(SESSIONS, rows)
@@ -523,30 +593,121 @@ def _generate_sessions(
 def _generate_payment_beneficiaries(
     fake: Faker, rng: np.random.Generator, clients: pd.DataFrame, users: pd.DataFrame
 ) -> pd.DataFrame:
-    """Add one saved beneficiary per client that has a digital user identity."""
+    """Add saved beneficiaries and private-banking counterparties for client context."""
     rows = []
     users_by_client = users.set_index("client_id")
     eligible_clients = clients[clients["client_id"].isin(users_by_client.index)]
-    for index, client in enumerate(eligible_clients.itertuples(index=False), start=1):
+    for client_index, client in enumerate(eligible_clients.itertuples(index=False), start=1):
         user = users_by_client.loc[client.client_id]
-        created_at = min(
-            pd.Timestamp(user["created_at"]) + pd.Timedelta(days=index),
-            DATASET_AS_OF - pd.Timedelta(days=20),
-        )
-        rows.append(
-            {
-                "payment_beneficiary_id": _identifier("B", index),
-                "client_id": client.client_id,
-                "added_by_user_id": user["user_id"],
-                "beneficiary_name": fake.company(),
-                "beneficiary_account_country": str(rng.choice(("CH", "DE", "FR", "IT", "GB"))),
-                "beneficiary_bank_country": str(rng.choice(("CH", "DE", "FR", "IT", "GB"))),
-                "beneficiary_change_event": "beneficiary_created",
-                "created_at": created_at,
-                "status": "active",
-            }
-        )
+        beneficiary_count = _beneficiary_count(client.institution_name, client_index)
+        for beneficiary_offset in range(1, beneficiary_count + 1):
+            row_index = len(rows) + 1
+            change_event = _beneficiary_change_event(
+                client.institution_name,
+                beneficiary_count,
+                beneficiary_offset,
+            )
+            account_country = _beneficiary_account_country(
+                rng,
+                client.institution_name,
+                client_index,
+                beneficiary_offset,
+            )
+            rows.append(
+                {
+                    "payment_beneficiary_id": _identifier("B", row_index),
+                    "client_id": client.client_id,
+                    "added_by_user_id": user["user_id"],
+                    "beneficiary_name": fake.company(),
+                    "beneficiary_account_country": account_country,
+                    "beneficiary_bank_country": _beneficiary_bank_country(
+                        rng,
+                        client.institution_name,
+                        account_country,
+                        beneficiary_offset,
+                    ),
+                    "beneficiary_change_event": change_event,
+                    "created_at": _beneficiary_created_at(
+                        client,
+                        user,
+                        change_event,
+                        client_index,
+                        beneficiary_offset,
+                    ),
+                    "status": "active",
+                }
+            )
     return _frame(PAYMENT_BENEFICIARIES, rows)
+
+
+def _beneficiary_count(institution_name: str, client_index: int) -> int:
+    """Return the number of saved counterparties created for one Client."""
+    if institution_name == ALPINE_CREST:
+        return 1 + (client_index % 3)
+    return 1
+
+
+def _beneficiary_change_event(
+    institution_name: str,
+    beneficiary_count: int,
+    beneficiary_offset: int,
+) -> str:
+    """Return private-banking newness context or the digital default event."""
+    if institution_name == ALPINE_CREST:
+        if beneficiary_offset == beneficiary_count:
+            return "new_beneficiary_added"
+        return "established_beneficiary"
+    return "beneficiary_created"
+
+
+def _beneficiary_account_country(
+    rng: np.random.Generator,
+    institution_name: str,
+    client_index: int,
+    beneficiary_offset: int,
+) -> str:
+    """Return deterministic account-country context for private and digital beneficiaries."""
+    if institution_name == ALPINE_CREST:
+        private_countries = ("CH", "DE", "FR", "IT", "LI", "SG", "AE", "PA")
+        return private_countries[(client_index + beneficiary_offset - 2) % len(private_countries)]
+    return str(rng.choice(("CH", "DE", "FR", "IT", "GB")))
+
+
+def _beneficiary_bank_country(
+    rng: np.random.Generator,
+    institution_name: str,
+    account_country: str,
+    beneficiary_offset: int,
+) -> str:
+    """Return bank-country context, including occasional correspondent-bank differences."""
+    if institution_name == ALPINE_CREST:
+        if beneficiary_offset % 3 == 0:
+            return "CH"
+        if beneficiary_offset % 2 == 0 and account_country != "GB":
+            return "GB"
+        return account_country
+    return str(rng.choice(("CH", "DE", "FR", "IT", "GB")))
+
+
+def _beneficiary_created_at(
+    client: object,
+    user: pd.Series,
+    change_event: str,
+    client_index: int,
+    beneficiary_offset: int,
+) -> pd.Timestamp:
+    """Return beneficiary creation time suitable for old/new counterparty features."""
+    if change_event == "new_beneficiary_added":
+        return DATASET_AS_OF - pd.Timedelta(days=35 + client_index % 5 + beneficiary_offset)
+    if change_event == "established_beneficiary":
+        established_at = pd.Timestamp(client.onboarded_at) + pd.Timedelta(
+            days=45 + beneficiary_offset * 20
+        )
+        return min(established_at, DATASET_AS_OF - pd.Timedelta(days=120))
+    return min(
+        pd.Timestamp(user["created_at"]) + pd.Timedelta(days=client_index),
+        DATASET_AS_OF - pd.Timedelta(days=20),
+    )
 
 
 def _generate_transactions(
@@ -556,30 +717,46 @@ def _generate_transactions(
     beneficiaries: pd.DataFrame,
     profile: DatasetScaleProfile,
 ) -> pd.DataFrame:
-    """Book transactions across accounts with optional beneficiary references for digital payments."""
+    """Book transactions with private-banking and digital beneficiary context."""
     relationship_clients = relationships.set_index("banking_relationship_id")["primary_client_id"]
-    beneficiary_ids_by_client = {
-        client_id: tuple(client_beneficiaries["payment_beneficiary_id"])
+    beneficiaries_by_client = {
+        client_id: tuple(
+            client_beneficiaries.sort_values(
+                ["created_at", "payment_beneficiary_id"],
+                kind="stable",
+            ).to_dict("records")
+        )
         for client_id, client_beneficiaries in beneficiaries.groupby("client_id")
     }
     rows = []
+    private_transaction_index = 0
     for index in range(1, profile.transaction_count + 1):
         account = accounts.iloc[(index - 1) % len(accounts)]
         client_id = str(relationship_clients.loc[account["banking_relationship_id"]])
         is_digital_payment = account["institution_name"] == NOVABANK and index % 2 == 0
-        beneficiary_ids = beneficiary_ids_by_client.get(client_id, ())
-        beneficiary_id = (
-            beneficiary_ids[index % len(beneficiary_ids)]
-            if is_digital_payment and beneficiary_ids
-            else None
+        if account["institution_name"] == ALPINE_CREST:
+            private_transaction_index += 1
+        transaction_type = _transaction_type(
+            account["institution_name"],
+            is_digital_payment,
+            private_transaction_index,
         )
+        direction = _transaction_direction(index, transaction_type)
         currency = str(account["currency"])
-        amount = _money(int(rng.integers(75, 65_000)))
+        amount = _transaction_amount(rng, transaction_type)
         booked_at = _bounded_timestamp(
             index,
             profile.transaction_count,
             start=DATASET_AS_OF - pd.Timedelta(days=90),
             end=DATASET_AS_OF - pd.Timedelta(days=5),
+        )
+        beneficiary_id = _transaction_beneficiary_id(
+            beneficiaries_by_client.get(client_id, ()),
+            transaction_type=transaction_type,
+            direction=direction,
+            booked_at=booked_at,
+            sequence_index=private_transaction_index if account["institution_name"] == ALPINE_CREST else index,
+            is_digital_payment=is_digital_payment,
         )
         rows.append(
             {
@@ -587,13 +764,17 @@ def _generate_transactions(
                 "account_id": account["account_id"],
                 "payment_beneficiary_id": beneficiary_id,
                 "booked_at": booked_at,
-                "transaction_type": _transaction_type(account["institution_name"], is_digital_payment),
-                "channel": _channel(account["institution_name"], is_digital_payment),
-                "direction": "debit" if index % 3 else "credit",
+                "transaction_type": transaction_type,
+                "channel": _channel(account["institution_name"], is_digital_payment, transaction_type),
+                "direction": direction,
                 "amount_original": amount,
                 "currency": currency,
                 "amount_chf": _to_chf(amount, currency),
-                "description": _transaction_description(account["institution_name"], is_digital_payment),
+                "description": _transaction_description(
+                    account["institution_name"],
+                    is_digital_payment,
+                    transaction_type,
+                ),
             }
         )
     return _frame(TRANSACTIONS, rows)
@@ -972,30 +1153,122 @@ def _account_type(institution_name: str, account_number: int) -> str:
     return "digital_savings" if account_number else "digital_current"
 
 
-def _transaction_type(institution_name: str, is_digital_payment: bool) -> str:
-    """Choose wire_transfer, card_payment, or instant_payment based on context."""
+def _transaction_type(
+    institution_name: str,
+    is_digital_payment: bool,
+    private_sequence_index: int = 0,
+) -> str:
+    """Choose transaction typology based on institution and deterministic context."""
     if is_digital_payment:
         return "instant_payment"
     if institution_name == ALPINE_CREST:
-        return "wire_transfer"
+        sequence_index = max(private_sequence_index, 1)
+        return PRIVATE_BANKING_TRANSACTION_TYPE_SEQUENCE[
+            (sequence_index - 1) % len(PRIVATE_BANKING_TRANSACTION_TYPE_SEQUENCE)
+        ]
     return "card_payment"
 
 
-def _channel(institution_name: str, is_digital_payment: bool) -> str:
-    """Pick relationship_manager, web, or mobile_app based on payment context."""
+def _transaction_amount(rng: np.random.Generator, transaction_type: str) -> Decimal:
+    """Return deterministic amount ranges that reflect the transaction typology."""
+    amount_ranges = {
+        "management_fee": (500, 8_000),
+        "custody_fee": (125, 4_000),
+        "securities_purchase": (25_000, 260_000),
+        "securities_sale": (25_000, 260_000),
+        "fx_trade": (10_000, 180_000),
+        "wire_transfer": (5_000, 170_000),
+    }
+    minimum, maximum = amount_ranges.get(transaction_type, (75, 65_000))
+    return _money(int(rng.integers(minimum, maximum)))
+
+
+def _transaction_direction(index: int, transaction_type: str) -> str:
+    """Return account-perspective direction consistent with the transaction typology."""
+    if transaction_type in {"management_fee", "custody_fee", "securities_purchase", "fx_trade"}:
+        return "debit"
+    if transaction_type == "securities_sale":
+        return "credit"
+    return "debit" if index % 3 else "credit"
+
+
+def _transaction_beneficiary_id(
+    beneficiaries: tuple[dict[str, object], ...],
+    *,
+    transaction_type: str,
+    direction: str,
+    booked_at: pd.Timestamp,
+    sequence_index: int,
+    is_digital_payment: bool,
+) -> str | None:
+    """Select a beneficiary/counterparty only when the transaction type supports it."""
+    eligible_beneficiaries = tuple(
+        beneficiary
+        for beneficiary in beneficiaries
+        if pd.Timestamp(beneficiary["created_at"]) <= booked_at
+    )
+    if is_digital_payment:
+        if not eligible_beneficiaries:
+            return None
+        return str(eligible_beneficiaries[sequence_index % len(eligible_beneficiaries)]["payment_beneficiary_id"])
+
+    private_counterparty_types = {"wire_transfer", "fx_trade", "securities_purchase"}
+    if direction != "debit" or transaction_type not in private_counterparty_types:
+        return None
+    if not eligible_beneficiaries:
+        return None
+
+    if sequence_index % 7 == 0:
+        new_beneficiaries = tuple(
+            beneficiary
+            for beneficiary in eligible_beneficiaries
+            if beneficiary["beneficiary_change_event"] == "new_beneficiary_added"
+        )
+        if new_beneficiaries:
+            return str(
+                new_beneficiaries[(sequence_index - 1) % len(new_beneficiaries)][
+                    "payment_beneficiary_id"
+                ]
+            )
+
+    established_beneficiaries = tuple(
+        beneficiary
+        for beneficiary in eligible_beneficiaries
+        if beneficiary["beneficiary_change_event"] == "established_beneficiary"
+    )
+    candidates = established_beneficiaries or eligible_beneficiaries
+    return str(candidates[(sequence_index - 1) % len(candidates)]["payment_beneficiary_id"])
+
+
+def _channel(institution_name: str, is_digital_payment: bool, transaction_type: str) -> str:
+    """Pick relationship_manager, web, mobile_app, or batch based on context."""
     if is_digital_payment:
         return "mobile_app"
+    if transaction_type in {"management_fee", "custody_fee"}:
+        return "batch"
     if institution_name == ALPINE_CREST:
         return "relationship_manager"
     return "web"
 
 
-def _transaction_description(institution_name: str, is_digital_payment: bool) -> str:
+def _transaction_description(
+    institution_name: str,
+    is_digital_payment: bool,
+    transaction_type: str,
+) -> str:
     """Return a human-readable transaction description based on context."""
     if is_digital_payment:
         return "Outbound payment to saved beneficiary"
     if institution_name == ALPINE_CREST:
-        return "Private banking account movement"
+        descriptions = {
+            "wire_transfer": "Private banking wire transfer",
+            "fx_trade": "Private banking FX trade",
+            "management_fee": "Private banking management fee",
+            "custody_fee": "Private banking custody fee",
+            "securities_purchase": "Private banking securities purchase",
+            "securities_sale": "Private banking securities sale",
+        }
+        return descriptions[transaction_type]
     return "Digital banking account activity"
 
 
@@ -1025,6 +1298,13 @@ def _coarse_geolocation(index: int) -> str:
     """Return a deterministic coarse geolocation signal."""
     locations = ("Zurich-CH", "Geneva-CH", "Berlin-DE", "Paris-FR", "London-GB")
     return locations[(index - 1) % len(locations)]
+
+
+def _session_event(institution_name: str, events: tuple[str, ...], index: int) -> str:
+    """Return deterministic session events with NovaBank payment coverage."""
+    if institution_name == NOVABANK:
+        return "payment_authorized" if index % 2 == 0 else "add_beneficiary"
+    return events[(index - 1) % len(events)]
 
 
 def _case_summary(alert_type: str) -> str:

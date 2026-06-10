@@ -23,9 +23,25 @@ from banking_fraud_lab.sqlite_loader import (
     load_tables_to_sqlite,
 )
 from banking_fraud_lab.evaluation import evaluate_alert_scores
+from banking_fraud_lab.features import (
+    FEATURE_FAMILY_IDS,
+    PRIVATE_BANKING_FEATURE_FAMILIES,
+    FeatureFamilySpec,
+    build_private_banking_features,
+    calculate_amount_to_aum_features,
+    calculate_amount_to_baseline_features,
+    calculate_cross_border_features,
+    calculate_new_counterparty_features,
+    calculate_off_hours_features,
+    calculate_rm_concentration_features,
+    calculate_velocity_features,
+)
 
 __all__ = [
+    "FEATURE_FAMILY_IDS",
     "FOUNDATION_PROGRESSIVE_VIEW_SPECS",
+    "PRIVATE_BANKING_FEATURE_FAMILIES",
+    "FeatureFamilySpec",
     "ProgressiveViewSpec",
     "SCALE_PROFILES",
     "DatasetScaleProfile",
@@ -33,6 +49,14 @@ __all__ = [
     "__version__",
     "build_foundation_progressive_views",
     "build_learner_facing_views",
+    "build_private_banking_features",
+    "calculate_amount_to_aum_features",
+    "calculate_amount_to_baseline_features",
+    "calculate_cross_border_features",
+    "calculate_new_counterparty_features",
+    "calculate_off_hours_features",
+    "calculate_rm_concentration_features",
+    "calculate_velocity_features",
     "create_minimal_banking_world_sqlite",
     "evaluate_alert_scores",
     "generate_dataset_quality_report",

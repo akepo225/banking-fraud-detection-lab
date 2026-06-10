@@ -1,10 +1,11 @@
 # ERD-Backed Schema Tour
 
-This tour shows the v0.2 foundation schema as one **Realistic synthetic data
+This tour shows the v0.2 foundation schema plus additive v0.3 private-banking
+transaction context as one **Realistic synthetic data
 model**. It is intentionally foundation-level: it explains how **Partner**,
 **Client**, **User**, **Banking relationship**, accounts, sessions, **Detection
 pattern** observations, and the **Alert lifecycle** connect before later modules
-add deeper private-banking or digital-banking features.
+add deeper feature-engineering or modeling exercises.
 
 The canonical schema remains the source of truth in
 `src/banking_fraud_lab/schema/tables.py`. This page is a learner-facing ERD tour
@@ -33,6 +34,14 @@ erDiagram
     banking_relationships {
         string banking_relationship_id PK
         string primary_client_id FK
+        Decimal aum_chf
+    }
+    relationship_manager_history {
+        string rm_history_id PK
+        string banking_relationship_id FK
+        string relationship_manager_code
+        datetime64 effective_from
+        datetime64 effective_to
     }
     accounts {
         string account_id PK
@@ -99,6 +108,7 @@ erDiagram
     roles ||--o{ partner_roles : assigned_as
     clients ||--o{ banking_relationships : primary_client
     banking_relationships ||--o{ partner_roles : contains_role
+    banking_relationships ||--o{ relationship_manager_history : manager_history
     banking_relationships ||--o{ accounts : owns
     accounts ||--o{ transactions : books
     clients ||--o{ users : authenticates_as
@@ -136,7 +146,10 @@ erDiagram
 - **Client** records identify the legal customer and point back to a Partner.
 - **User** records are digital login identities owned by a Client.
 - A **Banking relationship** groups the Client's service arrangement, accounts,
-  Partner roles, and downstream Alert lifecycle context.
+  Partner roles, relationship AUM context, and downstream Alert lifecycle
+  context.
+- `payment_beneficiaries` represents NovaBank Digital saved beneficiaries and
+  Alpine Crest Private Bank counterparties for transaction-context features.
 - Suspicious activities record observed **Detection pattern** signals before an
   alert is generated.
 - The **Alert lifecycle** flows from suspicious activity to alert, optional case,
@@ -153,6 +166,7 @@ erDiagram
 | `roles` | `role_id` | None |
 | `partner_roles` | `partner_role_id` | `partners.partner_id`, `roles.role_id`, `banking_relationships.banking_relationship_id` |
 | `banking_relationships` | `banking_relationship_id` | `clients.client_id` |
+| `relationship_manager_history` | `rm_history_id` | `banking_relationships.banking_relationship_id` |
 | `accounts` | `account_id` | `banking_relationships.banking_relationship_id` |
 | `transactions` | `transaction_id` | `accounts.account_id`, `payment_beneficiaries.payment_beneficiary_id` |
 | `users` | `user_id` | `clients.client_id` |
@@ -168,8 +182,8 @@ erDiagram
 
 Start with `foundation_client_relationships` when the lesson needs a compact
 Client, Partner, and Banking relationship anchor. Move to canonical tables when
-the lesson needs role history, account detail, transaction detail, or digital
-User/session context.
+the lesson needs role history, relationship-manager history, account detail,
+transaction detail, or digital User/session context.
 
 Start with `foundation_alert_lifecycle` when the lesson needs the Alert lifecycle
 in one surface. Move to `suspicious_activities`, `alerts`, `cases`, and

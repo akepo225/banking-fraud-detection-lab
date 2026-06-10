@@ -32,11 +32,12 @@ These CSV files were generated with `generate_minimal_banking_world(seed=42, sca
 | `roles.csv` | 4 | Controlled role vocabulary. |
 | `partner_roles.csv` | 12 | Effective-dated partner roles in banking relationships. |
 | `banking_relationships.csv` | 6 | Swiss-bank-style relationship containers. |
+| `relationship_manager_history.csv` | 6 | Effective-dated relationship-manager assignment history. |
 | `accounts.csv` | 8 | Accounts under banking relationships. |
 | `transactions.csv` | 12 | Money movement events. |
-| `users.csv` | 4 | Digital login identities. |
+| `users.csv` | 6 | Digital login identities. |
 | `sessions.csv` | 7 | Digital session telemetry. |
-| `payment_beneficiaries.csv` | 4 | Saved payment beneficiaries. |
+| `payment_beneficiaries.csv` | 10 | Saved beneficiaries and private-banking counterparties. |
 | `suspicious_activities.csv` | 3 | Suspicious activity observations before alert generation. |
 | `alerts.csv` | 3 | Alerts generated from suspicious activities. |
 | `cases.csv` | 2 | Investigation cases opened from alerts. |

@@ -14,6 +14,7 @@ from banking_fraud_lab.schema import (
     CASES,
     CLIENTS,
     PARTNERS,
+    RELATIONSHIP_MANAGER_HISTORY,
     SUSPICIOUS_ACTIVITIES,
 )
 
@@ -98,8 +99,30 @@ FOUNDATION_ALERT_LIFECYCLE = ProgressiveViewSpec(
     ),
 )
 
+PB_RELATIONSHIP_CONTEXT = ProgressiveViewSpec(
+    name="pb_relationship_context",
+    purpose=(
+        "Exposes one row per Banking relationship with relationship AUM and current "
+        "relationship-manager history for private-banking relationship-context exercises."
+    ),
+    source_tables=(BANKING_RELATIONSHIPS, RELATIONSHIP_MANAGER_HISTORY),
+    columns=(
+        "banking_relationship_id",
+        "primary_client_id",
+        "institution_name",
+        "relationship_name",
+        "relationship_opened_at",
+        "relationship_status",
+        "aum_chf",
+        "relationship_manager_code",
+        "rm_effective_from",
+        "rm_effective_to",
+    ),
+)
+
 FOUNDATION_PROGRESSIVE_VIEW_SPECS = (
     FOUNDATION_CLIENT_RELATIONSHIPS,
+    PB_RELATIONSHIP_CONTEXT,
     FOUNDATION_ALERT_LIFECYCLE,
 )
 
@@ -130,6 +153,43 @@ JOIN "partners" AS p
 JOIN "banking_relationships" AS br
   ON br."primary_client_id" = c."client_id"
  AND br."institution_name" = c."institution_name"
+""",
+    PB_RELATIONSHIP_CONTEXT.name: """
+CREATE VIEW "pb_relationship_context" AS
+SELECT
+  br."banking_relationship_id" AS "banking_relationship_id",
+  br."primary_client_id" AS "primary_client_id",
+  br."institution_name" AS "institution_name",
+  br."relationship_name" AS "relationship_name",
+  br."opened_at" AS "relationship_opened_at",
+  br."status" AS "relationship_status",
+  br."aum_chf" AS "aum_chf",
+  rmh."relationship_manager_code" AS "relationship_manager_code",
+  rmh."effective_from" AS "rm_effective_from",
+  rmh."effective_to" AS "rm_effective_to"
+FROM "banking_relationships" AS br
+LEFT JOIN (
+  SELECT
+    ranked_rmh."banking_relationship_id",
+    ranked_rmh."relationship_manager_code",
+    ranked_rmh."effective_from",
+    ranked_rmh."effective_to"
+  FROM (
+    SELECT
+      rmh_source."banking_relationship_id" AS "banking_relationship_id",
+      rmh_source."relationship_manager_code" AS "relationship_manager_code",
+      rmh_source."effective_from" AS "effective_from",
+      rmh_source."effective_to" AS "effective_to",
+      ROW_NUMBER() OVER (
+        PARTITION BY rmh_source."banking_relationship_id"
+        ORDER BY rmh_source."effective_from" DESC, rmh_source."rm_history_id" DESC
+      ) AS "current_rank"
+    FROM "relationship_manager_history" AS rmh_source
+    WHERE rmh_source."effective_to" IS NULL
+  ) AS ranked_rmh
+  WHERE ranked_rmh."current_rank" = 1
+) AS rmh
+  ON rmh."banking_relationship_id" = br."banking_relationship_id"
 """,
     FOUNDATION_ALERT_LIFECYCLE.name: """
 CREATE VIEW "foundation_alert_lifecycle" AS
@@ -192,6 +252,7 @@ def build_foundation_progressive_view(
     """Build one foundation-level Progressive data view by name."""
     view_builders = {
         FOUNDATION_CLIENT_RELATIONSHIPS.name: _build_foundation_client_relationships,
+        PB_RELATIONSHIP_CONTEXT.name: _build_pb_relationship_context,
         FOUNDATION_ALERT_LIFECYCLE.name: _build_foundation_alert_lifecycle,
     }
     try:
@@ -253,6 +314,64 @@ def _build_foundation_client_relationships(
     )
 
     return view.loc[:, FOUNDATION_CLIENT_RELATIONSHIPS.columns].copy()
+
+
+def _build_pb_relationship_context(
+    tables: Mapping[str, pd.DataFrame],
+) -> pd.DataFrame:
+    """Return the private-banking relationship context view with current RM history."""
+    _require_source_tables(PB_RELATIONSHIP_CONTEXT, tables)
+
+    relationships = tables[BANKING_RELATIONSHIPS][
+        [
+            "banking_relationship_id",
+            "primary_client_id",
+            "institution_name",
+            "relationship_name",
+            "opened_at",
+            "status",
+            "aum_chf",
+        ]
+    ].rename(
+        columns={
+            "opened_at": "relationship_opened_at",
+            "status": "relationship_status",
+        }
+    )
+    current_rm_history = tables[RELATIONSHIP_MANAGER_HISTORY][
+        [
+            "rm_history_id",
+            "banking_relationship_id",
+            "relationship_manager_code",
+            "effective_from",
+            "effective_to",
+        ]
+    ]
+    current_rm_history = (
+        current_rm_history[current_rm_history["effective_to"].isna()]
+        .sort_values(
+            ["banking_relationship_id", "effective_from", "rm_history_id"],
+            ascending=[True, False, False],
+            kind="stable",
+        )
+        .drop_duplicates("banking_relationship_id", keep="first")
+        .drop(columns="rm_history_id")
+        .rename(
+            columns={
+                "effective_from": "rm_effective_from",
+                "effective_to": "rm_effective_to",
+            }
+        )
+    )
+
+    view = relationships.merge(
+        current_rm_history,
+        on="banking_relationship_id",
+        how="left",
+        validate="one_to_one",
+    )
+
+    return view.loc[:, PB_RELATIONSHIP_CONTEXT.columns].copy()
 
 
 def _build_foundation_alert_lifecycle(
@@ -342,6 +461,7 @@ __all__ = [
     "FOUNDATION_CLIENT_RELATIONSHIPS",
     "FOUNDATION_PROGRESSIVE_VIEW_SPECS",
     "FOUNDATION_PROGRESSIVE_VIEW_SQL",
+    "PB_RELATIONSHIP_CONTEXT",
     "ProgressiveViewSpec",
     "build_foundation_progressive_view",
     "build_foundation_progressive_views",

@@ -112,7 +112,8 @@ Deliverables:
 - Beneficial ownership and authorized signatory joins.
 - Account and transaction typology expansion for wires, FX, fees, and investment-related flows.
 - Private-banking feature library for amount-to-AUM ratios, new counterparty behavior, off-hours activity, cross-border movement, velocity changes, and relationship-manager concentration.
-- Notebook for private-banking feature engineering.
+- Notebook for private-banking feature engineering under
+  `notebooks/04_private_banking_feature_engineering/`.
 - Notebook for private-banking supervised baseline and threshold tuning.
 - Case-library entries for private-banking transaction fraud and control failures.
 - Regulatory notes connecting Swiss AMLA, AMLO, FINMA, and model governance to analytics decisions.

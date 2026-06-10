@@ -4,6 +4,7 @@ from pathlib import Path
 
 import sqlite3
 
+import pandas as pd
 import pytest
 
 from banking_fraud_lab import (
@@ -16,6 +17,7 @@ from banking_fraud_lab.run_sql import main as run_sql_main
 from banking_fraud_lab.schema import (
     LEARNER_FACING_TABLE_NAMES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
+    RELATIONSHIP_MANAGER_HISTORY,
     ROLES,
     TABLE_NAMES,
 )
@@ -27,6 +29,9 @@ EXAMPLE_SQL_FILES = (
     Path("sql/examples/03_client_relationship_cohorts.sql"),
     Path("sql/examples/04_progressive_alert_queue.sql"),
     Path("sql/examples/05_transaction_feature_extraction.sql"),
+    Path("sql/examples/06_private_banking_value_features.sql"),
+    Path("sql/examples/07_private_banking_context_features.sql"),
+    Path("sql/examples/08_private_banking_relationship_features.sql"),
 )
 
 
@@ -112,6 +117,40 @@ def test_default_sqlite_database_exposes_foundation_progressive_views(
         )
         assert "available_to_learners" not in protected_view_columns
         assert PROTECTED_SCENARIO_ANSWER_KEYS not in view_names
+    finally:
+        connection.close()
+
+
+def test_sqlite_pb_relationship_context_selects_latest_current_rm_history(
+    tmp_path: Path,
+) -> None:
+    """SQLite pb_relationship_context must match Python latest-current RM selection."""
+    tables = generate_minimal_banking_world(seed=42)
+    first_history = tables[RELATIONSHIP_MANAGER_HISTORY].iloc[[0]].copy()
+    first_relationship_id = str(first_history.iloc[0]["banking_relationship_id"])
+    latest_effective_from = pd.Timestamp(first_history.iloc[0]["effective_from"]) + pd.Timedelta(
+        minutes=30
+    )
+    first_history.loc[:, "rm_history_id"] = "RMH-9999"
+    first_history.loc[:, "relationship_manager_code"] = "RM-999"
+    first_history.loc[:, "effective_from"] = latest_effective_from
+    tables[RELATIONSHIP_MANAGER_HISTORY] = pd.concat(
+        [tables[RELATIONSHIP_MANAGER_HISTORY], first_history],
+        ignore_index=True,
+    )
+    connection = load_tables_to_sqlite(tables, tmp_path / "world.sqlite")
+
+    try:
+        row = connection.execute(
+            """
+            SELECT COUNT(*), MAX("relationship_manager_code"), MAX("rm_effective_from")
+            FROM "pb_relationship_context"
+            WHERE "banking_relationship_id" = ?
+            """,
+            (first_relationship_id,),
+        ).fetchone()
+
+        assert row == (1, "RM-999", latest_effective_from.isoformat(sep=" "))
     finally:
         connection.close()
 
@@ -256,6 +295,39 @@ def test_representative_sql_examples_execute_successfully(tmp_path: Path) -> Non
         for sql_file in EXAMPLE_SQL_FILES:
             rows = connection.execute(sql_file.read_text(encoding="utf-8")).fetchall()
             assert rows, f"{sql_file} returned no rows"
+    finally:
+        connection.close()
+
+
+def test_sqlite_private_banking_transaction_context_is_queryable(tmp_path: Path) -> None:
+    """SQLite learner path should expose AUM and counterparty transaction context."""
+    connection = create_minimal_banking_world_sqlite(
+        tmp_path / "learner_world.sqlite",
+        seed=42,
+    )
+
+    try:
+        row = connection.execute(
+            """
+            SELECT
+              COUNT(DISTINCT t.transaction_type) AS private_typologies,
+              SUM(CASE WHEN t.payment_beneficiary_id IS NOT NULL THEN 1 ELSE 0 END)
+                AS linked_counterparty_rows,
+              MIN(CAST(br.aum_chf AS REAL)) AS min_aum_chf
+            FROM transactions AS t
+            JOIN accounts AS a
+              ON a.account_id = t.account_id
+            JOIN banking_relationships AS br
+              ON br.banking_relationship_id = a.banking_relationship_id
+            LEFT JOIN payment_beneficiaries AS pb
+              ON pb.payment_beneficiary_id = t.payment_beneficiary_id
+            WHERE a.institution_name = 'Alpine Crest Private Bank'
+            """
+        ).fetchone()
+
+        assert row[0] >= 6
+        assert row[1] > 0
+        assert row[2] > 0
     finally:
         connection.close()
 

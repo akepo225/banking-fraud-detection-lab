@@ -11,6 +11,7 @@ from banking_fraud_lab import (
     generate_minimal_banking_world,
     generate_private_banking_transaction_fraud_world,
 )
+from banking_fraud_lab.generators.private_banking import PRIVATE_BANKING_FALSE_POSITIVE_TYPE
 from banking_fraud_lab.schema import LEARNER_FACING_TABLE_NAMES, TABLE_NAMES
 
 
@@ -136,6 +137,37 @@ def test_scenario_generators_accept_scale_parameter() -> None:
     assert len(private_tiny["alerts"]) < len(private_small["alerts"])
     assert len(digital_tiny["transactions"]) < len(digital_small["transactions"])
     assert len(digital_tiny["alerts"]) < len(digital_small["alerts"])
+
+
+def test_private_banking_false_positive_generation_is_deterministic() -> None:
+    """Same seed and prevalence must produce the same false-positive examples."""
+    first = generate_private_banking_transaction_fraud_world(
+        seed=42,
+        scale="small",
+        scenario_prevalence=0.2,
+    )
+    second = generate_private_banking_transaction_fraud_world(
+        seed=42,
+        scale="small",
+        scenario_prevalence=0.2,
+    )
+
+    first_alert_ids = first["alerts"].loc[
+        first["alerts"]["alert_type"] == PRIVATE_BANKING_FALSE_POSITIVE_TYPE,
+        "alert_id",
+    ]
+    second_alert_ids = second["alerts"].loc[
+        second["alerts"]["alert_type"] == PRIVATE_BANKING_FALSE_POSITIVE_TYPE,
+        "alert_id",
+    ]
+    first_cases = first["cases"][first["cases"]["alert_id"].isin(first_alert_ids)].reset_index(
+        drop=True
+    )
+    second_cases = second["cases"][
+        second["cases"]["alert_id"].isin(second_alert_ids)
+    ].reset_index(drop=True)
+
+    pd.testing.assert_frame_equal(first_cases, second_cases)
 
 
 def test_sqlite_loader_accepts_scale_profile() -> None:

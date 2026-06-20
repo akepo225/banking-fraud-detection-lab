@@ -10,7 +10,7 @@ WITH digital_transactions AS (
     t.direction,
     CAST(t.amount_chf AS REAL) AS amount_chf,
     sa.session_id,
-    CAST(a.opened_at AS REAL) AS account_opened_epoch
+    a.opened_at
   FROM transactions AS t
   JOIN accounts AS a
     ON a.account_id = t.account_id
@@ -52,14 +52,12 @@ SELECT
   dt.direction,
   ROUND(dt.amount_chf, 2) AS amount_chf,
   ROUND(
-    (julianday(dt.booked_at) - julianday(date(dt.account_opened_epoch, 'unixepoch'))) ,
+    julianday(dt.booked_at) - julianday(dt.opened_at),
     2
   ) AS db_account_age_days,
   CASE
-    WHEN (
-      julianday(dt.booked_at)
-      - julianday(date(dt.account_opened_epoch, 'unixepoch'))
-    ) <= 30 THEN 1
+    WHEN (julianday(dt.booked_at) - julianday(dt.opened_at)) BETWEEN 0 AND 30
+      THEN 1
     ELSE 0
   END AS db_is_early_life_account,
   COALESCE(spc.db_session_payment_count, 0) AS db_session_payment_count,

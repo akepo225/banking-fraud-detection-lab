@@ -37,6 +37,38 @@ transaction size and destination context within a Banking relationship.
 observed or recently created counterparties, timing, repetition, and assignment
 concentration that support transaction-fraud review.
 
+## Digital-Banking Feature Families
+
+The v0.4 digital-banking feature library mirrors the private-banking shape for
+NovaBank Digital analytics. Every family uses the `db_` prefix and maps to one
+of the three existing digital Detection pattern IDs (`digital_scam_to_mule`,
+`new_beneficiary_payment`, or `session_payment_velocity`). No new pattern IDs
+are introduced.
+
+| Family ID | Detection pattern ID | Source tables | Output columns |
+| --- | --- | --- | --- |
+| `db_session_risk` | `session_payment_velocity` | `transactions`, `sessions`, `accounts`, `banking_relationships`, `users` | `db_is_vpn_or_proxy`, `db_asn_risk_score`, `db_is_high_risk_network`, `db_is_password_sms_auth` |
+| `db_beneficiary_novelty` | `new_beneficiary_payment` | `transactions`, `payment_beneficiaries` | `db_beneficiary_age_days`, `db_is_new_beneficiary` |
+| `db_payment_velocity` | `session_payment_velocity` | `transactions`, `suspicious_activities`, `sessions`, `accounts` | `db_session_payment_count`, `db_session_payment_amount_chf`, `db_session_max_payment_chf` |
+| `db_account_age` | `digital_scam_to_mule` | `transactions`, `accounts` | `db_account_age_days`, `db_is_early_life_account` |
+| `db_shared_device` | `digital_scam_to_mule` | `sessions`, `users`, `suspicious_activities`, `transactions` | `db_device_user_count`, `db_is_shared_device` |
+| `db_pass_through` | `digital_scam_to_mule` | `transactions`, `accounts`, `payment_beneficiaries` | `db_prior_credit_amount_chf`, `db_hours_since_prior_credit`, `db_is_rapid_pass_through` |
+| `db_risky_channel` | `new_beneficiary_payment` | `transactions`, `payment_beneficiaries` | `db_is_mobile_app_channel`, `db_is_beneficiary_country_risky` |
+
+### Digital Pattern Mapping Rationale
+
+`db_session_risk` and `db_payment_velocity` map to `session_payment_velocity`
+because they describe session-level telemetry and payment velocity that support
+elevated session review.
+
+`db_beneficiary_novelty` and `db_risky_channel` map to `new_beneficiary_payment`
+because they describe recently added or updated beneficiaries and risky channel
+or destination-country context for new-beneficiary review.
+
+`db_account_age`, `db_shared_device`, and `db_pass_through` map to
+`digital_scam_to_mule` because they describe early-life accounts, shared device
+usage, and rapid pass-through behavior typical of scam-to-mule flows.
+
 ## Python Path
 
 Use `build_private_banking_features()` when a notebook needs the complete
@@ -97,3 +129,33 @@ uv run python -m banking_fraud_lab.run_sql data/sample/minimal_world.sqlite sql/
 The feature-engineering notebook also runs these SQL examples against an
 in-memory learner-facing SQLite database so the Python and SQL paths remain
 aligned.
+
+## Digital-Banking Python And SQLite Path
+
+Use `build_digital_banking_features()` for the complete NovaBank Digital
+transaction-level feature frame:
+
+```python
+from banking_fraud_lab import (
+    build_digital_banking_features,
+    generate_digital_fraud_scenarios_world,
+)
+
+tables = generate_digital_fraud_scenarios_world(seed=42, scale="tiny")
+features = build_digital_banking_features(tables)
+features.head()
+```
+
+Individual `db_` calculators (for example `calculate_db_session_risk_features`)
+follow the same one-family-per-function shape as the private-banking library.
+
+The merged digital feature frame is scoped to NovaBank Digital transactions and
+excludes `protected_scenario_answer_keys`. The v0.4 digital-banking SQLite
+exercises calculate representative features directly against the learner database:
+
+- `sql/examples/09_digital_session_channel_features.sql` covers `db_session_risk`
+  and `db_risky_channel`.
+- `sql/examples/10_digital_beneficiary_passthrough_features.sql` covers
+  `db_beneficiary_novelty` and `db_pass_through`.
+- `sql/examples/11_digital_velocity_account_features.sql` covers
+  `db_payment_velocity`, `db_account_age`, and `db_shared_device`.

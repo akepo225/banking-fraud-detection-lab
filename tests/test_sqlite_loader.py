@@ -32,6 +32,9 @@ EXAMPLE_SQL_FILES = (
     Path("sql/examples/06_private_banking_value_features.sql"),
     Path("sql/examples/07_private_banking_context_features.sql"),
     Path("sql/examples/08_private_banking_relationship_features.sql"),
+    Path("sql/examples/09_digital_session_channel_features.sql"),
+    Path("sql/examples/10_digital_beneficiary_passthrough_features.sql"),
+    Path("sql/examples/11_digital_velocity_account_features.sql"),
 )
 
 

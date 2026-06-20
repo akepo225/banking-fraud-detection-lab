@@ -4,6 +4,7 @@ import pytest
 
 from banking_fraud_lab import SCALE_PROFILES, generate_minimal_banking_world
 from banking_fraud_lab.generators import (
+    generate_digital_fraud_scenarios_world,
     generate_digital_scam_to_mule_world,
     generate_private_banking_transaction_fraud_world,
 )
@@ -169,7 +170,11 @@ def test_digital_sessions_stay_within_user_authorization_window(scale: str) -> N
 
 @pytest.mark.parametrize(
     "world_generator",
-    (generate_private_banking_transaction_fraud_world, generate_digital_scam_to_mule_world),
+    (
+        generate_private_banking_transaction_fraud_world,
+        generate_digital_scam_to_mule_world,
+        generate_digital_fraud_scenarios_world,
+    ),
 )
 def test_scenario_generators_preserve_temporal_invariants(world_generator) -> None:
     """Scenario injection must not break foundation temporal ordering."""

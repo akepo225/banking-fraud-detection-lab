@@ -24,6 +24,10 @@ Alpine Crest Private Bank track and keeps later NovaBank Digital features from
 sharing ambiguous names. SQL exercises should expose the same learner-facing
 column names that the Python feature library emits.
 
+Digital-banking feature identifiers must start with `db_`. The prefix marks the
+NovaBank Digital track and keeps digital session and payment features distinct
+from private-banking features.
+
 Required v0.3 private-banking feature families:
 
 - Amount ratios: amount-to-AUM and amount-to-relationship-baseline features.
@@ -46,10 +50,12 @@ the registry first.
 
 Track notebooks must live in numbered module directories using the
 `NN_track_name/` convention. The v0.3 private-banking module path is
-`notebooks/04_private_banking_feature_engineering/`.
+`notebooks/04_private_banking_feature_engineering/`. The v0.4 digital-banking
+module path is `notebooks/05_digital_session_and_payment_fraud/`.
 
 Notebook files must use `<institution_slug>_<module_role>.ipynb`. For Alpine
-Crest Private Bank, the institution slug is `alpine_crest`.
+Crest Private Bank, the institution slug is `alpine_crest`. For NovaBank
+Digital, the institution slug is `novabank`.
 
 Required module roles for private-banking track depth:
 
@@ -147,16 +153,26 @@ review boundaries separate.
 
 ## v0.4 Digital-Banking Track Mirroring
 
-v0.4 should follow the same conventions with NovaBank Digital substitutions.
+v0.4 follows the same conventions with NovaBank Digital substitutions.
 NovaBank Digital scope is excluded from v0.3 implementation.
 
 | Convention | v0.3 private-banking value | v0.4 digital-banking value |
 | --- | --- | --- |
 | Institution | Alpine Crest Private Bank | NovaBank Digital |
-| Module path | `notebooks/04_private_banking_feature_engineering/` | Future numbered digital-banking module path |
-| Feature prefix | `pb_` | Future digital-banking prefix defined by the v0.4 issue |
+| Institution slug | `alpine_crest` | `novabank` |
+| Module path | `notebooks/04_private_banking_feature_engineering/` | `notebooks/05_digital_session_and_payment_fraud/` |
+| Feature prefix | `pb_` | `db_` |
 | Primary pattern IDs | `pb_high_value_movement`, `pb_transaction_fraud` | `digital_scam_to_mule`, `new_beneficiary_payment`, `session_payment_velocity` |
 | Scenario focus | relationship, account, counterparty, and relationship-manager context | Client, User, session, device, beneficiary, and payment context |
+
+v0.4 reuses the existing Detection pattern registry and does not extend it. No
+new `pattern_id` values are added for v0.4. The three digital-banking pattern IDs
+already in `PATTERN_IDS` cover the v0.4 scenarios: account-takeover behavior is
+modeled under `new_beneficiary_payment` and `session_payment_velocity`, and
+onboarding-abuse and early-life mule behavior is modeled under
+`digital_scam_to_mule`. v0.4 builds on the v0.1 digital baseline at
+`notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb` instead
+of replacing it.
 
 ## Human Approval
 

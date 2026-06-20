@@ -9,6 +9,8 @@ import yaml
 
 from banking_fraud_lab.schema import PATTERN_IDS
 from private_banking_test_constants import (
+    DIGITAL_V0_4_MODULE_PREFIX,
+    DIGITAL_V0_4_PATTERN_IDS,
     PRIVATE_BANKING_V0_3_MODULE_PREFIX,
     PRIVATE_BANKING_V0_3_PATTERN_IDS,
 )
@@ -178,6 +180,43 @@ def test_private_banking_v0_3_regulatory_notes_reference_required_pattern_ids() 
                 f"{note_path} must use v0.3 private-banking pattern_ids from "
                 f"{sorted(PRIVATE_BANKING_V0_3_PATTERN_IDS)}; got {invalid_pattern_ids}"
             )
+
+
+def test_digital_v0_4_regulatory_notes_reference_digital_pattern_ids_and_modules() -> None:
+    """v0.4 digital regulatory notes must carry digital pattern IDs and v0.4 modules."""
+    required_digital_families = {"app_scam_payment", "fatf_typologies"}
+    covered_digital_families: set[str] = set()
+
+    for note_path in _source_note_paths():
+        metadata, _body = _read_note(note_path)
+        linked_modules = _linked_modules(metadata)
+        is_digital_v0_4 = any(
+            linked_module.startswith(DIGITAL_V0_4_MODULE_PREFIX)
+            for linked_module in linked_modules
+        )
+
+        if is_digital_v0_4:
+            pattern_ids = metadata.get("pattern_ids")
+            assert pattern_ids is not None, f"{note_path} must define pattern_ids metadata"
+            assert isinstance(pattern_ids, list), f"{note_path} pattern_ids must be a list"
+            assert pattern_ids, f"{note_path} pattern_ids must not be empty"
+            invalid_pattern_ids = sorted(set(pattern_ids) - DIGITAL_V0_4_PATTERN_IDS)
+            assert not invalid_pattern_ids, (
+                f"{note_path} must use digital pattern_ids from "
+                f"{sorted(DIGITAL_V0_4_PATTERN_IDS)}; got {invalid_pattern_ids}"
+            )
+            digital_modules = [
+                linked_module
+                for linked_module in linked_modules
+                if linked_module.startswith(DIGITAL_V0_4_MODULE_PREFIX)
+            ]
+            assert digital_modules, f"{note_path} must link at least one v0.4 notebook"
+            covered_digital_families.update(set(metadata["source_families"]))
+
+    assert required_digital_families <= covered_digital_families, (
+        f"Missing digital v0.4 regulatory families: "
+        f"{required_digital_families - covered_digital_families}"
+    )
 
 
 def test_regulatory_notes_avoid_imperative_compliance_wording() -> None:

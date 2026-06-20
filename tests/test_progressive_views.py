@@ -7,6 +7,8 @@ import pandas as pd
 from banking_fraud_lab import generate_minimal_banking_world
 from banking_fraud_lab.progressive_views import (
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
+    NB_USER_SESSION_CONTEXT,
+    NOVA_BANK_DIGITAL,
     PB_RELATIONSHIP_CONTEXT,
     build_foundation_progressive_views,
 )
@@ -18,8 +20,10 @@ from banking_fraud_lab.schema import (
     COLUMN_NAMES,
     PROTECTED_SCENARIO_ANSWER_KEYS,
     RELATIONSHIP_MANAGER_HISTORY,
+    SESSIONS,
     SUSPICIOUS_ACTIVITIES,
     TABLE_NAMES,
+    USERS,
 )
 
 
@@ -178,6 +182,72 @@ def test_pb_relationship_context_view_selects_latest_current_rm_history() -> Non
     assert len(view) == len(tables[BANKING_RELATIONSHIPS])
     assert selected_row["relationship_manager_code"] == "RM-999"
     assert selected_row["rm_effective_from"] == latest_effective_from
+
+
+def test_nb_user_session_context_view_links_client_user_and_session_telemetry() -> None:
+    """The digital session view must keep Client and User explicit and carry telemetry."""
+    tables = generate_minimal_banking_world(seed=42)
+
+    spec = FOUNDATION_PROGRESSIVE_VIEW_SPECS_BY_NAME["nb_user_session_context"]
+    assert spec is NB_USER_SESSION_CONTEXT
+    assert spec.source_tables == ("clients", "users", "sessions")
+    assert PROTECTED_SCENARIO_ANSWER_KEYS not in spec.source_tables
+    assert not spec.stable_for_case_references
+    assert spec.columns == (
+        "client_id",
+        "partner_id",
+        "institution_name",
+        "client_segment",
+        "client_onboarded_at",
+        "client_status",
+        "user_id",
+        "username_hash",
+        "user_created_at",
+        "user_status",
+        "authorized_from",
+        "authorized_to",
+        "session_id",
+        "started_at",
+        "channel",
+        "user_agent",
+        "app_or_browser_version",
+        "device_fingerprint_hash",
+        "ip_country",
+        "asn_risk_score",
+        "coarse_geolocation",
+        "is_vpn_or_proxy",
+        "auth_method",
+        "session_event",
+    )
+
+    view = build_foundation_progressive_views(tables)[spec.name]
+
+    assert tuple(view.columns) == spec.columns
+    nova_users = tables[USERS][tables[USERS]["institution_name"] == NOVA_BANK_DIGITAL]
+    nova_sessions = tables[SESSIONS][tables[SESSIONS]["user_id"].isin(nova_users["user_id"])]
+    assert len(view) == len(nova_sessions)
+    assert set(view["institution_name"]) == {NOVA_BANK_DIGITAL}
+    assert set(view["session_id"]) == set(nova_sessions["session_id"])
+
+    identity_context = view.merge(
+        tables[USERS][["user_id", "client_id"]],
+        on="user_id",
+        how="left",
+        validate="many_to_one",
+        suffixes=("_view", "_user"),
+    )
+    assert (identity_context["client_id_view"] == identity_context["client_id_user"]).all()
+    assert (view["user_id"] != view["client_id"]).all()
+    telemetry_columns = (
+        "device_fingerprint_hash",
+        "ip_country",
+        "asn_risk_score",
+        "coarse_geolocation",
+        "is_vpn_or_proxy",
+        "auth_method",
+        "session_event",
+    )
+    assert view[list(telemetry_columns)].notna().all().all()
 
 
 def test_foundation_alert_lifecycle_allows_schema_valid_child_multiplicity() -> None:

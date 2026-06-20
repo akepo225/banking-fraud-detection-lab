@@ -86,6 +86,62 @@ Columns:
 | `rm_effective_from` | `relationship_manager_history.effective_from` |
 | `rm_effective_to` | `relationship_manager_history.effective_to` |
 
+## `nb_user_session_context`
+
+Exposes the digital Client, User, and session telemetry chain for NovaBank
+Digital session and payment-fraud exercises, keeping Client and User identities
+explicitly linked while carrying device, authentication, network, and
+geolocation context.
+
+Module path:
+
+- `05_digital_session_and_payment_fraud`
+
+Source tables:
+
+- `clients`
+- `users`
+- `sessions`
+
+Learner use:
+
+- Inspect the digital Client, User, and session chain in one traceable surface
+  before querying `users`, `sessions`, and `payment_beneficiaries` directly.
+- Keep Client (the legal customer) and User (the digital login identity) explicit
+  and linked while carrying device, authentication, network, and geolocation
+  context for session and payment-fraud exercises.
+- Avoid `protected_scenario_answer_keys` in learner-facing SQL and notebook
+  exercises.
+
+Columns:
+
+| Column | Canonical source |
+| --- | --- |
+| `client_id` | `clients.client_id` |
+| `partner_id` | `clients.partner_id` |
+| `institution_name` | `clients.institution_name` |
+| `client_segment` | `clients.client_segment` |
+| `client_onboarded_at` | `clients.onboarded_at` |
+| `client_status` | `clients.status` |
+| `user_id` | `users.user_id` |
+| `username_hash` | `users.username_hash` |
+| `user_created_at` | `users.created_at` |
+| `user_status` | `users.status` |
+| `authorized_from` | `users.authorized_from` |
+| `authorized_to` | `users.authorized_to` |
+| `session_id` | `sessions.session_id` |
+| `started_at` | `sessions.started_at` |
+| `channel` | `sessions.channel` |
+| `user_agent` | `sessions.user_agent` |
+| `app_or_browser_version` | `sessions.app_or_browser_version` |
+| `device_fingerprint_hash` | `sessions.device_fingerprint_hash` |
+| `ip_country` | `sessions.ip_country` |
+| `asn_risk_score` | `sessions.asn_risk_score` |
+| `coarse_geolocation` | `sessions.coarse_geolocation` |
+| `is_vpn_or_proxy` | `sessions.is_vpn_or_proxy` |
+| `auth_method` | `sessions.auth_method` |
+| `session_event` | `sessions.session_event` |
+
 ## `foundation_alert_lifecycle`
 
 Shows the Alert lifecycle from suspicious activity through alert, case, and case

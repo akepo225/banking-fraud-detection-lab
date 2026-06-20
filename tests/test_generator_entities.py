@@ -255,6 +255,77 @@ def test_session_telemetry_matches_declared_channel() -> None:
         assert set(channel_sessions["app_or_browser_version"]) <= telemetry["versions"]
 
 
+def test_digital_client_user_session_device_chain_is_internally_consistent() -> None:
+    """The NovaBank digital Client→User→session→device→beneficiary chain must join cleanly."""
+    tables = generate_minimal_banking_world(seed=42)
+    clients = tables["clients"]
+    users = tables["users"]
+    sessions = tables["sessions"]
+    beneficiaries = tables["payment_beneficiaries"]
+
+    # Sessions only exist for NovaBank Digital users and join back to a Client.
+    session_chain = sessions.merge(
+        users[["user_id", "client_id", "institution_name"]],
+        on="user_id",
+        how="left",
+        validate="many_to_one",
+    ).merge(
+        clients[["client_id", "institution_name"]],
+        on="client_id",
+        how="left",
+        validate="many_to_one",
+        suffixes=("_user", "_client"),
+    )
+    assert not session_chain.empty
+    assert set(session_chain["institution_name_user"]) == {"NovaBank Digital"}
+    assert (session_chain["institution_name_user"] == session_chain["institution_name_client"]).all()
+
+    # Every session carries a device fingerprint, network, and auth telemetry.
+    telemetry_columns = (
+        "device_fingerprint_hash",
+        "ip_country",
+        "asn_risk_score",
+        "coarse_geolocation",
+        "is_vpn_or_proxy",
+        "auth_method",
+        "session_event",
+    )
+    assert sessions[list(telemetry_columns)].notna().all().all()
+
+    # A device fingerprint may be shared across Users, but every shared device still
+    # resolves to valid NovaBank Users.
+    shared_device_user_counts = (
+        sessions.groupby("device_fingerprint_hash")["user_id"].nunique().max()
+    )
+    assert shared_device_user_counts >= 1
+
+    # Beneficiary-change trail for NovaBank Digital joins back to a Client and a User.
+    nova_beneficiaries = beneficiaries.merge(
+        clients[["client_id", "institution_name"]],
+        on="client_id",
+        how="left",
+        validate="many_to_one",
+    )
+    nova_beneficiaries = nova_beneficiaries[
+        nova_beneficiaries["institution_name"] == "NovaBank Digital"
+    ]
+    assert not nova_beneficiaries.empty
+    assert nova_beneficiaries["added_by_user_id"].isin(users["user_id"]).all()
+    beneficiary_user_context = nova_beneficiaries.merge(
+        users[["user_id", "institution_name"]].rename(
+            columns={
+                "user_id": "added_by_user_id",
+                "institution_name": "user_institution",
+            }
+        ),
+        on="added_by_user_id",
+        how="left",
+        validate="many_to_one",
+    )
+    assert (beneficiary_user_context["institution_name"] == beneficiary_user_context["user_institution"]).all()
+    assert {"beneficiary_created"}.issubset(set(nova_beneficiaries["beneficiary_change_event"]))
+
+
 def test_alert_lifecycle_is_distinct_from_single_fraud_flag() -> None:
     """Suspicious activity, alerts, cases, outcomes, and fraud confirmation stay separate."""
     tables = generate_minimal_banking_world(seed=42)

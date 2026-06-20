@@ -15,8 +15,12 @@ from banking_fraud_lab.schema import (
     CLIENTS,
     PARTNERS,
     RELATIONSHIP_MANAGER_HISTORY,
+    SESSIONS,
     SUSPICIOUS_ACTIVITIES,
+    USERS,
 )
+
+NOVA_BANK_DIGITAL = "NovaBank Digital"
 
 
 @dataclass(frozen=True)
@@ -120,9 +124,47 @@ PB_RELATIONSHIP_CONTEXT = ProgressiveViewSpec(
     ),
 )
 
+NB_USER_SESSION_CONTEXT = ProgressiveViewSpec(
+    name="nb_user_session_context",
+    purpose=(
+        "Exposes the digital Client, User, and session telemetry chain for "
+        "NovaBank Digital session and payment-fraud exercises, keeping Client and "
+        "User identities explicitly linked while carrying device, authentication, "
+        "network, and geolocation context."
+    ),
+    source_tables=(CLIENTS, USERS, SESSIONS),
+    columns=(
+        "client_id",
+        "partner_id",
+        "institution_name",
+        "client_segment",
+        "client_onboarded_at",
+        "client_status",
+        "user_id",
+        "username_hash",
+        "user_created_at",
+        "user_status",
+        "authorized_from",
+        "authorized_to",
+        "session_id",
+        "started_at",
+        "channel",
+        "user_agent",
+        "app_or_browser_version",
+        "device_fingerprint_hash",
+        "ip_country",
+        "asn_risk_score",
+        "coarse_geolocation",
+        "is_vpn_or_proxy",
+        "auth_method",
+        "session_event",
+    ),
+)
+
 FOUNDATION_PROGRESSIVE_VIEW_SPECS = (
     FOUNDATION_CLIENT_RELATIONSHIPS,
     PB_RELATIONSHIP_CONTEXT,
+    NB_USER_SESSION_CONTEXT,
     FOUNDATION_ALERT_LIFECYCLE,
 )
 
@@ -191,6 +233,41 @@ LEFT JOIN (
 ) AS rmh
   ON rmh."banking_relationship_id" = br."banking_relationship_id"
 """,
+    NB_USER_SESSION_CONTEXT.name: """
+CREATE VIEW "nb_user_session_context" AS
+SELECT
+  c."client_id" AS "client_id",
+  c."partner_id" AS "partner_id",
+  c."institution_name" AS "institution_name",
+  c."client_segment" AS "client_segment",
+  c."onboarded_at" AS "client_onboarded_at",
+  c."status" AS "client_status",
+  u."user_id" AS "user_id",
+  u."username_hash" AS "username_hash",
+  u."created_at" AS "user_created_at",
+  u."status" AS "user_status",
+  u."authorized_from" AS "authorized_from",
+  u."authorized_to" AS "authorized_to",
+  s."session_id" AS "session_id",
+  s."started_at" AS "started_at",
+  s."channel" AS "channel",
+  s."user_agent" AS "user_agent",
+  s."app_or_browser_version" AS "app_or_browser_version",
+  s."device_fingerprint_hash" AS "device_fingerprint_hash",
+  s."ip_country" AS "ip_country",
+  s."asn_risk_score" AS "asn_risk_score",
+  s."coarse_geolocation" AS "coarse_geolocation",
+  s."is_vpn_or_proxy" AS "is_vpn_or_proxy",
+  s."auth_method" AS "auth_method",
+  s."session_event" AS "session_event"
+FROM "clients" AS c
+JOIN "users" AS u
+  ON u."client_id" = c."client_id"
+ AND u."institution_name" = c."institution_name"
+JOIN "sessions" AS s
+  ON s."user_id" = u."user_id"
+WHERE c."institution_name" = 'NovaBank Digital'
+""",
     FOUNDATION_ALERT_LIFECYCLE.name: """
 CREATE VIEW "foundation_alert_lifecycle" AS
 SELECT
@@ -253,6 +330,7 @@ def build_foundation_progressive_view(
     view_builders = {
         FOUNDATION_CLIENT_RELATIONSHIPS.name: _build_foundation_client_relationships,
         PB_RELATIONSHIP_CONTEXT.name: _build_pb_relationship_context,
+        NB_USER_SESSION_CONTEXT.name: _build_nb_user_session_context,
         FOUNDATION_ALERT_LIFECYCLE.name: _build_foundation_alert_lifecycle,
     }
     try:
@@ -374,12 +452,86 @@ def _build_pb_relationship_context(
     return view.loc[:, PB_RELATIONSHIP_CONTEXT.columns].copy()
 
 
+def _build_nb_user_session_context(
+    tables: Mapping[str, pd.DataFrame],
+) -> pd.DataFrame:
+    """Return the digital Client, User, and session telemetry chain for NovaBank Digital."""
+    _require_source_tables(NB_USER_SESSION_CONTEXT, tables)
+
+    clients = tables[CLIENTS][
+        [
+            "client_id",
+            "partner_id",
+            "institution_name",
+            "client_segment",
+            "onboarded_at",
+            "status",
+        ]
+    ].rename(
+        columns={
+            "onboarded_at": "client_onboarded_at",
+            "status": "client_status",
+        }
+    )
+    users = tables[USERS][
+        [
+            "user_id",
+            "client_id",
+            "institution_name",
+            "username_hash",
+            "created_at",
+            "status",
+            "authorized_from",
+            "authorized_to",
+        ]
+    ].rename(
+        columns={
+            "created_at": "user_created_at",
+            "status": "user_status",
+        }
+    )
+    sessions = tables[SESSIONS][
+        [
+            "session_id",
+            "user_id",
+            "started_at",
+            "channel",
+            "user_agent",
+            "app_or_browser_version",
+            "device_fingerprint_hash",
+            "ip_country",
+            "asn_risk_score",
+            "coarse_geolocation",
+            "is_vpn_or_proxy",
+            "auth_method",
+            "session_event",
+        ]
+    ]
+
+    view = (
+        clients.merge(
+            users,
+            on=("client_id", "institution_name"),
+            how="inner",
+            validate="one_to_one",
+        )
+        .merge(
+            sessions,
+            on="user_id",
+            how="inner",
+            validate="one_to_many",
+        )
+    )
+    view = view[view["institution_name"] == NOVA_BANK_DIGITAL]
+
+    return view.loc[:, NB_USER_SESSION_CONTEXT.columns].copy().reset_index(drop=True)
+
+
 def _build_foundation_alert_lifecycle(
     tables: Mapping[str, pd.DataFrame],
 ) -> pd.DataFrame:
     """Return the foundation Alert lifecycle view."""
     _require_source_tables(FOUNDATION_ALERT_LIFECYCLE, tables)
-
     suspicious_activities = tables[SUSPICIOUS_ACTIVITIES][
         [
             "suspicious_activity_id",
@@ -461,6 +613,8 @@ __all__ = [
     "FOUNDATION_CLIENT_RELATIONSHIPS",
     "FOUNDATION_PROGRESSIVE_VIEW_SPECS",
     "FOUNDATION_PROGRESSIVE_VIEW_SQL",
+    "NB_USER_SESSION_CONTEXT",
+    "NOVA_BANK_DIGITAL",
     "PB_RELATIONSHIP_CONTEXT",
     "ProgressiveViewSpec",
     "build_foundation_progressive_view",

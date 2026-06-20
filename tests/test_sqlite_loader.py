@@ -155,6 +155,53 @@ def test_sqlite_pb_relationship_context_selects_latest_current_rm_history(
         connection.close()
 
 
+def test_sqlite_nb_user_session_context_matches_python_builder(
+    tmp_path: Path,
+) -> None:
+    """SQLite nb_user_session_context must match the Python builder across scales."""
+    from banking_fraud_lab.progressive_views import (
+        NB_USER_SESSION_CONTEXT,
+        build_foundation_progressive_views,
+    )
+
+    for scale in ("tiny", "small"):
+        tables = generate_minimal_banking_world(seed=42, scale=scale)
+        python_view = build_foundation_progressive_views(tables)[
+            NB_USER_SESSION_CONTEXT.name
+        ].sort_values("session_id", kind="stable").reset_index(drop=True)
+        connection = load_tables_to_sqlite(tables, tmp_path / f"world_{scale}.sqlite")
+
+        try:
+            sqlite_columns = _sqlite_view_column_names(
+                connection,
+                NB_USER_SESSION_CONTEXT.name,
+            )
+            assert sqlite_columns == NB_USER_SESSION_CONTEXT.columns
+            sqlite_view = pd.read_sql_query(
+                'SELECT * FROM "nb_user_session_context"',
+                connection,
+            ).sort_values("session_id", kind="stable").reset_index(drop=True)
+        finally:
+            connection.close()
+
+        assert tuple(sqlite_view.columns) == NB_USER_SESSION_CONTEXT.columns
+        assert len(sqlite_view) == len(python_view)
+        assert list(sqlite_view["session_id"]) == list(python_view["session_id"])
+        assert set(sqlite_view["institution_name"]) == {"NovaBank Digital"}
+        for column in (
+            "client_id",
+            "user_id",
+            "channel",
+            "device_fingerprint_hash",
+            "asn_risk_score",
+            "is_vpn_or_proxy",
+            "auth_method",
+        ):
+            assert list(sqlite_view[column]) == list(python_view[column]), (
+                f"Column {column} differs between SQLite and Python views at {scale}"
+            )
+
+
 def test_replace_removes_protected_tables_when_switching_to_learner_facing(
     tmp_path: Path,
 ) -> None:

@@ -292,12 +292,15 @@ def test_digital_client_user_session_device_chain_is_internally_consistent() -> 
     )
     assert sessions[list(telemetry_columns)].notna().all().all()
 
-    # A device fingerprint may be shared across Users, but every shared device still
-    # resolves to valid NovaBank Users.
+    # A device fingerprint may be shared across Users in scenario data, but the
+    # base computation must always resolve to a positive distinct-User count per
+    # fingerprint and never to a null device.
+    assert sessions["device_fingerprint_hash"].notna().all()
     shared_device_user_counts = (
-        sessions.groupby("device_fingerprint_hash")["user_id"].nunique().max()
+        sessions.groupby("device_fingerprint_hash")["user_id"].nunique()
     )
-    assert shared_device_user_counts >= 1
+    assert (shared_device_user_counts >= 1).all()
+    assert len(shared_device_user_counts) == sessions["device_fingerprint_hash"].nunique()
 
     # Beneficiary-change trail for NovaBank Digital joins back to a Client and a User.
     nova_beneficiaries = beneficiaries.merge(

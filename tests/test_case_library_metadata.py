@@ -15,6 +15,19 @@ CASE_SOURCE_PACK_DIR = Path("docs/cases/source_packs")
 CASE_LIBRARY_INDEX = Path("docs/cases/index.md")
 HITL_MARKER = "<!-- HITL-REVIEW-REQUIRED -->"
 PRIVATE_BANKING_TRACK = "Private-banking fraud detection"
+DIGITAL_TRACK = "Digital-banking fraud detection"
+DIGITAL_V0_4_MODULE_PREFIX = "notebooks/05_digital_session_and_payment_fraud/"
+DIGITAL_V0_4_PATTERN_IDS = {
+    "digital_scam_to_mule",
+    "new_beneficiary_payment",
+    "session_payment_velocity",
+}
+REQUIRED_V0_4_DIGITAL_SOURCE_PACKS = {
+    "digital-app-scam-payments.md",
+    "digital-money-mule-behavior.md",
+    "digital-online-bank-control-failures.md",
+    "digital-payment-system-guidance.md",
+}
 REQUIRED_METADATA_FIELDS = {
     "title",
     "status",
@@ -140,6 +153,39 @@ def test_private_banking_v0_3_source_packs_reference_required_pattern_ids() -> N
                 f"{path} must use a v0.3 private-banking pattern_id from "
                 f"{sorted(PRIVATE_BANKING_V0_3_PATTERN_IDS)}"
             )
+
+
+def test_digital_v0_4_source_packs_cover_required_topics() -> None:
+    """The four required v0.4 digital source packs must each be present."""
+    source_pack_names = {path.name for path in _source_pack_paths()}
+    assert REQUIRED_V0_4_DIGITAL_SOURCE_PACKS <= source_pack_names
+
+
+def test_digital_v0_4_source_packs_reference_digital_pattern_ids_and_modules() -> None:
+    """v0.4 digital source packs must use digital pattern IDs and v0.4 modules."""
+    for path in _source_pack_paths():
+        metadata = _metadata(path)
+        linked_modules = _linked_modules(metadata)
+        is_digital_v0_4 = metadata["track"] == DIGITAL_TRACK and any(
+            linked_module.startswith(DIGITAL_V0_4_MODULE_PREFIX)
+            for linked_module in linked_modules
+        )
+
+        if is_digital_v0_4:
+            pattern_id = metadata.get("pattern_id")
+            assert pattern_id is not None, f"{path} must define pattern_id metadata"
+            assert pattern_id in DIGITAL_V0_4_PATTERN_IDS, (
+                f"{path} must use a digital pattern_id from "
+                f"{sorted(DIGITAL_V0_4_PATTERN_IDS)}"
+            )
+            digital_modules = [
+                linked_module
+                for linked_module in linked_modules
+                if linked_module.startswith(DIGITAL_V0_4_MODULE_PREFIX)
+            ]
+            assert digital_modules, f"{path} must link at least one v0.4 notebook"
+            for linked_module in digital_modules:
+                assert Path(linked_module).exists()
 
 
 def test_case_library_index_links_all_source_packs() -> None:

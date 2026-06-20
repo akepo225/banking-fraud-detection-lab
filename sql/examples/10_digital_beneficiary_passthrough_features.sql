@@ -23,7 +23,7 @@ beneficiary_context AS (
     dt.direction,
     dt.amount_chf,
     dt.payment_beneficiary_id,
-    CAST(pb.created_at AS REAL) AS beneficiary_created_epoch,
+    pb.created_at AS beneficiary_created_at,
     pb.beneficiary_change_event
   FROM digital_transactions AS dt
   LEFT JOIN payment_beneficiaries AS pb
@@ -56,8 +56,8 @@ SELECT
   ROUND(bc.amount_chf, 2) AS amount_chf,
   ROUND(
     CASE
-      WHEN bc.beneficiary_created_epoch IS NOT NULL
-        THEN (julianday(bc.booked_at) - julianday(date(bc.beneficiary_created_epoch, 'unixepoch'))) * 24
+      WHEN bc.beneficiary_created_at IS NOT NULL
+        THEN (julianday(bc.booked_at) - julianday(bc.beneficiary_created_at)) * 24
       ELSE -1
     END,
     2

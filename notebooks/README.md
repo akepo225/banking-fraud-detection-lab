@@ -15,6 +15,9 @@ Track extension notebook naming and module-layout conventions are defined in
   `04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`,
   then run
   `04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb`.
+- `05_digital_session_and_payment_fraud/`: NovaBank Digital session and payment
+  fraud feature engineering. Start with
+  `05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb`.
 
 ## Optional Warm-Ups
 
@@ -45,7 +48,7 @@ uv run jupyter lab notebooks
 To execute the featured notebooks without opening the UI, run the smoke tests:
 
 ```bash
-uv run pytest tests/test_foundations_notebook.py tests/test_private_banking_notebook.py tests/test_digital_scam_to_mule_notebook.py tests/test_alert_governance_notebook.py tests/test_private_banking_feature_engineering_notebook.py tests/test_private_banking_supervised_baseline_notebook.py
+uv run pytest tests/test_foundations_notebook.py tests/test_private_banking_notebook.py tests/test_digital_scam_to_mule_notebook.py tests/test_alert_governance_notebook.py tests/test_private_banking_feature_engineering_notebook.py tests/test_private_banking_supervised_baseline_notebook.py tests/test_digital_feature_engineering_notebook.py
 ```
 
 Run the optional warm-up notebooks:

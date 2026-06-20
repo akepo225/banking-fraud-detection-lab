@@ -286,12 +286,16 @@ def inject_onboarding_abuse_scenario(
     selected_accounts = _select_nova_accounts_by_prevalence(
         scenario_tables,
         scenario_prevalence=scenario_prevalence,
-        exclude_lower_balance=True,
+        prefer_lower_balance=True,
     )
     if selected_accounts.empty:
         return scenario_tables
 
-    rows = _build_onboarding_abuse_rows(scenario_tables, selected_accounts)
+    rows = _build_onboarding_abuse_rows(
+        scenario_tables,
+        selected_accounts,
+        noisy_outcome_rate=noisy_outcome_rate,
+    )
     _apply_early_life_account_updates(scenario_tables, rows["account_updates"])
     _append_rows(scenario_tables, SESSIONS, rows["sessions"])
     _append_rows(scenario_tables, PAYMENT_BENEFICIARIES, rows["beneficiaries"])
@@ -323,7 +327,7 @@ def _inject_takeover_style_scenario(
     selected_accounts = _select_nova_accounts_by_prevalence(
         scenario_tables,
         scenario_prevalence=scenario_prevalence,
-        exclude_lower_balance=False,
+        prefer_lower_balance=False,
     )
     if selected_accounts.empty:
         return scenario_tables
@@ -354,9 +358,16 @@ def _select_nova_accounts_by_prevalence(
     tables: Mapping[str, pd.DataFrame],
     *,
     scenario_prevalence: float,
-    exclude_lower_balance: bool,
+    prefer_lower_balance: bool,
 ) -> pd.DataFrame:
-    """Select deterministic NovaBank accounts for a scenario family."""
+    """Select deterministic NovaBank accounts for a scenario family.
+
+    ``prefer_lower_balance=True`` sorts ascending so the lowest-balance accounts
+    are selected first (used for onboarding-abuse / early-life mule selection).
+    ``prefer_lower_balance=False`` sorts descending so the highest-balance
+    accounts are selected first (used for account-takeover and
+    suspicious-beneficiary-change).
+    """
     accounts = tables[ACCOUNTS]
     digital_accounts = accounts[accounts["institution_name"] == NOVABANK].copy()
     if digital_accounts.empty or scenario_prevalence == 0:
@@ -367,7 +378,7 @@ def _select_nova_accounts_by_prevalence(
         max(1, math.ceil(len(digital_accounts) * scenario_prevalence)),
     )
     digital_accounts["balance_chf_numeric"] = digital_accounts["balance_chf"].map(float)
-    sort_ascending = [True, True] if exclude_lower_balance else [False, True]
+    sort_ascending = [True, True] if prefer_lower_balance else [False, True]
     return digital_accounts.sort_values(
         ["balance_chf_numeric", "account_id"],
         ascending=sort_ascending,
@@ -815,7 +826,7 @@ def _build_takeover_style_rows(
             answer_key_id=answer_key_id,
             case_id=case_id,
             scenario_name=scenario_name,
-            opened_at=event_at + pd.Timedelta(hours=3),
+            decided_at=event_at + pd.Timedelta(hours=3, days=1),
             transaction_id=transaction_id,
             loss_amount=payment_amount,
             case_index=offset,
@@ -839,6 +850,8 @@ def _build_takeover_style_rows(
 def _build_onboarding_abuse_rows(
     tables: Mapping[str, pd.DataFrame],
     selected_accounts: pd.DataFrame,
+    *,
+    noisy_outcome_rate: float = 0.0,
 ) -> dict[str, list[dict[str, object]]]:
     """Build rows for the onboarding-abuse scenario under the scam-to-mule pattern."""
     users_by_client = _primary_users_by_client(tables[USERS])
@@ -1017,34 +1030,19 @@ def _build_onboarding_abuse_rows(
                 ),
             }
         )
-        outcomes.append(
-            {
-                "case_outcome_id": outcome_id,
-                "case_id": case_id,
-                "decided_at": onboarding_at + pd.Timedelta(days=1),
-                "recorded_at": onboarding_at + pd.Timedelta(days=1, hours=1),
-                "outcome_type": "confirmed-fraud",
-                "confirmed_fraud": True,
-                "loss_amount_original": onward_amount,
-                "loss_currency": "CHF",
-                "loss_amount_chf": onward_amount,
-                "notes": (
-                    "Onboarding-abuse confirmed; noisy operational outcomes are "
-                    "retained elsewhere in the alert lifecycle."
-                ),
-            }
+        outcome, answer_key = _build_scenario_outcome_with_noise(
+            outcome_id=outcome_id,
+            answer_key_id=answer_key_id,
+            case_id=case_id,
+            scenario_name=ONBOARDING_ABUSE_SCENARIO_NAME,
+            decided_at=onboarding_at + pd.Timedelta(days=1),
+            transaction_id=onward_transaction_id,
+            loss_amount=onward_amount,
+            case_index=offset,
+            noisy_outcome_rate=noisy_outcome_rate,
         )
-        answer_keys.append(
-            {
-                "answer_key_id": answer_key_id,
-                "scenario_name": ONBOARDING_ABUSE_SCENARIO_NAME,
-                "entity_table": TRANSACTIONS,
-                "entity_id": onward_transaction_id,
-                "label_type": "scenario_label",
-                "label_value": LABEL_TRUE_FRAUD,
-                "available_to_learners": False,
-            }
-        )
+        outcomes.append(outcome)
+        answer_keys.append(answer_key)
 
     return {
         "account_updates": account_updates,
@@ -1065,13 +1063,17 @@ def _build_scenario_outcome_with_noise(
     answer_key_id: str,
     case_id: str,
     scenario_name: str,
-    opened_at: pd.Timestamp,
+    decided_at: pd.Timestamp,
     transaction_id: str,
     loss_amount: Decimal,
     case_index: int,
     noisy_outcome_rate: float,
 ) -> tuple[dict[str, object], dict[str, object]]:
     """Build a case outcome and protected answer key with deliberate label noise.
+
+    ``decided_at`` is the outcome decision timestamp; callers must pass a value
+    that respects the case ``closed_at`` (decided at or before closure) and the
+    lifecycle ordering invariants (decided at or after ``opened_at``).
 
     A deterministic subset of cases (controlled by ``noisy_outcome_rate``) receive
     a triage outcome that disagrees with the true protected label, so
@@ -1084,7 +1086,6 @@ def _build_scenario_outcome_with_noise(
       ``confirmed-fraud`` with ``confirmed_fraud=True`` even though the protected
       answer key records ``true_false_positive``.
     """
-    decided_at = opened_at + pd.Timedelta(days=1)
     noise_period = max(1, round(1.0 / noisy_outcome_rate)) if noisy_outcome_rate > 0 else 0
     is_noisy = noisy_outcome_rate > 0 and (case_index % noise_period == 0)
     uninvestigated_noise = is_noisy and (case_index // max(noise_period, 1)) % 2 == 0

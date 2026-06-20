@@ -242,6 +242,7 @@ def test_digital_sql_session_channel_exercise_surfaces_risk_signals(
             encoding="utf-8"
         )
         rows = connection.execute(sql).fetchall()
+        assert rows, "Session/channel SQL exercise returned no rows"
         columns = rows[0].keys()
         assert "db_is_vpn_or_proxy" in columns
         assert "db_is_high_risk_network" in columns

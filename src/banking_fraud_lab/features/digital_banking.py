@@ -23,6 +23,25 @@ RISKY_BENEFICIARY_COUNTRIES = frozenset({"LT", "BG", "RU"})
 EARLY_LIFE_ACCOUNT_DAYS = 30
 
 
+def _transaction_session_links(suspicious_activities: pd.DataFrame) -> pd.DataFrame:
+    """Return one deterministic session link per transaction.
+
+    Suspicious activities should carry at most one session per transaction. When
+    duplicates exist this keeps the earliest-detected link deterministically
+    (sorted by detection order) so feature joining never depends on row order.
+    """
+    links = suspicious_activities[["transaction_id", "session_id"]].dropna(
+        subset=["transaction_id"]
+    )
+    if links.empty:
+        return links
+    return (
+        links.sort_values(["transaction_id", "session_id"], kind="stable")
+        .drop_duplicates(subset=["transaction_id"], keep="first")
+        .reset_index(drop=True)
+    )
+
+
 def calculate_db_session_risk_features(
     transactions: pd.DataFrame,
     sessions: pd.DataFrame,
@@ -34,9 +53,7 @@ def calculate_db_session_risk_features(
     carry both the ``transaction_id`` and ``session_id`` for digital activity.
     Transactions without a session link keep neutral (non-risky) feature values.
     """
-    activity_links = suspicious_activities[
-        ["transaction_id", "session_id"]
-    ].drop_duplicates(subset=["transaction_id"])
+    activity_links = _transaction_session_links(suspicious_activities)
     session_columns = [
         "session_id",
         "is_vpn_or_proxy",
@@ -122,9 +139,7 @@ def calculate_db_payment_velocity_features(
 ) -> pd.DataFrame:
     """Count outbound payments authorized within the same digital session."""
     del sessions  # Session details are not needed beyond the session_id link.
-    activity_links = suspicious_activities[["transaction_id", "session_id"]].drop_duplicates(
-        subset=["transaction_id"]
-    )
+    activity_links = _transaction_session_links(suspicious_activities)
     context = transactions[["transaction_id", "direction", "amount_chf"]].merge(
         activity_links,
         on="transaction_id",
@@ -204,9 +219,7 @@ def calculate_db_shared_device_features(
     suspicious_activities: pd.DataFrame,
 ) -> pd.DataFrame:
     """Count distinct Users per device fingerprint for transactions with sessions."""
-    activity_links = suspicious_activities[["transaction_id", "session_id"]].drop_duplicates(
-        subset=["transaction_id"]
-    )
+    activity_links = _transaction_session_links(suspicious_activities)
     session_context = sessions[["session_id", "device_fingerprint_hash", "user_id"]]
     device_user_counts = (
         session_context.dropna(subset=["device_fingerprint_hash"])

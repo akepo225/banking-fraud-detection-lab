@@ -4,6 +4,9 @@ status: draft-hitl
 hitl_review_required: true
 source_families:
   - app_scam_payment
+pattern_ids:
+  - new_beneficiary_payment
+  - session_payment_velocity
 track: digital-banking fraud detection
 primary_official_sources:
   - https://www.psr.org.uk/publications/policy-statements/ps255-app-scams-reimbursement-requirement/
@@ -11,6 +14,9 @@ primary_official_sources:
 linked_modules:
   - notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb
   - notebooks/03_alert_governance/alert_governance_memo.ipynb
+  - notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb
+  - notebooks/05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb
+  - notebooks/05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb
 ---
 
 # UK APP Scam Reimbursement Guidance
@@ -50,6 +56,14 @@ too broadly may overwhelm investigators and produce weak explanations for legiti
   score scam-to-mule risk.
 - `notebooks/03_alert_governance/alert_governance_memo.ipynb`: compares thresholds, alert
   capacity, and false positives across private-banking and digital-banking scenarios.
+- `notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb`:
+  builds the `db_` session-risk, beneficiary-novelty, and velocity features that connect APP
+  scam signals to the `new_beneficiary_payment` and `session_payment_velocity` Detection
+  patterns.
+- `notebooks/05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb`:
+  tunes alert thresholds with investigation capacity and cost tradeoffs.
+- `notebooks/05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb`: reviews
+  alerts where confirmed-fraud is an imperfect, noisy label.
 
 ## Human Review
 

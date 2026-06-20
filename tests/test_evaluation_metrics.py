@@ -209,3 +209,69 @@ def test_alert_metrics_report_rejects_negative_cost_inputs(
 
     with pytest.raises(ValueError, match=parameter_name):
         evaluate_alert_scores(cases, case_outcomes, alert_scores, **kwargs)
+
+
+def test_digital_supervised_baseline_report_is_deterministic_and_well_formed() -> None:
+    """The digital supervised-baseline evaluation report must be deterministic."""
+    from banking_fraud_lab import (
+        build_digital_banking_features,
+        build_learner_facing_views,
+        generate_digital_fraud_scenarios_world,
+    )
+
+    required_report_fields = {
+        "pr_auc",
+        "threshold_summaries",
+        "cost_curve",
+        "lowest_cost_threshold",
+        "limitation_summary",
+    }
+    reports = []
+    for _ in range(2):
+        tables = generate_digital_fraud_scenarios_world(
+            seed=42, scale="small", scenario_prevalence=0.5, noisy_outcome_rate=0.3
+        )
+        learner_tables = build_learner_facing_views(tables)
+        feature_frame = build_digital_banking_features(learner_tables)
+        model_frame = (
+            learner_tables["cases"][["case_id", "alert_id", "transaction_id"]]
+            .merge(
+                learner_tables["alerts"][["alert_id", "alert_type"]],
+                on="alert_id",
+                how="inner",
+                validate="one_to_one",
+            )
+            .merge(
+                learner_tables["case_outcomes"][["case_id", "confirmed_fraud"]],
+                on="case_id",
+                how="inner",
+                validate="one_to_one",
+            )
+            .merge(feature_frame, on="transaction_id", how="inner", validate="one_to_one")
+        )
+        assert model_frame["confirmed_fraud"].nunique() == 2
+        alert_scores = pd.DataFrame(
+            {
+                "alert_id": model_frame["alert_id"],
+                "score": model_frame["confirmed_fraud"].astype(float),
+            }
+        )
+        report = evaluate_alert_scores(
+            cases=model_frame[["case_id", "alert_id"]],
+            case_outcomes=learner_tables["case_outcomes"],
+            alert_scores=alert_scores,
+            thresholds=(0.85, 0.60, 0.25),
+            alert_capacity=6,
+            investigation_cost_chf=200.0,
+            false_positive_cost_chf=600.0,
+            missed_fraud_cost_chf=40_000.0,
+        )
+        reports.append(report)
+
+    assert required_report_fields <= set(reports[0])
+    assert "accuracy is out of scope" in reports[0]["limitation_summary"]
+    threshold_summary = reports[0]["threshold_summaries"][0]
+    assert threshold_summary["alert_capacity"] == 6
+    assert threshold_summary["capacity_utilization"] is not None
+    assert reports[0]["pr_auc"] == reports[1]["pr_auc"]
+    assert reports[0]["lowest_cost_threshold"] == reports[1]["lowest_cost_threshold"]

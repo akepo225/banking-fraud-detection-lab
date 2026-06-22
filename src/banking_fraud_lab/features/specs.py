@@ -13,7 +13,10 @@ from banking_fraud_lab.schema import (
     PARTNERS,
     PAYMENT_BENEFICIARIES,
     PATTERN_IDS,
+    SESSIONS,
+    SUSPICIOUS_ACTIVITIES,
     TRANSACTIONS,
+    USERS,
 )
 
 
@@ -194,20 +197,193 @@ PRIVATE_BANKING_FEATURE_FAMILIES: tuple[FeatureFamilySpec, ...] = (
     RM_CONCENTRATION,
 )
 
+# v0.4 digital-banking feature families. Every family uses the ``db_`` prefix and
+# maps to an existing digital Detection pattern ID (digital_scam_to_mule,
+# new_beneficiary_payment, or session_payment_velocity). No new pattern IDs are
+# introduced. Source of truth: src/banking_fraud_lab/schema/detection_patterns.py.
+
+DB_SESSION_RISK = FeatureFamilySpec(
+    family_id="db_session_risk",
+    display_name="Session risk telemetry",
+    description=(
+        "Surfaces session-level risk telemetry such as VPN/proxy use, ASN/network "
+        "risk, unfamiliar geolocation, and authentication method for digital "
+        "payments."
+    ),
+    detection_pattern_id="session_payment_velocity",
+    source_tables=(TRANSACTIONS, SUSPICIOUS_ACTIVITIES, SESSIONS),
+    source_columns=(
+        "transactions.transaction_id",
+        "suspicious_activities.transaction_id",
+        "suspicious_activities.session_id",
+        "sessions.session_id",
+        "sessions.is_vpn_or_proxy",
+        "sessions.asn_risk_score",
+        "sessions.coarse_geolocation",
+        "sessions.auth_method",
+    ),
+    output_columns=(
+        "db_is_vpn_or_proxy",
+        "db_asn_risk_score",
+        "db_is_high_risk_network",
+        "db_is_password_sms_auth",
+    ),
+)
+
+DB_BENEFICIARY_NOVELTY = FeatureFamilySpec(
+    family_id="db_beneficiary_novelty",
+    display_name="Beneficiary novelty",
+    description=(
+        "Flags outbound payments to recently added or updated beneficiaries so "
+        "new-beneficiary-payment behavior is evaluated against beneficiary history."
+    ),
+    detection_pattern_id="new_beneficiary_payment",
+    source_tables=(TRANSACTIONS, PAYMENT_BENEFICIARIES),
+    source_columns=(
+        "transactions.transaction_id",
+        "transactions.payment_beneficiary_id",
+        "transactions.booked_at",
+        "payment_beneficiaries.created_at",
+        "payment_beneficiaries.beneficiary_change_event",
+    ),
+    output_columns=("db_beneficiary_age_days", "db_is_new_beneficiary"),
+)
+
+DB_PAYMENT_VELOCITY = FeatureFamilySpec(
+    family_id="db_payment_velocity",
+    display_name="Session payment velocity",
+    description=(
+        "Counts outbound payments authorized within the same session so elevated "
+        "session-level velocity supports session_payment_velocity review."
+    ),
+    detection_pattern_id="session_payment_velocity",
+    source_tables=(TRANSACTIONS, SUSPICIOUS_ACTIVITIES, SESSIONS, ACCOUNTS),
+    source_columns=(
+        "transactions.transaction_id",
+        "transactions.account_id",
+        "suspicious_activities.transaction_id",
+        "suspicious_activities.session_id",
+        "sessions.session_id",
+        "sessions.started_at",
+    ),
+    output_columns=(
+        "db_session_payment_count",
+        "db_session_payment_amount_chf",
+        "db_session_max_payment_chf",
+    ),
+)
+
+DB_ACCOUNT_AGE = FeatureFamilySpec(
+    family_id="db_account_age",
+    display_name="Account age",
+    description=(
+        "Measures account age at payment time and flags early-life accounts that "
+        "are typical of digital scam-to-mule behavior."
+    ),
+    detection_pattern_id="digital_scam_to_mule",
+    source_tables=(TRANSACTIONS, ACCOUNTS),
+    source_columns=(
+        "transactions.transaction_id",
+        "transactions.account_id",
+        "transactions.booked_at",
+        "accounts.opened_at",
+    ),
+    output_columns=("db_account_age_days", "db_is_early_life_account"),
+)
+
+DB_SHARED_DEVICE = FeatureFamilySpec(
+    family_id="db_shared_device",
+    display_name="Shared device usage",
+    description=(
+        "Counts distinct Users observed on the same device fingerprint so shared "
+        "device usage supports digital scam-to-mule review."
+    ),
+    detection_pattern_id="digital_scam_to_mule",
+    source_tables=(SESSIONS, USERS, SUSPICIOUS_ACTIVITIES, TRANSACTIONS),
+    source_columns=(
+        "suspicious_activities.transaction_id",
+        "suspicious_activities.session_id",
+        "sessions.session_id",
+        "sessions.device_fingerprint_hash",
+        "sessions.user_id",
+    ),
+    output_columns=(
+        "db_device_user_count",
+        "db_is_shared_device",
+    ),
+)
+
+DB_PASS_THROUGH = FeatureFamilySpec(
+    family_id="db_pass_through",
+    display_name="Pass-through behavior",
+    description=(
+        "Detects incoming credits followed rapidly by outbound debits to a new "
+        "beneficiary, the pass-through signature of digital scam-to-mule flows."
+    ),
+    detection_pattern_id="digital_scam_to_mule",
+    source_tables=(TRANSACTIONS, ACCOUNTS, PAYMENT_BENEFICIARIES),
+    source_columns=(
+        "transactions.transaction_id",
+        "transactions.account_id",
+        "transactions.booked_at",
+        "transactions.direction",
+        "transactions.amount_chf",
+        "transactions.payment_beneficiary_id",
+        "payment_beneficiaries.beneficiary_change_event",
+    ),
+    output_columns=(
+        "db_prior_credit_amount_chf",
+        "db_hours_since_prior_credit",
+        "db_is_rapid_pass_through",
+    ),
+)
+
+DB_RISKY_CHANNEL = FeatureFamilySpec(
+    family_id="db_risky_channel",
+    display_name="Risky channel",
+    description=(
+        "Flags high-risk digital channels and country mismatch between the paying "
+        "account institution and the beneficiary country for new-beneficiary review."
+    ),
+    detection_pattern_id="new_beneficiary_payment",
+    source_tables=(TRANSACTIONS, PAYMENT_BENEFICIARIES),
+    source_columns=(
+        "transactions.transaction_id",
+        "transactions.channel",
+        "transactions.payment_beneficiary_id",
+        "payment_beneficiaries.beneficiary_account_country",
+    ),
+    output_columns=("db_is_mobile_app_channel", "db_is_beneficiary_country_risky"),
+)
+
+DIGITAL_BANKING_FEATURE_FAMILIES: tuple[FeatureFamilySpec, ...] = (
+    DB_SESSION_RISK,
+    DB_BENEFICIARY_NOVELTY,
+    DB_PAYMENT_VELOCITY,
+    DB_ACCOUNT_AGE,
+    DB_SHARED_DEVICE,
+    DB_PASS_THROUGH,
+    DB_RISKY_CHANNEL,
+)
+
 FEATURE_FAMILY_IDS: tuple[str, ...] = tuple(
-    feature.family_id for feature in PRIVATE_BANKING_FEATURE_FAMILIES
+    feature.family_id
+    for feature in (*PRIVATE_BANKING_FEATURE_FAMILIES, *DIGITAL_BANKING_FEATURE_FAMILIES)
 )
 
 _UNKNOWN_PATTERN_IDS = sorted(
     {
         feature.detection_pattern_id
-        for feature in PRIVATE_BANKING_FEATURE_FAMILIES
+        for feature in (
+            *PRIVATE_BANKING_FEATURE_FAMILIES,
+            *DIGITAL_BANKING_FEATURE_FAMILIES,
+        )
     }
     - set(PATTERN_IDS)
 )
 if _UNKNOWN_PATTERN_IDS:
     raise ValueError(
-        "Private-banking feature families reference unknown Detection pattern IDs: "
+        "Feature families reference unknown Detection pattern IDs: "
         f"{_UNKNOWN_PATTERN_IDS}"
     )
 
@@ -216,6 +392,14 @@ __all__ = [
     "AMOUNT_TO_AUM",
     "AMOUNT_TO_RELATIONSHIP_BASELINE",
     "CROSS_BORDER_MOVEMENT",
+    "DB_ACCOUNT_AGE",
+    "DB_BENEFICIARY_NOVELTY",
+    "DB_PASS_THROUGH",
+    "DB_PAYMENT_VELOCITY",
+    "DB_RISKY_CHANNEL",
+    "DB_SESSION_RISK",
+    "DB_SHARED_DEVICE",
+    "DIGITAL_BANKING_FEATURE_FAMILIES",
     "FEATURE_FAMILY_IDS",
     "FeatureFamilySpec",
     "NEW_COUNTERPARTY",

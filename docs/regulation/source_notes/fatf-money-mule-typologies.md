@@ -4,12 +4,17 @@ status: draft-hitl
 hitl_review_required: true
 source_families:
   - fatf_typologies
+pattern_ids:
+  - digital_scam_to_mule
 track: digital-banking fraud detection
 primary_official_sources:
   - https://www.fatf-gafi.org/en/publications/Methodsandtrends/Professional-money-laundering.html
 linked_modules:
   - notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb
   - notebooks/03_alert_governance/alert_governance_memo.ipynb
+  - notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb
+  - notebooks/05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb
+  - notebooks/05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb
 ---
 
 # FATF Typologies For Money-Mule Networks
@@ -47,6 +52,13 @@ Digital synthetic data and avoid claims about criminal intent.
   behavior through account age, beneficiary novelty, shared-device signals, and payment velocity.
 - `notebooks/03_alert_governance/alert_governance_memo.ipynb`: frames network-like indicators
   as review evidence and documents uncertainty.
+- `notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb`:
+  builds the `db_` shared-device, account-age, and pass-through features that connect mule
+  typologies to the `digital_scam_to_mule` Detection pattern.
+- `notebooks/05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb`:
+  tunes alert thresholds with investigation capacity and cost tradeoffs.
+- `notebooks/05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb`: reviews
+  alerts where confirmed-fraud is an imperfect, noisy label.
 
 ## Human Review
 

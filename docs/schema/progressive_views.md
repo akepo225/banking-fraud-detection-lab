@@ -76,6 +76,56 @@ Columns:
 | `rm_effective_from` | When the current relationship manager assignment became effective. |
 | `rm_effective_to` | When the current relationship manager assignment ended, if superseded. |
 
+## `nb_user_session_context`
+
+Exposes the digital Client, User, and session telemetry chain for NovaBank
+Digital session and payment-fraud exercises, keeping Client and User identities
+explicitly linked while carrying device, authentication, network, and
+geolocation context.
+
+This view supports v0.4 digital-banking lessons that need the session and
+identity chain in one traceable surface before learners work directly with the
+`users`, `sessions`, and `payment_beneficiaries` tables. It keeps Client (the
+legal customer) and User (the digital login identity) explicitly separate and
+linked, and it is filtered to NovaBank Digital so it does not surface
+private-banking relationship rows. It is module-specific and is not marked as a
+stable cross-module case-reference surface.
+
+Source tables:
+
+- `clients`
+- `users`
+- `sessions`
+
+Columns:
+
+| Column | Learner purpose |
+| --- | --- |
+| `client_id` | Client identifier for the legal customer. |
+| `partner_id` | Partner record that represents the Client. |
+| `institution_name` | Fictional NovaBank Digital institution. |
+| `client_segment` | Segment context for early cohorting. |
+| `client_onboarded_at` | When the Client was onboarded. |
+| `client_status` | Current Client status. |
+| `user_id` | Digital login identity (kept distinct from `client_id`). |
+| `username_hash` | Synthetic username token for the digital User. |
+| `user_created_at` | When the digital User was created. |
+| `user_status` | Current digital User status. |
+| `authorized_from` | When the current digital authorization became effective. |
+| `authorized_to` | When the digital authorization ended, if revoked. |
+| `session_id` | Digital session identifier. |
+| `started_at` | Session start timestamp. |
+| `channel` | Web or mobile app channel. |
+| `user_agent` | Synthetic browser or app user-agent family. |
+| `app_or_browser_version` | Synthetic app or browser version observed in the session. |
+| `device_fingerprint_hash` | Synthetic device fingerprint token. |
+| `ip_country` | Country inferred from IP address. |
+| `asn_risk_score` | Coarse ASN/network risk score from 0 to 100. |
+| `coarse_geolocation` | Coarse city or region-level geolocation signal. |
+| `is_vpn_or_proxy` | Whether the session used VPN or proxy signals. |
+| `auth_method` | Authentication method used. |
+| `session_event` | Main event observed during the session. |
+
 ## `foundation_alert_lifecycle`
 
 Shows the Alert lifecycle from suspicious activity through alert, case, and case

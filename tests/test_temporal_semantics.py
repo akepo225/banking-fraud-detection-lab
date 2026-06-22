@@ -4,6 +4,7 @@ import pytest
 
 from banking_fraud_lab import SCALE_PROFILES, generate_minimal_banking_world
 from banking_fraud_lab.generators import (
+    generate_digital_fraud_scenarios_world,
     generate_digital_scam_to_mule_world,
     generate_private_banking_transaction_fraud_world,
 )
@@ -147,9 +148,33 @@ def test_alert_case_outcome_lifecycle_ordering_holds(scale: str) -> None:
     assert (closed_outcomes["decided_at"] <= closed_outcomes["closed_at"]).all()
 
 
+@pytest.mark.parametrize("scale", tuple(SCALE_PROFILES))
+def test_digital_sessions_stay_within_user_authorization_window(scale: str) -> None:
+    """NovaBank Digital sessions must start after the User is created and authorized."""
+    tables = generate_minimal_banking_world(seed=42, scale=scale)
+
+    sessions = tables["sessions"].merge(
+        tables["users"][["user_id", "created_at", "authorized_from", "authorized_to"]],
+        on="user_id",
+        how="left",
+        validate="many_to_one",
+    )
+    assert (sessions["created_at"] <= sessions["authorized_from"]).all()
+    assert (sessions["created_at"] <= sessions["started_at"]).all()
+    assert (sessions["authorized_from"] <= sessions["started_at"]).all()
+
+    bounded = sessions.dropna(subset=["authorized_to"])
+    if not bounded.empty:
+        assert (bounded["started_at"] <= bounded["authorized_to"]).all()
+
+
 @pytest.mark.parametrize(
     "world_generator",
-    (generate_private_banking_transaction_fraud_world, generate_digital_scam_to_mule_world),
+    (
+        generate_private_banking_transaction_fraud_world,
+        generate_digital_scam_to_mule_world,
+        generate_digital_fraud_scenarios_world,
+    ),
 )
 def test_scenario_generators_preserve_temporal_invariants(world_generator) -> None:
     """Scenario injection must not break foundation temporal ordering."""

@@ -124,6 +124,26 @@ def test_track_extension_contract_includes_v04_mirroring_guidance() -> None:
         assert pattern_id in contract
 
 
+def test_track_extension_contract_pins_v04_conventions() -> None:
+    contract = _contract_text()
+
+    # Issue #97 resolves the open v0.4 placeholders.
+    assert "Future digital-banking prefix" not in contract
+    assert "Future numbered digital-banking module path" not in contract
+
+    # The pinned v0.4 conventions are recorded in the contract.
+    assert "db_" in contract
+    assert "`novabank`" in contract
+    assert "notebooks/05_digital_session_and_payment_fraud/" in contract
+
+    # v0.4 reuses the existing registry instead of extending it and documents
+    # how the existing pattern IDs map to the two v0.4 scenario families, so
+    # downstream slices model account-takeover and onboarding-abuse correctly.
+    assert "does not extend" in contract
+    assert "account-takeover" in contract
+    assert "onboarding-abuse" in contract
+
+
 def test_track_extension_contract_is_linked_from_indexes() -> None:
     expected_link = "track-extension-conventions.md"
 

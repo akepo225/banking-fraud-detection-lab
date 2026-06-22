@@ -70,11 +70,23 @@ The `sql/examples/` directory contains representative learner queries:
 - `08_private_banking_relationship_features.sql` calculates new-counterparty
   and relationship-manager concentration features for the
   `pb_transaction_fraud` Detection pattern.
+- `09_digital_session_channel_features.sql` calculates NovaBank Digital session
+  risk, risky channel, and beneficiary-country features for the
+  `session_payment_velocity` and `new_beneficiary_payment` Detection patterns.
+- `10_digital_beneficiary_passthrough_features.sql` calculates NovaBank Digital
+  beneficiary-novelty and rapid pass-through features for the
+  `digital_scam_to_mule` and `new_beneficiary_payment` Detection patterns.
+- `11_digital_velocity_account_features.sql` calculates NovaBank Digital
+  session-velocity, account-age, and shared-device features for the
+  `digital_scam_to_mule` and `session_payment_velocity` Detection patterns.
 
 The v0.3 feature-engineering notebook at
 `../notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
 loads examples 06-08 into an in-memory learner-facing SQLite database and
-compares representative SQL outputs with the Python feature library.
+compares representative SQL outputs with the Python feature library. The v0.4
+digital-banking notebooks under
+`../notebooks/05_digital_session_and_payment_fraud/` consume examples 09-11
+alongside the `db_`-prefixed Python feature library.
 
 These examples are smoke-tested against the generated SQLite database and return
 meaningful rows against the default learner-facing tiny data.

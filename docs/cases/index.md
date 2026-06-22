@@ -32,6 +32,14 @@ The initial v0.1 source packs are draft HITL artifacts and require human review 
   private-banking source pack for relationship-scale movement, cross-border context, and v0.3 feature interpretation.
 - [Authorised scam payment to mule or fraudster account](source_packs/digital-scam-to-mule.md):
   digital scam-to-mule source pack for NovaBank Digital exercises.
+- [Authorised push payment scam to a newly added beneficiary](source_packs/digital-app-scam-payments.md):
+  digital APP-scam source pack for NovaBank Digital new-beneficiary exercises.
+- [Early-life account receiving and rapidly passing funds onward](source_packs/digital-money-mule-behavior.md):
+  digital money-mule source pack for NovaBank Digital scam-to-mule exercises.
+- [Account-takeover with elevated session payment velocity](source_packs/digital-online-bank-control-failures.md):
+  digital online-bank control-failure source pack for NovaBank Digital session-velocity exercises.
+- [Payment-system guidance on new-beneficiary confirmation](source_packs/digital-payment-system-guidance.md):
+  digital payment-system guidance source pack for NovaBank Digital new-beneficiary exercises.
 - [Model-output governance and threshold documentation](source_packs/model-governance-method.md):
   cross-track governance method source pack.
 - [Money mule network and shared-account movement](source_packs/graph-network-money-mules.md):

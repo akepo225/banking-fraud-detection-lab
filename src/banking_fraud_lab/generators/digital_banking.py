@@ -204,6 +204,11 @@ def inject_digital_fraud_scenarios(
     """
     _validate_prevalence(scenario_prevalence)
     _validate_prevalence(noisy_outcome_rate)
+    # scam-to-mule is intentionally the clean v0.1 baseline scenario: its case
+    # outcomes are always confirmed-fraud (test_digital_scam_to_mule_scenario
+    # asserts confirmed_fraud.all()), so it is injected WITHOUT noisy_outcome_rate.
+    # The v0.4 families (account-takeover, onboarding-abuse,
+    # suspicious-beneficiary-change) carry the noisy confirmed-fraud labels.
     scenario_tables = inject_digital_scam_to_mule_flow(
         tables,
         scenario_prevalence=scenario_prevalence,
@@ -213,10 +218,15 @@ def inject_digital_fraud_scenarios(
         scenario_prevalence=scenario_prevalence,
         noisy_outcome_rate=noisy_outcome_rate,
     )
+    # Accounts whose lifecycle (opened_at) scam-to-mule rewrote as early-life
+    # mules must be skipped by onboarding-abuse so the two injections target
+    # disjoint accounts and never overwrite each other's opened_at.
+    rewritten_account_ids = _early_life_account_ids(scenario_tables)
     scenario_tables = inject_onboarding_abuse_scenario(
         scenario_tables,
         scenario_prevalence=scenario_prevalence,
         noisy_outcome_rate=noisy_outcome_rate,
+        exclude_account_ids=rewritten_account_ids,
     )
     scenario_tables = inject_suspicious_beneficiary_change_scenario(
         scenario_tables,
@@ -224,6 +234,33 @@ def inject_digital_fraud_scenarios(
         noisy_outcome_rate=noisy_outcome_rate,
     )
     return scenario_tables
+
+
+def _early_life_account_ids(tables: Mapping[str, pd.DataFrame]) -> frozenset[str]:
+    """Return NovaBank account ids whose opened_at a scenario injection rewrote.
+
+    scam-to-mule rewrites opened_at on its mule accounts to mark them early-life.
+    We identify them by joining the scam-to-mule answer keys (entity transactions)
+    back to their accounts.
+    """
+    answer_keys = tables.get(PROTECTED_SCENARIO_ANSWER_KEYS)
+    if answer_keys is None or answer_keys.empty:
+        return frozenset()
+    scam_keys = answer_keys[
+        answer_keys["scenario_name"] == DIGITAL_SCAM_TO_MULE_SCENARIO_NAME
+    ]
+    if scam_keys.empty:
+        return frozenset()
+    cases = tables.get("cases")
+    if cases is None or cases.empty:
+        return frozenset()
+    scam_transactions = cases.merge(
+        scam_keys[["entity_id"]],
+        left_on="transaction_id",
+        right_on="entity_id",
+        how="inner",
+    )
+    return frozenset(scam_transactions["account_id"].dropna())
 
 
 def inject_account_takeover_scenario(
@@ -278,6 +315,7 @@ def inject_onboarding_abuse_scenario(
     *,
     scenario_prevalence: float = 0.5,
     noisy_outcome_rate: float = 0.3,
+    exclude_account_ids: frozenset[str] | None = None,
 ) -> dict[str, pd.DataFrame]:
     """Inject onboarding-abuse behavior modeled under the digital scam-to-mule pattern."""
     _validate_prevalence(scenario_prevalence)
@@ -287,6 +325,7 @@ def inject_onboarding_abuse_scenario(
         scenario_tables,
         scenario_prevalence=scenario_prevalence,
         prefer_lower_balance=True,
+        exclude_account_ids=exclude_account_ids,
     )
     if selected_accounts.empty:
         return scenario_tables
@@ -359,6 +398,7 @@ def _select_nova_accounts_by_prevalence(
     *,
     scenario_prevalence: float,
     prefer_lower_balance: bool,
+    exclude_account_ids: frozenset[str] | None = None,
 ) -> pd.DataFrame:
     """Select deterministic NovaBank accounts for a scenario family.
 
@@ -367,16 +407,28 @@ def _select_nova_accounts_by_prevalence(
     ``prefer_lower_balance=False`` sorts descending so the highest-balance
     accounts are selected first (used for account-takeover and
     suspicious-beneficiary-change).
+
+    ``exclude_account_ids`` skips accounts whose lifecycle a prior injection has
+    already rewritten (for example ``opened_at``), so a later injection targets a
+    disjoint account set and never corrupts another injection's account lifecycle.
     """
     accounts = tables[ACCOUNTS]
     digital_accounts = accounts[accounts["institution_name"] == NOVABANK].copy()
     if digital_accounts.empty or scenario_prevalence == 0:
         return digital_accounts.iloc[0:0]
 
+    if exclude_account_ids:
+        digital_accounts = digital_accounts[
+            ~digital_accounts["account_id"].isin(exclude_account_ids)
+        ]
+    if digital_accounts.empty:
+        return digital_accounts.iloc[0:0]
+
     target_count = min(
         len(digital_accounts),
-        max(1, math.ceil(len(digital_accounts) * scenario_prevalence)),
+        max(1, math.ceil(len(accounts[accounts["institution_name"] == NOVABANK]) * scenario_prevalence)),
     )
+    digital_accounts = digital_accounts.copy()
     digital_accounts["balance_chf_numeric"] = digital_accounts["balance_chf"].map(float)
     sort_ascending = [True, True] if prefer_lower_balance else [False, True]
     return digital_accounts.sort_values(
@@ -1087,6 +1139,11 @@ def _build_scenario_outcome_with_noise(
       answer key records ``true_false_positive``.
     """
     noise_period = max(1, round(1.0 / noisy_outcome_rate)) if noisy_outcome_rate > 0 else 0
+    # Note: noise selection is intentionally deterministic and anchored at the
+    # first case of each family (case_index 0). This guarantees both noise
+    # directions (uninvestigated-but-fraud and confirmed-but-benign) appear in
+    # the small learner datasets regardless of the requested rate. Tests rely on
+    # this determinism to find noisy outcomes.
     is_noisy = noisy_outcome_rate > 0 and (case_index % noise_period == 0)
     uninvestigated_noise = is_noisy and (case_index // max(noise_period, 1)) % 2 == 0
 

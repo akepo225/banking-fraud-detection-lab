@@ -300,6 +300,49 @@ def test_digital_fraud_scenario_generation_is_deterministic() -> None:
         )
 
 
+def test_scenario_injections_target_disjoint_accounts() -> None:
+    """Each injection family must target distinct accounts so opened_at never collides."""
+    tables = generate_digital_fraud_scenarios_world(
+        seed=42, scale="small", scenario_prevalence=0.5, noisy_outcome_rate=0.3
+    )
+    cases = tables["cases"][["transaction_id", "account_id"]]
+    answer_keys = tables[PROTECTED_SCENARIO_ANSWER_KEYS][
+        ["scenario_name", "entity_id"]
+    ].merge(cases, left_on="entity_id", right_on="transaction_id", how="left")
+
+    # scam-to-mule accounts must be disjoint from onboarding-abuse accounts (both
+    # rewrite opened_at via _apply_early_life_account_updates).
+    scam_accounts = set(
+        answer_keys.loc[
+            answer_keys["scenario_name"] == "novabank_digital_scam_to_mule_flow",
+            "account_id",
+        ]
+    )
+    onboarding_accounts = set(
+        answer_keys.loc[
+            answer_keys["scenario_name"] == "novabank_digital_onboarding_abuse",
+            "account_id",
+        ]
+    )
+    assert scam_accounts, "scam-to-mule produced no account rows"
+    assert onboarding_accounts, "onboarding-abuse produced no account rows"
+    assert scam_accounts.isdisjoint(onboarding_accounts), (
+        "scam-to-mule and onboarding-abuse injections overlap accounts"
+    )
+
+    # No account lifecycle corruption: every account opened_at precedes its bookings.
+    digital_transactions = tables["transactions"].merge(
+        tables["accounts"][["account_id", "opened_at"]],
+        on="account_id",
+        how="left",
+        validate="many_to_one",
+    )
+    assert (
+        pd.to_datetime(digital_transactions["booked_at"])
+        >= pd.to_datetime(digital_transactions["opened_at"])
+    ).all(), "booked_at predates account opened_at (lifecycle corruption)"
+
+
 def test_scenario_injection_preserves_referential_integrity() -> None:
     """All scenario rows must join cleanly back to canonical tables."""
     tables = generate_digital_fraud_scenarios_world(seed=42, scale="small")

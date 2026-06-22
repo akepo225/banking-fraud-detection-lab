@@ -15,7 +15,14 @@ WITH digital_transactions AS (
   FROM transactions AS t
   JOIN accounts AS a
     ON a.account_id = t.account_id
-  LEFT JOIN suspicious_activities AS sa
+  LEFT JOIN (
+    -- One session link per transaction, matching the Python
+    -- _transaction_session_links helper (deterministic deduplication).
+    SELECT transaction_id, MIN(session_id) AS session_id
+    FROM suspicious_activities
+    WHERE transaction_id IS NOT NULL AND session_id IS NOT NULL
+    GROUP BY transaction_id
+  ) AS sa
     ON sa.transaction_id = t.transaction_id
   WHERE a.institution_name = 'NovaBank Digital'
 ),

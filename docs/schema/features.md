@@ -47,7 +47,7 @@ are introduced.
 
 | Family ID | Detection pattern ID | Source tables | Output columns |
 | --- | --- | --- | --- |
-| `db_session_risk` | `session_payment_velocity` | `transactions`, `sessions`, `accounts`, `banking_relationships`, `users` | `db_is_vpn_or_proxy`, `db_asn_risk_score`, `db_is_high_risk_network`, `db_is_password_sms_auth` |
+| `db_session_risk` | `session_payment_velocity` | `transactions`, `suspicious_activities`, `sessions` | `db_is_vpn_or_proxy`, `db_asn_risk_score`, `db_is_high_risk_network`, `db_is_password_sms_auth` |
 | `db_beneficiary_novelty` | `new_beneficiary_payment` | `transactions`, `payment_beneficiaries` | `db_beneficiary_age_days`, `db_is_new_beneficiary` |
 | `db_payment_velocity` | `session_payment_velocity` | `transactions`, `suspicious_activities`, `sessions`, `accounts` | `db_session_payment_count`, `db_session_payment_amount_chf`, `db_session_max_payment_chf` |
 | `db_account_age` | `digital_scam_to_mule` | `transactions`, `accounts` | `db_account_age_days`, `db_is_early_life_account` |

@@ -29,15 +29,6 @@ beneficiary_context AS (
   LEFT JOIN payment_beneficiaries AS pb
     ON pb.payment_beneficiary_id = dt.payment_beneficiary_id
 ),
-prior_credits AS (
-  SELECT
-    bc.account_id,
-    MAX(bc.booked_at) AS prior_credit_at,
-    SUM(CASE WHEN bc.direction = 'credit' THEN bc.amount_chf ELSE 0 END) AS prior_credit_amount_chf
-  FROM beneficiary_context AS bc
-  WHERE bc.direction = 'credit'
-  GROUP BY bc.account_id
-),
 -- For each debit, find the nearest prior credit booked on the same account so
 -- the pass-through window is per-debit rather than a single account-wide aggregate.
 nearest_prior_credit AS (
@@ -86,7 +77,18 @@ SELECT
     2
   ) AS db_beneficiary_age_days,
   CASE
-    WHEN bc.beneficiary_change_event IN ('new_beneficiary_added', 'beneficiary_updated')
+    -- Match the Python db_beneficiary_novelty logic: a beneficiary is "new" when
+    -- it exists AND it has a new/updated lifecycle event, was created within the
+    -- 30-day lookback, or has no recorded creation timestamp.
+    WHEN bc.payment_beneficiary_id IS NOT NULL
+      AND (
+        bc.beneficiary_change_event IN ('new_beneficiary_added', 'beneficiary_updated')
+        OR (
+          bc.beneficiary_created_at IS NOT NULL
+          AND julianday(bc.booked_at) - julianday(bc.beneficiary_created_at) BETWEEN 0 AND 30
+        )
+        OR bc.beneficiary_created_at IS NULL
+      )
       THEN 1
     ELSE 0
   END AS db_is_new_beneficiary,

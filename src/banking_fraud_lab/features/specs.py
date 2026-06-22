@@ -211,11 +211,10 @@ DB_SESSION_RISK = FeatureFamilySpec(
         "payments."
     ),
     detection_pattern_id="session_payment_velocity",
-    source_tables=(TRANSACTIONS, SUSPICIOUS_ACTIVITIES, SESSIONS, ACCOUNTS, BANKING_RELATIONSHIPS, USERS),
+    source_tables=(TRANSACTIONS, SUSPICIOUS_ACTIVITIES, SESSIONS),
     source_columns=(
         "transactions.transaction_id",
-        "transactions.account_id",
-        "accounts.banking_relationship_id",
+        "suspicious_activities.transaction_id",
         "suspicious_activities.session_id",
         "sessions.session_id",
         "sessions.is_vpn_or_proxy",

@@ -309,6 +309,9 @@ def test_scenario_injections_target_disjoint_accounts() -> None:
     answer_keys = tables[PROTECTED_SCENARIO_ANSWER_KEYS][
         ["scenario_name", "entity_id"]
     ].merge(cases, left_on="entity_id", right_on="transaction_id", how="left")
+    # Drop rows where the join failed so a broken join cannot make the non-empty
+    # disjointness checks pass vacuously.
+    answer_keys = answer_keys.dropna(subset=["account_id"])
 
     # scam-to-mule accounts must be disjoint from onboarding-abuse accounts (both
     # rewrite opened_at via _apply_early_life_account_updates).
@@ -324,8 +327,8 @@ def test_scenario_injections_target_disjoint_accounts() -> None:
             "account_id",
         ]
     )
-    assert scam_accounts, "scam-to-mule produced no account rows"
-    assert onboarding_accounts, "onboarding-abuse produced no account rows"
+    assert scam_accounts, "scam-to-mule produced no linked account rows"
+    assert onboarding_accounts, "onboarding-abuse produced no linked account rows"
     assert scam_accounts.isdisjoint(onboarding_accounts), (
         "scam-to-mule and onboarding-abuse injections overlap accounts"
     )

@@ -309,12 +309,23 @@ def test_scenario_injections_target_disjoint_accounts() -> None:
     answer_keys = tables[PROTECTED_SCENARIO_ANSWER_KEYS][
         ["scenario_name", "entity_id"]
     ].merge(cases, left_on="entity_id", right_on="transaction_id", how="left")
-    # Drop rows where the join failed so a broken join cannot make the non-empty
-    # disjointness checks pass vacuously.
-    answer_keys = answer_keys.dropna(subset=["account_id"])
 
     # scam-to-mule accounts must be disjoint from onboarding-abuse accounts (both
     # rewrite opened_at via _apply_early_life_account_updates).
+    targeted_scenarios = (
+        "novabank_digital_scam_to_mule_flow",
+        "novabank_digital_onboarding_abuse",
+    )
+    # Fail loudly if the join dropped any account link for the targeted scenarios,
+    # instead of silently masking a broken join.
+    for scenario_name in targeted_scenarios:
+        scenario_keys = answer_keys[
+            answer_keys["scenario_name"] == scenario_name
+        ]
+        assert scenario_keys["account_id"].notna().all(), (
+            f"{scenario_name} answer keys failed to join to a case account_id"
+        )
+
     scam_accounts = set(
         answer_keys.loc[
             answer_keys["scenario_name"] == "novabank_digital_scam_to_mule_flow",

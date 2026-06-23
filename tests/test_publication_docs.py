@@ -52,6 +52,9 @@ def test_readme_covers_publication_readiness_contract() -> None:
         "(docs/adr/0001-broaden-scope-to-banking-fraud-detection-lab.md)",
         "(CONTRIBUTING.md)",
         "(docs/release/v0.1-publication-checklist.md)",
+        "(docs/release/v0.5-acceptance-review.md)",
+        "(notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb)",
+        "(notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb)",
         "(LICENSE.md)",
     ]
     for link in required_links:
@@ -182,3 +185,45 @@ def test_notebook_and_sql_guides_are_actionable_for_end_users() -> None:
     assert "did not tell a new user how to launch" in audit
     assert "listed optional `warmups/` material" in audit
     assert "did not show how to run them against the generated database" in audit
+
+
+def test_readme_curriculum_map_covers_every_module_directory() -> None:
+    """Every numbered notebook module on disk must be linked from the README.
+
+    Guards against a module directory being added under ``notebooks/`` without a
+    corresponding entry in the README Curriculum Map, which is how the v0.4
+    modules 04 and 05 originally went undocumented.
+    """
+    readme = _read("README.md")
+
+    module_dirs = sorted(path.name for path in (ROOT / "notebooks").iterdir() if path.is_dir())
+    numbered_modules = [name for name in module_dirs if re.fullmatch(r"[0-9][0-9]_.*", name)]
+    assert numbered_modules, "expected at least one numbered notebook module directory"
+
+    missing = [
+        name for name in numbered_modules if f"(notebooks/{name}/" not in readme
+    ]
+    assert not missing, (
+        "README Curriculum Map is missing links for module directories: "
+        f"{missing}. Every notebooks/[0-9][0-9]_* directory must be linked."
+    )
+
+
+def test_readme_markdown_links_resolve() -> None:
+    """Every local markdown link in the README must resolve to an existing path.
+
+    External (http/https), fragment (#), and mailto targets are skipped. Guards
+    against dead links to notebooks or docs that were renamed or moved.
+    """
+    readme = _read("README.md")
+    targets = re.findall(r"\]\(([^)]+)\)", readme)
+
+    unresolved = []
+    for target in targets:
+        if target.startswith(("http://", "https://", "#", "mailto:")):
+            continue
+        # Markdown links may carry an optional title fragment: ``path "title"``.
+        path_part = target.split()[0]
+        if not (ROOT / path_part).exists():
+            unresolved.append(target)
+    assert not unresolved, f"README links do not resolve to existing files: {unresolved}"

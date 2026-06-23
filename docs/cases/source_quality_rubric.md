@@ -32,6 +32,31 @@ human-readable phrase (which names the specific source body) and confirm it fall
 under the correct tier above. The metadata tests do not enforce an exact
 `source_quality` vocabulary, so existing phrases stay stable during v0.5 migration.
 
+## Machine-readable `source_type` vocabulary
+
+The `source_type` front-matter field is a controlled vocabulary that classifies
+the source **body** independently of its human-readable `source_authority` and
+`source_quality` phrase family. It is finer-grained than the prose "Source type"
+column above: several distinct authority kinds all sit in Tier 1. The canonical
+token set mirrors `SOURCE_TYPES` in `tests/test_case_library_metadata.py`, which
+asserts every pack's `source_type` is a member of this set.
+
+| Token | Tier | Intended source body | In use |
+| --- | --- | --- | --- |
+| `regulator` | 1 | National/supranational regulator — FINMA, Federal Reserve, Payment Systems Regulator | 5 packs |
+| `court` | 1 | Public court filings / adjudication records | reserved |
+| `enforcement` | 1 | Law-enforcement agency — Europol, national law-enforcement agency | graph-network-money-mules |
+| `cyber_authority` | 1 | Cyber-security authority — National Cyber Security Centre (NCSC) | digital-online-bank-control-failures |
+| `bank_disclosure` | 2 | Bank/issuer annual report or official disclosure | reserved |
+| `payment_system_operator` | 2 | Payment-system operator — Pay.UK, payment-rails performance data | digital-payment-system-guidance |
+| `journalism` | 3 | Reputable journalism (always corroborated against a tier 1–2 source) | reserved |
+| `industry_report` | 4 | Industry research / typology report — UK Finance, FATF-style typology | digital-money-mule-behavior |
+
+The three reserved tokens (`court`, `bank_disclosure`, `journalism`) are not yet
+used by any pack; they are defined so a future pack can adopt them without a
+vocabulary change. Add a new `source_type` value to this table and to
+`SOURCE_TYPES` together so the rubric and the test stay in sync.
+
 ## How each tier anchors learning without reconstructing events
 
 The principle is the same for every tier: extract the **Detection pattern** (the

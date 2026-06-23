@@ -23,6 +23,21 @@ Track extension notebook naming and module-layout conventions are defined in
   then run
   `05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb`.
 
+## Case Library And Regulatory Context
+
+Each module directory has its own `README.md` linking the notebooks in that module
+to the relevant case source packs and regulatory source notes. See:
+
+- [00_foundations/README.md](00_foundations/README.md)
+- [01_private_banking_transaction_fraud/README.md](01_private_banking_transaction_fraud/README.md)
+- [02_digital_scam_to_mule/README.md](02_digital_scam_to_mule/README.md)
+- [03_alert_governance/README.md](03_alert_governance/README.md)
+- [04_private_banking_feature_engineering/README.md](04_private_banking_feature_engineering/README.md)
+- [05_digital_session_and_payment_fraud/README.md](05_digital_session_and_payment_fraud/README.md)
+
+For the full catalogs, see the [case library index](../docs/cases/index.md) and
+the [regulatory source index](../docs/regulation/index.md).
+
 ## Optional Warm-Ups
 
 The warm-ups under `00_foundations/warmups/` are outside the required core module

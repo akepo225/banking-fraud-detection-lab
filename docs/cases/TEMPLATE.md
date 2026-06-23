@@ -48,6 +48,7 @@ track: Private-banking fraud detection | Digital-banking fraud detection
 detection_pattern: human-readable detection-pattern description
 institution_type: private bank | payment service provider or digital bank | ...
 source_authority: FINMA | Payment Systems Regulator | FATF | ...
+source_type: regulator | court | enforcement | bank_disclosure | payment_system_operator | cyber_authority | industry_report | journalism
 geography: Switzerland / cross-border | United Kingdom / payments | ...
 product: private-banking transactions | authorised push payments | ...
 source_quality: official regulator source candidate | ...
@@ -66,6 +67,11 @@ preserve the human-readable `detection_pattern` field, and **add** the structure
   `pattern_id: new_beneficiary_payment` or `pattern_id: session_payment_velocity`.
 - Cross-track governance / graph packs may omit `pattern_id` or reference the
   most relevant pattern; never invent a new `pattern_id`.
+
+`source_type` (also added to every pack during v0.5 migration) classifies the
+source body using a controlled vocabulary; see the
+[source-quality rubric](source_quality_rubric.md) for the token-to-tier mapping.
+`source_authority` remains the human-readable publishing-body name.
 
 The `linked_modules` field must contain only repository paths that exist at the
 time the pack is added.

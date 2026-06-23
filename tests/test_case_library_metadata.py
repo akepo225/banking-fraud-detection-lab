@@ -188,6 +188,31 @@ def test_case_source_pack_pattern_id_required_except_cross_track() -> None:
             )
 
 
+def test_source_type_vocabulary_documented_in_rubric() -> None:
+    """Every canonical source_type token must be documented in the rubric.
+
+    The machine-readable ``source_type`` vocabulary lives canonically in
+    ``SOURCE_TYPES``; the source-quality rubric documents each token's tier
+    mapping and intended source body so a contributor copying TEMPLATE.md has an
+    authoritative list. Guards against a token being added to ``SOURCE_TYPES``
+    without being documented in the rubric.
+    """
+    rubric = CASE_QUALITY_RUBRIC.read_text(encoding="utf-8")
+    missing = [token for token in SOURCE_TYPES if f"`{token}`" not in rubric]
+    assert not missing, (
+        "source_type tokens missing from docs/cases/source_quality_rubric.md: "
+        f"{missing}"
+    )
+
+
+def test_template_front_matter_documents_source_type() -> None:
+    """TEMPLATE.md front-matter example must include the source_type field."""
+    template = CASE_TEMPLATE.read_text(encoding="utf-8")
+    assert "source_type:" in template, (
+        "TEMPLATE.md front-matter example must document the source_type field"
+    )
+
+
 def test_case_index_groups_packs_by_detection_pattern() -> None:
     """The case index must expose a section per pattern_id and one for cross-track packs."""
     index_text = CASE_LIBRARY_INDEX.read_text(encoding="utf-8")

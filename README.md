@@ -16,7 +16,9 @@ reconstruct real events. The curriculum uses one **Realistic synthetic data
 model**, then exposes **Progressive data views** so early exercises stay
 approachable while later modules still use realistic joins and labels.
 
-The v0.1 path focuses on two first-class **Fraud detection tracks**:
+The curriculum is organized around two first-class **Fraud detection tracks**,
+each developed as a depth track beyond the foundations and alert-governance
+modules:
 
 - **Private-banking fraud detection**, using fictional **Alpine Crest Private
   Bank** scenarios for Banking relationship, Partner, account, transaction,
@@ -24,6 +26,10 @@ The v0.1 path focuses on two first-class **Fraud detection tracks**:
 - **Digital-banking fraud detection**, using fictional **NovaBank Digital**
   scenarios for Client, User, session, device, beneficiary, payment, alert, and
   Scam-to-mule flow analysis.
+
+A **Detection-pattern-first case library** and a **learning-use-first
+regulatory source index** provide supporting context and source discipline for
+the exercises in every module.
 
 ## Target Learner
 
@@ -43,7 +49,7 @@ investment, regulatory, or professional advice.
 Public cases and regulatory sources are used only as learning anchors for
 Detection patterns, source discipline, and governance questions.
 
-## v0.1 Curriculum Map
+## Curriculum Map
 
 Start with the [notebook guide](notebooks/README.md), then run the featured
 modules in order:
@@ -60,6 +66,12 @@ modules in order:
 - [`03_alert_governance`](notebooks/03_alert_governance/alert_governance_memo.ipynb):
   alert interpretation, threshold tradeoffs, limitations, and a governance memo
   draft.
+- [`04_private_banking_feature_engineering`](notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb):
+  Private-banking feature engineering and supervised threshold tuning for Alpine
+  Crest relationship, account, counterparty, and velocity context.
+- [`05_digital_session_and_payment_fraud`](notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb):
+  NovaBank Digital session and payment fraud feature engineering, supervised
+  baseline, and alert triage.
 
 Optional canonical-data refreshers for Python, pandas, SQL, and sklearn live in
 [`00_foundations/warmups`](notebooks/00_foundations/warmups/). They are outside
@@ -117,13 +129,16 @@ SQLite databases.
 - [Dataset quality report](docs/data_quality/dataset_quality_report.md)
 - [SQLite examples](sql/README.md)
 - [Evaluation metrics guide](docs/evaluation/metrics.md)
-- [Case library](docs/cases/index.md)
-- [Regulatory source index](docs/regulation/index.md)
+- [Case library](docs/cases/index.md) (organized Detection-pattern-first)
+- [Regulatory source index](docs/regulation/index.md) (organized by learning
+  use: analytics question, control, documentation, explainability, alert
+  handling, governance)
 - [v0.1 CI quality gates](docs/quality_gates/v0.1-ci.md)
 - [Implementation roadmap](docs/ROADMAP.md)
 - [Scope ADR](docs/adr/0001-broaden-scope-to-banking-fraud-detection-lab.md)
 - [Contribution guide](CONTRIBUTING.md)
 - [v0.1 publication checklist](docs/release/v0.1-publication-checklist.md)
+- [v0.5 acceptance review](docs/release/v0.5-acceptance-review.md)
 - [Split license model](LICENSE.md)
 
 ## Quality Bar

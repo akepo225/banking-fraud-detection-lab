@@ -12,7 +12,7 @@ source_type: cyber_authority
 geography: United Kingdom / online banking
 product: online and mobile-banking sessions
 source_quality: official cyber-security authority source candidate
-linked_modules: notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb, notebooks/05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb, notebooks/05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb, notebooks/03_alert_governance/alert_governance_memo.ipynb
+linked_modules: notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb, notebooks/05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb, notebooks/05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb, notebooks/05_digital_session_and_payment_fraud/novabank_case_narrative.ipynb, notebooks/03_alert_governance/alert_governance_memo.ipynb
 ---
 
 # Online-Bank Account Control Failure Source Pack

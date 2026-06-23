@@ -12,7 +12,7 @@ source_type: regulator
 geography: United Kingdom / payments
 product: authorised push payments
 source_quality: official payment regulator source candidate
-linked_modules: notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb, notebooks/03_alert_governance/alert_governance_memo.ipynb
+linked_modules: notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb, notebooks/03_alert_governance/alert_governance_memo.ipynb, notebooks/05_digital_session_and_payment_fraud/novabank_case_narrative.ipynb
 ---
 
 # Digital Scam-To-Mule Source Pack

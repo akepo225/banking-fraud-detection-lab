@@ -13,6 +13,7 @@ from private_banking_test_constants import (
 
 CASE_SOURCE_PACK_DIR = Path("docs/cases/source_packs")
 CASE_LIBRARY_INDEX = Path("docs/cases/index.md")
+REGULATORY_SOURCE_NOTE_DIR = Path("docs/regulation/source_notes")
 HITL_MARKER = "<!-- HITL-REVIEW-REQUIRED -->"
 PRIVATE_BANKING_TRACK = "Private-banking fraud detection"
 DIGITAL_TRACK = "Digital-banking fraud detection"
@@ -98,9 +99,11 @@ BANNED_RECONSTRUCTION_PHRASES = (
 # v0.5 case-library skill layer: canonical template, rubric, contributor guide,
 # and the worked-example pack. The template sections are a superset of the
 # REQUIRED_SECTIONS every source pack already carries; `## Summary` and the
-# structured learner-output exercise format are introduced by v0.5 and migrate
-# pack-by-pack in #119/#120/#121, so the new requirements are scoped to the
-# template artifacts and the worked example rather than every pack at once.
+# structured learner-output exercise format are introduced by v0.5. #118 lands
+# them on the worked example and the template artifacts; #120 finishes the
+# private-banking track, so the v0.5 conformance and learner-output exercise
+# requirements now apply to every private-banking pack, not only the worked
+# example (issue #120 acceptance criterion 3).
 CASE_TEMPLATE = Path("docs/cases/TEMPLATE.md")
 CASE_QUALITY_RUBRIC = Path("docs/cases/source_quality_rubric.md")
 CASE_CONTRIBUTING = Path("docs/cases/CONTRIBUTING.md")
@@ -109,6 +112,12 @@ WORKED_EXAMPLE_PACK = Path(
 )
 TEMPLATE_REQUIRED_SECTIONS = REQUIRED_SECTIONS | {"## Summary"}
 WORKED_EXAMPLE_PATTERN_IDS = {"pb_transaction_fraud", "pb_high_value_movement"}
+# Every source pack on the private-banking track must reach v0.5 template
+# conformance (issue #120). Discovered dynamically so a new private-banking
+# pack is governed the moment it lands.
+CORE_NOTEBOOK_MODULES = tuple(
+    sorted(p for p in Path("notebooks").glob("[0-9][0-9]_*") if p.is_dir())
+)
 
 
 def test_case_source_packs_cover_v0_1_learning_areas() -> None:
@@ -395,60 +404,97 @@ def test_case_contributing_checklist_covers_required_disciplines() -> None:
     assert "PATTERN_IDS" in text
 
 
-def test_worked_example_source_pack_conforms_to_template() -> None:
-    """The v0.5 worked-example pack must carry every template section."""
-    text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
+def test_private_banking_source_packs_conform_to_v0_5_template() -> None:
+    """Every private-banking pack must carry every v0.5 template section.
 
-    assert HITL_MARKER in text
-    headings = _section_headings(text)
-    missing = TEMPLATE_REQUIRED_SECTIONS - headings
-    assert not missing, f"Worked example missing sections: {sorted(missing)}"
-
-
-def test_worked_example_source_pack_has_learner_output_exercises() -> None:
-    """The worked example must include structured learner-output exercises."""
-    text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
-    exercise_section = _section_text(text, "## Linked Modules And Exercises")
-    exercise_blocks = _exercise_blocks(exercise_section)
-
-    assert exercise_blocks, "Worked example needs at least one exercise"
-    # Each exercise block must carry a Pattern, Module, Prompt, and output.
-    for block in exercise_blocks:
-        for label in ("Pattern:", "Module:", "Prompt:", "Learner output:"):
-            assert label in block, f"Exercise block missing field: {label}"
+    Generalizes the worked-example check (#118) across the whole private-banking
+    track once #120 finishes the upgrade, so a future edit cannot silently strip
+    the ``## Summary`` (or any other template) section from a pack.
+    """
+    private_banking_packs = _private_banking_packs()
+    assert private_banking_packs, "No private-banking source packs found to validate"
+    for pack in private_banking_packs:
+        text = pack.read_text(encoding="utf-8")
+        assert HITL_MARKER in text, f"{pack.name} missing HITL marker"
+        missing = TEMPLATE_REQUIRED_SECTIONS - _section_headings(text)
+        assert not missing, f"{pack.name} missing sections: {sorted(missing)}"
 
 
-def test_worked_example_source_pack_exercises_reference_valid_pattern_ids() -> None:
-    """Worked-example exercises must cite frozen private-banking pattern IDs."""
-    text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
-    exercise_section = _section_text(text, "## Linked Modules And Exercises")
-    exercise_blocks = _exercise_blocks(exercise_section)
+def test_private_banking_source_packs_have_learner_output_exercises() -> None:
+    """Every private-banking pack must include structured learner-output exercises.
 
-    referenced_pattern_ids: set[str] = set()
-    for block in exercise_blocks:
-        referenced_pattern_ids.update(_exercise_pattern_ids(block))
-    assert referenced_pattern_ids & WORKED_EXAMPLE_PATTERN_IDS, (
-        "Worked-example exercises must reference at least one of "
-        f"{sorted(WORKED_EXAMPLE_PATTERN_IDS)}"
+    Each ``### Exercise N`` block must carry a Pattern, Module, Prompt, and
+    Learner-output field, and there must be at least one exercise per pack
+    (issue #120 acceptance criterion 1).
+    """
+    for pack in _private_banking_packs():
+        text = pack.read_text(encoding="utf-8")
+        exercise_section = _section_text(text, "## Linked Modules And Exercises")
+        exercise_blocks = _exercise_blocks(exercise_section)
+        assert exercise_blocks, f"{pack.name} needs at least one exercise"
+        for index, block in enumerate(exercise_blocks, start=1):
+            for label in ("Pattern:", "Module:", "Prompt:", "Learner output:"):
+                assert label in block, (
+                    f"{pack.name} exercise {index} missing field: {label}"
+                )
+
+
+def test_private_banking_source_pack_exercises_reference_valid_pattern_ids() -> None:
+    """Private-banking exercises must cite frozen private-banking pattern IDs."""
+    private_banking_pattern_ids = set(PRIVATE_BANKING_V0_3_PATTERN_IDS)
+    for pack in _private_banking_packs():
+        text = pack.read_text(encoding="utf-8")
+        exercise_section = _section_text(text, "## Linked Modules And Exercises")
+        referenced_pattern_ids: set[str] = set()
+        for block in _exercise_blocks(exercise_section):
+            referenced_pattern_ids.update(_exercise_pattern_ids(block))
+        assert referenced_pattern_ids & private_banking_pattern_ids, (
+            f"{pack.name} exercises must reference at least one of "
+            f"{sorted(private_banking_pattern_ids)}"
+        )
+        invalid = referenced_pattern_ids - set(PATTERN_IDS)
+        assert not invalid, (
+            f"{pack.name} cites unknown pattern_id(s): {sorted(invalid)}"
+        )
+
+
+def test_private_banking_source_pack_exercises_link_existing_modules() -> None:
+    """Private-banking exercise module paths must exist, checked per exercise."""
+    for pack in _private_banking_packs():
+        text = pack.read_text(encoding="utf-8")
+        exercise_section = _section_text(text, "## Linked Modules And Exercises")
+        exercise_blocks = _exercise_blocks(exercise_section)
+        assert exercise_blocks, f"{pack.name} needs at least one exercise"
+        for index, block in enumerate(exercise_blocks, start=1):
+            module_paths = re.findall(r"Module: `(notebooks/[^`]+)`", block)
+            assert module_paths, f"{pack.name} exercise {index} must name a Module path"
+            for module_path in module_paths:
+                assert Path(module_path).is_file(), (
+                    f"{pack.name} exercise {index} links missing module: {module_path}"
+                )
+
+
+def test_every_core_module_has_an_inbound_case_or_regulatory_link() -> None:
+    """Every core module must be linked back to by the case library or index.
+
+    Closes issue #124 acceptance criterion 2. PR #134 wires an outbound
+    "Case library and regulatory context" section into each module README; this
+    test guards the reverse direction so a module can never silently lose every
+    inbound link from a source pack or regulatory note. It is consolidated
+    (every core module in one assertion set) rather than a per-module one-off,
+    so a newly added module is governed the moment it lands under
+    ``notebooks/``.
+    """
+    inbound_sources = _inbound_module_links()
+    uncovered = sorted(
+        str(module)
+        for module in CORE_NOTEBOOK_MODULES
+        if not inbound_sources.get(module)
     )
-    invalid = referenced_pattern_ids - set(PATTERN_IDS)
-    assert not invalid, f"Worked example cites unknown pattern_id(s): {sorted(invalid)}"
-
-
-def test_worked_example_source_pack_exercises_link_existing_modules() -> None:
-    """Worked-example exercise module paths must exist, checked per exercise."""
-    text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
-    exercise_section = _section_text(text, "## Linked Modules And Exercises")
-    exercise_blocks = _exercise_blocks(exercise_section)
-
-    assert exercise_blocks, "Worked example needs at least one exercise"
-    for index, block in enumerate(exercise_blocks, start=1):
-        module_paths = re.findall(r"Module: `(notebooks/[^`]+)`", block)
-        assert module_paths, f"Exercise {index} must name a Module path"
-        for module_path in module_paths:
-            assert Path(module_path).is_file(), (
-                f"Exercise {index} links missing module: {module_path}"
-            )
+    assert not uncovered, (
+        "Core modules with no inbound link from any source pack or regulatory "
+        f"note: {uncovered}"
+    )
 
 
 def _exercise_blocks(exercise_section: str) -> list[str]:
@@ -495,6 +541,90 @@ def _source_pack_paths() -> tuple[Path, ...]:
     paths = tuple(sorted(CASE_SOURCE_PACK_DIR.glob("*.md")))
     assert paths, f"No source packs found under {CASE_SOURCE_PACK_DIR}"
     return paths
+
+
+def _private_banking_packs() -> tuple[Path, ...]:
+    """Return source packs whose ``track`` is the private-banking track.
+
+    These are the packs #120 must bring to v0.5 template conformance, so the
+    v0.5 conformance and learner-output exercise validators run against every
+    pack in this set rather than only the worked example.
+    """
+    packs = tuple(
+        path
+        for path in _source_pack_paths()
+        if _metadata(path).get("track") == PRIVATE_BANKING_TRACK
+    )
+    assert packs, "No private-banking source packs found to validate"
+    return packs
+
+
+def _inbound_module_links() -> dict[Path, list[str]]:
+    """Map each core module to the source packs/notes that link to it.
+
+    Covers both ``linked_modules`` formats in the repo: case source packs use a
+    comma-separated inline value, while regulatory source notes use a YAML list
+    of indented ``- path`` entries. Any ``notebooks/...`` path referenced from
+    either source family is attributed to the core module (``notebooks/NN_*``)
+    that contains it.
+    """
+    inbound: dict[Path, list[str]] = {module: [] for module in CORE_NOTEBOOK_MODULES}
+
+    def attribute(linked_module: str) -> None:
+        normalized = linked_module.strip().strip("\"'")
+        if not normalized.startswith("notebooks/"):
+            return
+        referenced = Path(normalized)
+        for module in CORE_NOTEBOOK_MODULES:
+            if module in referenced.parents:
+                source = referenced.relative_to(module.parent).as_posix()
+                if source not in inbound[module]:
+                    inbound[module].append(source)
+                return
+
+    for pack in _source_pack_paths():
+        metadata = _metadata(pack)
+        if "linked_modules" in metadata:
+            for linked_module in metadata["linked_modules"].split(","):
+                attribute(linked_module)
+
+    for note in _regulatory_source_note_paths():
+        for linked_module in _yaml_list_field(note, "linked_modules"):
+            attribute(linked_module)
+
+    return inbound
+
+
+def _regulatory_source_note_paths() -> tuple[Path, ...]:
+    """Return regulatory source-note markdown files, failing clearly if none."""
+    paths = tuple(sorted(REGULATORY_SOURCE_NOTE_DIR.glob("*.md")))
+    assert paths, f"No regulatory source notes found under {REGULATORY_SOURCE_NOTE_DIR}"
+    return paths
+
+
+def _yaml_list_field(path: Path, field: str) -> list[str]:
+    """Parse a YAML-list front-matter field (indented ``- value`` entries).
+
+    Regulatory source notes express ``linked_modules`` as a YAML block rather
+    than the inline comma-separated form used by case packs. Only the list
+    values are returned; nested maps are ignored.
+    """
+    text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
+    if not text.startswith("---\n"):
+        return []
+    _, raw_front_matter, _ = text.split("---", maxsplit=2)
+    values: list[str] = []
+    in_field = False
+    for line in raw_front_matter.splitlines():
+        if re.match(rf"^{field}:\s*$", line):
+            in_field = True
+            continue
+        if in_field:
+            if line.startswith("  - "):
+                values.append(line.removeprefix("  - ").strip())
+            elif line and not line.startswith(" "):
+                in_field = False
+    return values
 
 
 def _linked_modules(metadata: dict[str, str]) -> tuple[str, ...]:

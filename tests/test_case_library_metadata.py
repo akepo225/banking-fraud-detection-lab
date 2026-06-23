@@ -474,6 +474,77 @@ def test_private_banking_source_pack_exercises_link_existing_modules() -> None:
                 )
 
 
+def test_digital_source_packs_conform_to_v0_5_template() -> None:
+    """Every digital pack must carry every v0.5 template section.
+
+    Digital mirror of ``test_private_banking_source_packs_conform_to_v0_5_template``
+    so issue #121 (PR #130) is guarded the same way #120 is: a future edit
+    cannot silently strip the ``## Summary`` (or any other template) section
+    from a digital pack.
+    """
+    digital_packs = _digital_packs()
+    assert digital_packs, "No digital source packs found to validate"
+    for pack in digital_packs:
+        text = pack.read_text(encoding="utf-8")
+        assert HITL_MARKER in text, f"{pack.name} missing HITL marker"
+        missing = TEMPLATE_REQUIRED_SECTIONS - _section_headings(text)
+        assert not missing, f"{pack.name} missing sections: {sorted(missing)}"
+
+
+def test_digital_source_packs_have_learner_output_exercises() -> None:
+    """Every digital pack must include structured learner-output exercises.
+
+    Each ``### Exercise N`` block must carry a Pattern, Module, Prompt, and
+    Learner-output field, and there must be at least one exercise per pack
+    (issue #121 acceptance criterion 1).
+    """
+    for pack in _digital_packs():
+        text = pack.read_text(encoding="utf-8")
+        exercise_section = _section_text(text, "## Linked Modules And Exercises")
+        exercise_blocks = _exercise_blocks(exercise_section)
+        assert exercise_blocks, f"{pack.name} needs at least one exercise"
+        for index, block in enumerate(exercise_blocks, start=1):
+            for label in ("Pattern:", "Module:", "Prompt:", "Learner output:"):
+                assert label in block, (
+                    f"{pack.name} exercise {index} missing field: {label}"
+                )
+
+
+def test_digital_source_pack_exercises_reference_valid_pattern_ids() -> None:
+    """Digital exercises must cite frozen digital pattern IDs."""
+    digital_pattern_ids = set(DIGITAL_V0_4_PATTERN_IDS)
+    for pack in _digital_packs():
+        text = pack.read_text(encoding="utf-8")
+        exercise_section = _section_text(text, "## Linked Modules And Exercises")
+        referenced_pattern_ids: set[str] = set()
+        for block in _exercise_blocks(exercise_section):
+            referenced_pattern_ids.update(_exercise_pattern_ids(block))
+        assert referenced_pattern_ids & digital_pattern_ids, (
+            f"{pack.name} exercises must reference at least one of "
+            f"{sorted(digital_pattern_ids)}"
+        )
+        invalid = referenced_pattern_ids - set(PATTERN_IDS)
+        assert not invalid, (
+            f"{pack.name} cites unknown pattern_id(s): {sorted(invalid)}"
+        )
+
+
+def test_digital_source_pack_exercises_link_existing_modules() -> None:
+    """Digital exercise module paths must exist, checked per exercise."""
+    for pack in _digital_packs():
+        text = pack.read_text(encoding="utf-8")
+        exercise_section = _section_text(text, "## Linked Modules And Exercises")
+        exercise_blocks = _exercise_blocks(exercise_section)
+        assert exercise_blocks, f"{pack.name} needs at least one exercise"
+        for index, block in enumerate(exercise_blocks, start=1):
+            module_paths = re.findall(r"Module: `(notebooks/[^`]+)`", block)
+            assert module_paths, f"{pack.name} exercise {index} must name a Module path"
+            for module_path in module_paths:
+                assert Path(module_path).is_file(), (
+                    f"{pack.name} exercise {index} links missing module: {module_path}"
+                )
+
+
 def test_every_core_module_has_an_inbound_case_or_regulatory_link() -> None:
     """Every core module must be linked back to by the case library or index.
 
@@ -556,6 +627,22 @@ def _private_banking_packs() -> tuple[Path, ...]:
         if _metadata(path).get("track") == PRIVATE_BANKING_TRACK
     )
     assert packs, "No private-banking source packs found to validate"
+    return packs
+
+
+def _digital_packs() -> tuple[Path, ...]:
+    """Return source packs whose ``track`` is the digital-banking track.
+
+    These are the packs #121 (PR #130) brings to v0.5 template conformance, so
+    the digital v0.5 conformance and learner-output exercise validators run
+    against every pack in this set.
+    """
+    packs = tuple(
+        path
+        for path in _source_pack_paths()
+        if _metadata(path).get("track") == DIGITAL_TRACK
+    )
+    assert packs, "No digital source packs found to validate"
     return packs
 
 

@@ -29,6 +29,19 @@ REQUIRED_V0_4_DIGITAL_SOURCE_PACKS = {
     "digital-online-bank-control-failures.md",
     "digital-payment-system-guidance.md",
 }
+# The six source packs upgraded to the v0.5 template by #121 (PR #130),
+# including the cross-listed graph/network pack. ``_digital_packs()`` selects
+# by this explicit filename set rather than by ``track`` so the graph pack —
+# whose ``track`` is ``Future graph/network analytics``, not the digital-banking
+# track — is still covered by the v0.5 conformance and exercise validators.
+DIGITAL_V0_5_SOURCE_PACKS = {
+    "digital-app-scam-payments.md",
+    "digital-money-mule-behavior.md",
+    "digital-online-bank-control-failures.md",
+    "digital-payment-system-guidance.md",
+    "digital-scam-to-mule.md",
+    "graph-network-money-mules.md",
+}
 REQUIRED_METADATA_FIELDS = {
     "title",
     "status",
@@ -631,16 +644,18 @@ def _private_banking_packs() -> tuple[Path, ...]:
 
 
 def _digital_packs() -> tuple[Path, ...]:
-    """Return source packs whose ``track`` is the digital-banking track.
+    """Return the six source packs upgraded to the v0.5 template by #121 (PR #130).
 
-    These are the packs #121 (PR #130) brings to v0.5 template conformance, so
-    the digital v0.5 conformance and learner-output exercise validators run
-    against every pack in this set.
+    These span the Digital-banking track plus the cross-listed graph/network
+    pack (``track`` ``Future graph/network analytics``, ``pattern_id
+    digital_scam_to_mule``). Selection is by explicit filename set rather than
+    by ``track`` so the graph pack is covered too — a track-only filter would
+    exclude it and leave #121's six-pack conformance unguarded.
     """
     packs = tuple(
         path
         for path in _source_pack_paths()
-        if _metadata(path).get("track") == DIGITAL_TRACK
+        if path.name in DIGITAL_V0_5_SOURCE_PACKS
     )
     assert packs, "No digital source packs found to validate"
     return packs

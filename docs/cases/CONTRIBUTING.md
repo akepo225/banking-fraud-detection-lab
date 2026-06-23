@@ -31,7 +31,9 @@ Every source pack must include, in order, the level-two sections from
 - [ ] `## Source Links` (official HTTPS URLs, tier 1–2 preferred)
 - [ ] `## Public Facts` (public-source facts only, no analysis)
 - [ ] `## Interpretation For Detection Patterns` (references `pattern_id`)
-- [ ] `## Likely Data Signals` (`pb_` or `db_` feature-prefix candidates)
+- [ ] `## Likely Data Signals` (`db_`-prefixed digital-banking features, or
+      unprefixed private-banking features — verify exact names against
+      `src/banking_fraud_lab/features/`)
 - [ ] `## Linked Modules And Exercises` (existing notebook paths + ≥1 exercise)
 - [ ] `## Regulatory Hooks` (educational, non-advisory)
 - [ ] `## Limitations`

@@ -19,6 +19,18 @@ linked_modules: notebooks/01_private_banking_transaction_fraud/alpine_crest_base
 
 <!-- HITL-REVIEW-REQUIRED -->
 
+This is educational material for the Banking Fraud Detection Lab. It is not legal,
+compliance, audit, investment, regulatory, or professional advice.
+
+## Summary
+
+This source pack anchors the `pb_high_value_movement` **Detection pattern** — high-value
+private-banking movement read against relationship-scale context — using an official FINMA
+publication as a public source candidate. It supports the private-banking track at **Alpine
+Crest Private Bank**. The learner outcome is to compare movement against relationship baselines
+rather than raw transaction amount, and to translate that into SQL and feature-interpretation
+artifacts without reconstructing the public matter.
+
 ## Source Links
 
 - FINMA source candidate: https://www.finma.ch/en/news/2024/06/20240618-mm-hsbc/
@@ -46,6 +58,20 @@ This source pack supports the `pb_high_value_movement` **Detection pattern**: un
 - `notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb`
 - `notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
 - `notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb`
+
+### Exercise 1 — Identify relationship-scale movement with SQL
+
+- Pattern: `pb_high_value_movement`
+- Module: `notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
+- Prompt: Using `sql/examples/06_private_banking_value_features.sql` as a pattern, write a SQLite query on the synthetic Alpine Crest Private Bank tables that returns transactions whose `amount_to_aum_ratio` (or `amount_to_relationship_baseline_ratio`) exceeds a relationship-appropriate threshold, joined to the Banking relationship context so the result is reviewable rather than headline-sized.
+- Learner output: A runnable SQL result listing flagged transactions with the relationship baseline alongside, plus one sentence on why relationship-scale context changes which transactions look high-value. Compare your read against the notebook's alert-aware metrics; learner-facing views do not expose the protected answer key.
+
+### Exercise 2 — Interpret a cross-border relationship feature
+
+- Pattern: `pb_high_value_movement` (overlaps `pb_transaction_fraud`)
+- Module: `notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb`
+- Prompt: Take the feature output from the feature-engineering module and interpret one relationship where `is_cross_border` combines with a high `amount_to_relationship_baseline_ratio`. Explain what the combination suggests for review evidence and what it does not prove.
+- Learner output: Three to four sentences naming the features, the candidate review signal, and one limitation (for example, legitimate cross-border high-net-worth behaviour).
 
 ## Regulatory Hooks
 

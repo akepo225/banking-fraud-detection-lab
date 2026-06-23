@@ -19,6 +19,18 @@ linked_modules: notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline
 
 <!-- HITL-REVIEW-REQUIRED -->
 
+This is educational material for the Banking Fraud Detection Lab. It is not legal,
+compliance, audit, investment, regulatory, or professional advice.
+
+## Summary
+
+This source pack anchors the `new_beneficiary_payment` **Detection pattern** — payment-system
+guidance on new-beneficiary confirmation (for example confirmation-of-payee-style controls) —
+using a Pay.UK publication as a public source candidate. It supports the digital-banking track
+at **NovaBank Digital**. The learner outcome is to reason about new-beneficiary confirmation
+and country-mismatch controls, and to produce feature-interpretation artifacts without
+reconstructing the public matter.
+
 ## Source Links
 
 - Pay.UK source candidate: https://www.wearepay.uk/
@@ -42,10 +54,10 @@ pattern.
 
 ## Likely Data Signals
 
-- New or updated beneficiary with no prior confirmation history.
+- New or updated beneficiary with no prior confirmation history (`db_is_new_beneficiary`, `db_beneficiary_age_days`).
 - Outbound payment immediately after beneficiary creation or update.
-- Beneficiary bank-country or account-country mismatch with the paying account.
-- Mobile-app channel and high-value first payment to the new beneficiary.
+- Beneficiary bank-country or account-country mismatch with the paying account (`db_is_beneficiary_country_risky`).
+- Mobile-app channel and high-value first payment to the new beneficiary (`db_is_mobile_app_channel`).
 
 ## Linked Modules And Exercises
 
@@ -53,6 +65,13 @@ pattern.
 - `notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb`
 - `notebooks/05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb`
 - `notebooks/05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb`
+
+### Exercise 1 — Interpret new-beneficiary control features
+
+- Pattern: `new_beneficiary_payment`
+- Module: `notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb`
+- Prompt: Using the feature-engineering module (which emits `db_is_new_beneficiary` and `db_is_beneficiary_country_risky`), summarize how often each flag is set and how often they co-occur across the synthetic NovaBank Digital payments. Consider what the combination suggests for new-beneficiary confirmation controls.
+- Learner output: A short interpretation (counts or co-occurrence rates) plus two or three sentences on what the flags add to review evidence and one limitation (for example, legitimate first-time payments to a new country).
 
 ## Regulatory Hooks
 

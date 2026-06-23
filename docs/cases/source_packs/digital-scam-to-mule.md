@@ -19,6 +19,18 @@ linked_modules: notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline
 
 <!-- HITL-REVIEW-REQUIRED -->
 
+This is educational material for the Banking Fraud Detection Lab. It is not legal,
+compliance, audit, investment, regulatory, or professional advice.
+
+## Summary
+
+This source pack anchors the `digital_scam_to_mule` **Detection pattern** — an authorised scam
+payment to a mule or fraudster account — using a Payment Systems Regulator publication as a
+public source candidate. It supports the digital-banking track at **NovaBank Digital**. The
+learner outcome is to investigate scam-to-mule flow from account age, shared-device, and
+pass-through signals, and to produce feature-interpretation artifacts without reconstructing
+the public matter.
+
 ## Source Links
 
 - Payment Systems Regulator APP fraud data: https://www.psr.org.uk/app-fraud-data/
@@ -35,16 +47,22 @@ This source pack supports a **Detection pattern** around authorised scam payment
 
 ## Likely Data Signals
 
-- New beneficiary shortly before payment.
-- Receiving account with short account age.
-- Shared device or network signals across Users.
-- Rapid onward transfer after incoming victim payment.
-- Noisy case outcomes where some alerts close without confirmation.
+- New beneficiary shortly before payment (`db_is_new_beneficiary`).
+- Receiving account with short account age (`db_account_age_days`, `db_is_early_life_account`).
+- Shared device or network signals across Users (`db_is_shared_device`, `db_device_user_count`).
+- Rapid onward transfer after incoming victim payment (`db_is_rapid_pass_through`, `db_hours_since_prior_credit`, `db_prior_credit_amount_chf`).
 
 ## Linked Modules And Exercises
 
 - `notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb`
 - `notebooks/03_alert_governance/alert_governance_memo.ipynb`
+
+### Exercise 1 — Investigate early-life-account and shared-device correlation
+
+- Pattern: `digital_scam_to_mule`
+- Module: `notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb`
+- Prompt: Using the scam-to-mule baseline module, investigate how often `db_is_early_life_account` and `db_is_shared_device` co-occur across the synthetic NovaBank Digital sessions, and how that co-occurrence relates to rapid pass-through (`db_is_rapid_pass_through`).
+- Learner output: A short correlation/co-occurrence summary plus two or three sentences on what the combination suggests for review and one limitation (for example, shared household devices).
 
 ## Regulatory Hooks
 
@@ -55,6 +73,7 @@ This source pack supports a **Detection pattern** around authorised scam payment
 
 - This draft does not provide legal or compliance advice.
 - This draft does not imply that NovaBank Digital is based on any named payment firm.
+- Case outcomes are noisy: some alerts close without confirmation, so confirmed-fraud labels are imperfect and should not be treated as ground truth.
 - Human review is required before publication.
 
 ## Human Review

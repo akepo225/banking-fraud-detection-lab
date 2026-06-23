@@ -12,19 +12,72 @@ They are educational notes for the **Banking Fraud Detection Lab** curriculum an
 - Summarize learning implications in original wording.
 - Connect sources to modules and case patterns.
 
-## Source Families
+## By Learning Use
 
-- Swiss AMLA, AMLO, FINMA, and MROS-related sources.
-- APP scam or payment guidance from EU or UK sources where relevant.
-- FATF typologies.
-- Model-risk, explainability, and governance references.
+Each source note is tagged with one or more `learning_use` categories in its front matter so
+learners can find the right reference for a given task. A note may appear under several
+categories. The six categories are:
 
-## Draft Source Notes
+- **Analytics Question** — shaping what makes a transaction, account, or network pattern investigable.
+- **Control** — describing controls and evidence a learner can derive from observable signals.
+- **Documentation** — keeping repeatable records of inputs, thresholds, limitations, and rationale.
+- **Explainability** — connecting a score or alert to data signals and case notes for a reviewer.
+- **Alert Handling** — working with alert lifecycle, capacity, and noisy labels.
+- **Governance** — stakeholder review, threshold tradeoffs, and model-risk habits.
 
-These notes are in draft HITL status. Human review is required before they are treated as
-publication-ready educational material.
+### Analytics Question
+
+Sources that help frame what is investigable in synthetic data.
+
+- [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md) — relationship-manager responsibility, counterparty novelty, cross-border movement.
+- [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md) — payment context: beneficiary novelty, account age, payment velocity, onward movement.
+- [FATF typologies for money-mule networks](source_notes/fatf-money-mule-typologies.md) — multi-account and network movement patterns.
+
+### Control
+
+Sources that describe controls and observable control-failure evidence.
 
 - [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md)
 - [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md)
 - [FATF typologies for money-mule networks](source_notes/fatf-money-mule-typologies.md)
+
+### Documentation
+
+Sources that shape how learners document inputs, thresholds, limitations, and rationale.
+
+- [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md) — separating analytics evidence from legal conclusions.
+- [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md) — intended use, input data, threshold choice, known limitations, monitoring.
+
+### Explainability
+
+Sources that help connect a score to data signals and case notes.
+
+- [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md)
+- [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md)
 - [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md)
+
+### Alert Handling
+
+Sources relevant to alert lifecycle, investigation capacity, and noisy labels.
+
+- [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md)
+- [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md)
+- [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md)
+
+### Governance
+
+Sources that frame stakeholder review, threshold tradeoffs, and model-risk habits.
+
+- [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md)
+- [FATF typologies for money-mule networks](source_notes/fatf-money-mule-typologies.md)
+- [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md)
+
+## By Source Family
+
+These notes are in draft HITL status. Human review is required before they are treated as
+publication-ready educational material.
+
+- **Swiss AMLA, AMLO, FINMA, and MROS-related sources** — [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md).
+- **APP scam or payment guidance from EU or UK sources** — [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md).
+- **FATF typologies** — [FATF typologies for money-mule networks](source_notes/fatf-money-mule-typologies.md).
+- **Model-risk, explainability, and governance references** — [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md).

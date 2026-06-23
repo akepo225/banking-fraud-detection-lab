@@ -9,6 +9,12 @@ source_families:
 pattern_ids:
   - pb_high_value_movement
   - pb_transaction_fraud
+learning_use:
+  - analytics_question
+  - control
+  - documentation
+  - explainability
+  - alert_handling
 track: private-banking fraud detection
 primary_official_sources:
   - https://www.finma.ch/en/documentation/legal-basis/laws-and-ordinances/anti-money-laundering-act-%28amla%29/
@@ -44,6 +50,15 @@ engineering and threshold-tuning questions. The regulatory note connects relatio
 responsibility, beneficial-ownership and signatory context, counterparty novelty, cross-border
 movement, alert capacity, and false-positive explanation boundaries to observable analytics
 evidence rather than to legal conclusions.
+
+## Learning Prompt
+
+When building `pb_transaction_fraud` and `pb_high_value_movement` features in the Alpine
+Crest notebooks, use this source family to frame what makes a transaction reviewable rather
+than to reach a legal conclusion. Consider how relationship-manager responsibility, beneficial
+ownership, and counterparty novelty shape the analytics question, the control evidence, the
+documentation you would keep, the way you explain a score to a reviewer, and how the alert
+moves through its lifecycle.
 
 ## Official Sources
 

@@ -7,6 +7,12 @@ source_families:
 pattern_ids:
   - new_beneficiary_payment
   - session_payment_velocity
+learning_use:
+  - analytics_question
+  - control
+  - explainability
+  - alert_handling
+  - governance
 track: digital-banking fraud detection
 primary_official_sources:
   - https://www.psr.org.uk/publications/policy-statements/ps255-app-scams-reimbursement-requirement/
@@ -31,6 +37,16 @@ This note links to Payment Systems Regulator material on authorised push payment
 reimbursement and APP scams. It does not restate operational instructions from the UK regime;
 instead, it extracts analytics lessons that help learners reason about scam-to-mule flows in
 synthetic NovaBank Digital data. No direct quotations are needed for the v0.1 exercises.
+
+## Learning Prompt
+
+When building `new_beneficiary_payment` and `session_payment_velocity` features in the
+NovaBank Digital notebooks, use this source to design scam-detection questions around payment
+context (beneficiary novelty, account age, payment velocity, onward movement) rather than
+authentication alone. Consider how reimbursement policy shapes the analytics question, the
+controls you would describe, the quality of the explanation an investigator needs, how alerts
+are triaged under capacity limits, and the governance tradeoff between catching mules and
+overwhelming investigators.
 
 ## Official Sources
 

@@ -7,6 +7,11 @@ source_families:
 pattern_ids:
   - pb_high_value_movement
   - pb_transaction_fraud
+learning_use:
+  - documentation
+  - explainability
+  - alert_handling
+  - governance
 track: cross-track governance
 primary_official_sources:
   - https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm
@@ -31,6 +36,14 @@ This note uses Federal Reserve SR 11-7 as an official model-risk governance refe
 documentation, validation, limitation statements, and effective challenge. It is included because
 fraud scoring notebooks need governance habits even when the baseline model is deliberately
 simple. No direct quotations are needed for the v0.1 exercises.
+
+## Learning Prompt
+
+When building and tuning fraud-scoring baselines across the Alpine Crest and NovaBank Digital
+notebooks, use this source to keep model governance habits visible. Consider how documentation
+(intended use, inputs, threshold choice, limitations), explainability (connecting a score to
+data signals and case notes), alert handling (precision, recall, PR-AUC, alert capacity, cost),
+and governance review (threshold rationale, effective challenge) interact across both tracks.
 
 ## Official Sources
 

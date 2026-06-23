@@ -37,11 +37,32 @@ REQUIRED_METADATA_FIELDS = {
     "detection_pattern",
     "institution_type",
     "source_authority",
+    "source_type",
     "geography",
     "product",
     "source_quality",
     "linked_modules",
 }
+
+# v0.5 (#119) machine-readable source taxonomy. `source_type` is a controlled
+# vocabulary that classifies the source body independent of its human-readable
+# `source_authority` / `source_quality` phrase family (the phrase family is
+# documented in docs/cases/source_quality_rubric.md and intentionally not a
+# single exact string, so the tests do not enforce it).
+SOURCE_TYPES = {
+    "regulator",
+    "court",
+    "enforcement",
+    "bank_disclosure",
+    "payment_system_operator",
+    "cyber_authority",
+    "industry_report",
+    "journalism",
+}
+# Packs that are genuinely cross-track governance/method rather than a single
+# Detection pattern keep `pattern_id` optional. Everything else must reference a
+# frozen PATTERN_IDS value.
+PATTERN_ID_OPTIONAL_PACKS = {"model-governance-method.md"}
 REQUIRED_AREAS = {
     "private_banking_transaction_fraud",
     "digital_scam_to_mule",
@@ -109,6 +130,9 @@ def test_case_source_packs_have_required_metadata_and_sections() -> None:
             assert metadata[field_name], f"{path} has empty metadata field: {field_name}"
         assert metadata["status"] == "draft-hitl"
         assert metadata["hitl_review_required"] == "true"
+        assert metadata["source_type"] in SOURCE_TYPES, (
+            f"{path} has unknown source_type: {metadata['source_type']}"
+        )
         assert HITL_MARKER in text
         assert "https://" in text, f"{path} must include at least one source URL"
         missing_sections = REQUIRED_SECTIONS - set(_section_headings(text))
@@ -146,6 +170,60 @@ def test_case_source_pack_pattern_ids_are_valid_when_present() -> None:
 
         if pattern_id:
             assert pattern_id in PATTERN_IDS, f"{path} has unknown pattern_id: {pattern_id}"
+
+
+def test_case_source_pack_pattern_id_required_except_cross_track() -> None:
+    """Detection-pattern packs must declare pattern_id; cross-track packs may omit it."""
+    for path in _source_pack_paths():
+        metadata = _metadata(path)
+        pattern_id = metadata.get("pattern_id")
+        if path.name in PATTERN_ID_OPTIONAL_PACKS:
+            assert pattern_id in PATTERN_IDS or pattern_id is None, (
+                f"{path} optional pattern_id must still be valid if set"
+            )
+        else:
+            assert pattern_id is not None, f"{path} must declare pattern_id"
+            assert pattern_id in PATTERN_IDS, (
+                f"{path} has unknown pattern_id: {pattern_id}"
+            )
+
+
+def test_case_index_groups_packs_by_detection_pattern() -> None:
+    """The case index must expose a section per pattern_id and one for cross-track packs."""
+    index_text = CASE_LIBRARY_INDEX.read_text(encoding="utf-8")
+
+    for pattern_id in PATTERN_IDS:
+        assert f"### `{pattern_id}`" in index_text, (
+            f"Index missing Detection-pattern section: {pattern_id}"
+        )
+    assert "## Cross-Pattern and Governance" in index_text
+    # Every pack must be linked from the index (existing invariant, restated here
+    # alongside the structure check for a single source of truth).
+    for path in _source_pack_paths():
+        relative_path = path.as_posix().removeprefix("docs/cases/")
+        assert f"]({relative_path})" in index_text, (
+            f"Index does not link {relative_path}"
+        )
+
+
+def test_case_index_pattern_sections_list_their_packs() -> None:
+    """Each pack must appear under the section matching its own pattern_id."""
+    index_text = CASE_LIBRARY_INDEX.read_text(encoding="utf-8")
+    sections = _index_pattern_sections(index_text)
+
+    for path in _source_pack_paths():
+        metadata = _metadata(path)
+        pattern_id = metadata.get("pattern_id")
+        relative_path = path.as_posix().removeprefix("docs/cases/")
+        link = f"]({relative_path})"
+        if pattern_id:
+            assert link in sections[pattern_id], (
+                f"{path.name} (pattern_id {pattern_id}) not listed under its section"
+            )
+        else:
+            assert link in sections["__cross__"], (
+                f"{path.name} not listed under Cross-Pattern and Governance"
+            )
 
 
 def test_private_banking_v0_3_source_packs_reference_required_pattern_ids() -> None:
@@ -447,6 +525,30 @@ def _metadata(path: Path) -> dict[str, str]:
 def _section_headings(text: str) -> set[str]:
     """Extract level-two markdown section headings."""
     return {line.strip() for line in text.splitlines() if line.startswith("## ")}
+
+
+def _index_pattern_sections(index_text: str) -> dict[str, str]:
+    """Map each pattern_id (and ``__cross__``) to its index-section body text."""
+    normalized = index_text.replace("\r\n", "\n")
+    sections: dict[str, str] = {}
+    current_key: str | None = None
+    current_lines: list[str] = []
+    for line in normalized.splitlines():
+        if line.startswith("### `") and line.endswith("`"):
+            if current_key is not None:
+                sections[current_key] = "\n".join(current_lines)
+            current_key = line.removeprefix("### `").removesuffix("`")
+            current_lines = []
+        elif line.startswith("## Cross-Pattern and Governance"):
+            if current_key is not None:
+                sections[current_key] = "\n".join(current_lines)
+            current_key = "__cross__"
+            current_lines = []
+        elif current_key is not None:
+            current_lines.append(line)
+    if current_key is not None:
+        sections[current_key] = "\n".join(current_lines)
+    return sections
 
 
 def _section_text(text: str, heading: str) -> str:

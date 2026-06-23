@@ -5,8 +5,10 @@ hitl_review_required: true
 v0_1_area: digital_scam_to_mule
 track: Digital-banking fraud detection
 detection_pattern: authorised scam payment to mule or fraudster account
+pattern_id: digital_scam_to_mule
 institution_type: payment service provider or digital bank
 source_authority: Payment Systems Regulator
+source_type: regulator
 geography: United Kingdom / payments
 product: authorised push payments
 source_quality: official payment regulator source candidate

@@ -8,6 +8,7 @@ detection_pattern: early-life account receiving and rapidly passing funds onward
 pattern_id: digital_scam_to_mule
 institution_type: payment service provider or digital bank
 source_authority: UK Finance
+source_type: industry_report
 geography: United Kingdom / cross-border payments
 product: digital current accounts and instant payments
 source_quality: reputable industry report candidate

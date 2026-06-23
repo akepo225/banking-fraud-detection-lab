@@ -8,6 +8,7 @@ detection_pattern: account-takeover with elevated session payment velocity
 pattern_id: session_payment_velocity
 institution_type: payment service provider or digital bank
 source_authority: National Cyber Security Centre
+source_type: cyber_authority
 geography: United Kingdom / online banking
 product: online and mobile-banking sessions
 source_quality: official cyber-security authority source candidate

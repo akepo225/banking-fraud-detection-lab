@@ -8,6 +8,7 @@ detection_pattern: relationship and transaction monitoring control failure
 pattern_id: pb_transaction_fraud
 institution_type: private bank
 source_authority: FINMA
+source_type: regulator
 geography: Switzerland / cross-border
 product: private-banking transactions
 source_quality: official regulator source candidate

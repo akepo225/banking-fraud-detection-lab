@@ -8,6 +8,7 @@ detection_pattern: payment-system guidance on new-beneficiary confirmation
 pattern_id: new_beneficiary_payment
 institution_type: payment service provider or digital bank
 source_authority: Pay.UK
+source_type: payment_system_operator
 geography: United Kingdom / payment rails
 product: confirmation-of-payee and new-beneficiary controls
 source_quality: official payment-system operator source candidate

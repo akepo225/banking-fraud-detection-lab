@@ -64,6 +64,14 @@ Required module roles for private-banking track depth:
 - `threshold_tuning`
 - `alert_interpretation`
 
+The v0.5 Case Library And Regulatory Skill Layer adds a cross-track module role:
+
+- `case_narrative` — exercises that teach learners to read source packs, separate
+  Public Facts from Interpretation For Detection Patterns, map evidence to a
+  Detection pattern, and write a short investigation note against synthetic
+  data. Case-narrative notebooks keep the facts-vs-interpretation split explicit
+  and use only learner-facing views (no protected answer keys).
+
 The v0.3 module extends the existing v0.1 baseline at
 `notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb`.
 It does not replace that baseline.

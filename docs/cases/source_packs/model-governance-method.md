@@ -18,6 +18,18 @@ linked_modules: notebooks/03_alert_governance/alert_governance_memo.ipynb
 
 <!-- HITL-REVIEW-REQUIRED -->
 
+This is educational material for the Banking Fraud Detection Lab. It is not legal,
+compliance, audit, investment, regulatory, or professional advice.
+
+## Summary
+
+This source pack anchors the cross-track **Detection pattern** behind model-output governance
+— threshold rationale, limitation statements, monitoring evidence, and stakeholder communication —
+using official Federal Reserve SR 11-7 guidance as a public source candidate. It supports the
+alert-governance module across both the **Alpine Crest Private Bank** and **NovaBank Digital**
+tracks. The learner outcome is to treat transparent scoring rules as models that need
+documentation and review, and to draft governance artifacts without overclaiming.
+
 ## Source Links
 
 - Federal Reserve SR 11-7 page: https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm
@@ -42,6 +54,13 @@ This source pack supports the governance **Detection pattern** behind the alert-
 ## Linked Modules And Exercises
 
 - `notebooks/03_alert_governance/alert_governance_memo.ipynb`
+
+### Exercise 1 — Draft a threshold-rationale governance memo
+
+- Pattern: cross-track governance (no single `pattern_id`; methodology pack)
+- Module: `notebooks/03_alert_governance/alert_governance_memo.ipynb`
+- Prompt: Pick one threshold choice from the alert-governance notebook and draft a one-paragraph governance memo explaining why that threshold was chosen. Ground the memo in alert-aware metrics (precision, recall, alert capacity) and state at least one known limitation; avoid headline-accuracy claims and avoid compliance instruction.
+- Learner output: A four-to-six-sentence governance memo naming the threshold, the metric evidence, the limitation, and a monitoring question. Educational framing only.
 
 ## Regulatory Hooks
 

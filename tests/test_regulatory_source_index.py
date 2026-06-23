@@ -29,11 +29,28 @@ REQUIRED_SOURCE_FAMILIES = {
 }
 REQUIRED_SECTIONS = (
     "## Source Scope",
+    "## Learning Prompt",
     "## Official Sources",
     "## Learning Implications",
     "## Linked Exercises",
     "## Human Review",
 )
+LEARNING_USE_CATEGORIES = {
+    "analytics_question",
+    "control",
+    "documentation",
+    "explainability",
+    "alert_handling",
+    "governance",
+}
+LEARNING_USE_DISPLAY = {
+    "analytics_question": "### Analytics Question",
+    "control": "### Control",
+    "documentation": "### Documentation",
+    "explainability": "### Explainability",
+    "alert_handling": "### Alert Handling",
+    "governance": "### Governance",
+}
 ALLOWED_OFFICIAL_DOMAINS = {
     "fedlex.admin.ch",
     "finma.ch",
@@ -102,6 +119,60 @@ def test_regulatory_notes_have_required_sections_and_hitl_marker() -> None:
         assert "not legal or compliance advice" in normalized
         for section in REQUIRED_SECTIONS:
             assert section in body, f"{note_path} is missing {section}"
+
+
+def test_regulatory_notes_carry_learning_use_metadata() -> None:
+    """Each source note must tag one or more learning_use categories in front matter."""
+    for note_path in _source_note_paths():
+        metadata, _body = _read_note(note_path)
+        learning_use = metadata.get("learning_use")
+
+        assert learning_use is not None, f"{note_path} must define learning_use"
+        assert isinstance(learning_use, list), f"{note_path} learning_use must be a list"
+        assert learning_use, f"{note_path} learning_use must not be empty"
+        invalid = sorted(set(learning_use) - LEARNING_USE_CATEGORIES)
+        assert not invalid, f"{note_path} has unknown learning_use: {invalid}"
+
+
+def test_regulatory_learning_prompt_is_actionable() -> None:
+    """The Learning Prompt section should be a short, actionable learner-facing prompt."""
+    for note_path in _source_note_paths():
+        _metadata, body = _read_note(note_path)
+        prompt = _section_text(body, "## Learning Prompt")
+        word_count = len(re.findall(r"\b\w+\b", prompt))
+
+        assert word_count >= 25, f"{note_path} has a thin learning prompt"
+        assert "## " not in prompt, f"{note_path} learning prompt leaked into another section"
+
+
+def test_regulatory_index_groups_notes_by_learning_use() -> None:
+    """The index must expose a By Learning Use section with each category subsection."""
+    index_text = REGULATORY_INDEX.read_text(encoding="utf-8")
+
+    assert "## By Learning Use" in index_text
+    for display_heading in LEARNING_USE_DISPLAY.values():
+        assert display_heading in index_text, f"Index missing learning-use heading: {display_heading}"
+    for note_path in _source_note_paths():
+        relative_path = note_path.as_posix().removeprefix("docs/regulation/")
+        assert f"]({relative_path})" in index_text, f"Index does not link {relative_path}"
+
+
+def test_regulatory_index_learning_use_sections_match_note_metadata() -> None:
+    """Each note must appear under every learning_use category it declares in front matter."""
+    index_text = REGULATORY_INDEX.read_text(encoding="utf-8")
+    sections = _index_learning_use_sections(index_text)
+
+    for note_path in _source_note_paths():
+        metadata, _body = _read_note(note_path)
+        learning_use = metadata["learning_use"]
+        assert isinstance(learning_use, list)
+        relative_path = note_path.as_posix().removeprefix("docs/regulation/")
+        link = f"]({relative_path})"
+        for category in learning_use:
+            assert category in sections, f"Index missing category section: {category}"
+            assert link in sections[category], (
+                f"{note_path.name} not listed under learning_use {category}"
+            )
 
 
 def test_regulatory_notes_list_metadata_sources_in_official_sources_section() -> None:
@@ -301,3 +372,25 @@ def _section_text(text: str, heading: str) -> str:
         if in_section:
             section_lines.append(line)
     return "\n".join(section_lines)
+
+
+def _index_learning_use_sections(index_text: str) -> dict[str, str]:
+    """Map each learning_use category to its index subsection body text."""
+    normalized = index_text.replace("\r\n", "\n")
+    reverse_display = {
+        display: category for category, display in LEARNING_USE_DISPLAY.items()
+    }
+    sections: dict[str, str] = {}
+    current_key: str | None = None
+    current_lines: list[str] = []
+    for line in normalized.splitlines():
+        if line in reverse_display:
+            if current_key is not None:
+                sections[current_key] = "\n".join(current_lines)
+            current_key = reverse_display[line]
+            current_lines = []
+        elif current_key is not None:
+            current_lines.append(line)
+    if current_key is not None:
+        sections[current_key] = "\n".join(current_lines)
+    return sections

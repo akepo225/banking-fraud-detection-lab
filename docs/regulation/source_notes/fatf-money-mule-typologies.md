@@ -6,6 +6,10 @@ source_families:
   - fatf_typologies
 pattern_ids:
   - digital_scam_to_mule
+learning_use:
+  - analytics_question
+  - control
+  - governance
 track: digital-banking fraud detection
 primary_official_sources:
   - https://www.fatf-gafi.org/en/publications/Methodsandtrends/Professional-money-laundering.html
@@ -29,6 +33,15 @@ This note uses FATF's professional money-laundering typology page as a global me
 trends anchor for mule and proxy-network analytics. The note treats the source as typology
 context, not as a synthetic reconstruction brief. No direct quotations are needed for the v0.1
 exercises.
+
+## Learning Prompt
+
+When building `digital_scam_to_mule` features in the NovaBank Digital notebooks, use this
+typology source to design multi-account analytics questions (shared devices, shared
+beneficiaries, pass-through chains, clustered incoming-to-outgoing flow) instead of scoring
+accounts in isolation. Consider how a repeatable movement pattern shapes the analytics
+question, the controls you can describe from tabular features, and how you would document the
+evidence and limitations of a network-style indicator for governance review.
 
 ## Official Sources
 

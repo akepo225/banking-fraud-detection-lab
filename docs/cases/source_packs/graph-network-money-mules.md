@@ -5,8 +5,10 @@ hitl_review_required: true
 v0_1_area: graph_or_network_pattern
 track: Future graph/network analytics
 detection_pattern: money mule network and shared-account movement
+pattern_id: digital_scam_to_mule
 institution_type: digital banking and payments network
 source_authority: Europol
+source_type: enforcement
 geography: Europe / international
 product: money movement and mule accounts
 source_quality: official law-enforcement source candidate

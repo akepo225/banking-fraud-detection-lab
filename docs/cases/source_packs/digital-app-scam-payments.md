@@ -8,6 +8,7 @@ detection_pattern: authorised push payment scam to a newly added beneficiary
 pattern_id: new_beneficiary_payment
 institution_type: payment service provider or digital bank
 source_authority: Payment Systems Regulator
+source_type: regulator
 geography: United Kingdom / payments
 product: authorised push payments and digital banking
 source_quality: official payment regulator source candidate

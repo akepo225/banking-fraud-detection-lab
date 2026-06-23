@@ -8,6 +8,7 @@ detection_pattern: high-value private-banking transaction movement
 pattern_id: pb_high_value_movement
 institution_type: private bank
 source_authority: FINMA
+source_type: regulator
 geography: Switzerland / cross-border
 product: private-banking relationships and transactions
 source_quality: official regulator source candidate

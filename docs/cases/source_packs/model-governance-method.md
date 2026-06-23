@@ -7,6 +7,7 @@ track: Cross-track governance
 detection_pattern: model-output governance and threshold documentation
 institution_type: cross-bank model governance
 source_authority: Federal Reserve
+source_type: regulator
 geography: United States / cross-border method
 product: fraud scoring and alert governance
 source_quality: official supervisory guidance source candidate

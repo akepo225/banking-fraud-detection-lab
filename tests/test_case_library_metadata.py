@@ -74,6 +74,21 @@ BANNED_RECONSTRUCTION_PHRASES = (
     "exact case",
 )
 
+# v0.5 case-library skill layer: canonical template, rubric, contributor guide,
+# and the worked-example pack. The template sections are a superset of the
+# REQUIRED_SECTIONS every source pack already carries; `## Summary` and the
+# structured learner-output exercise format are introduced by v0.5 and migrate
+# pack-by-pack in #119/#120/#121, so the new requirements are scoped to the
+# template artifacts and the worked example rather than every pack at once.
+CASE_TEMPLATE = Path("docs/cases/TEMPLATE.md")
+CASE_QUALITY_RUBRIC = Path("docs/cases/source_quality_rubric.md")
+CASE_CONTRIBUTING = Path("docs/cases/CONTRIBUTING.md")
+WORKED_EXAMPLE_PACK = Path(
+    "docs/cases/source_packs/private-banking-transaction-monitoring.md"
+)
+TEMPLATE_REQUIRED_SECTIONS = REQUIRED_SECTIONS | {"## Summary"}
+WORKED_EXAMPLE_PATTERN_IDS = {"pb_transaction_fraud", "pb_high_value_movement"}
+
 
 def test_case_source_packs_cover_v0_1_learning_areas() -> None:
     """The draft case library must cover each v0.1 source-pack area."""
@@ -231,6 +246,170 @@ def test_case_source_pack_metadata_parser_handles_crlf_front_matter(tmp_path: Pa
     crlf_path.write_bytes(crlf_text.encode("utf-8"))
 
     assert _metadata(crlf_path)["status"] == "draft-hitl"
+
+
+def test_case_template_declares_required_sections() -> None:
+    """The v0.5 template must document every section a migrated pack needs."""
+    text = CASE_TEMPLATE.read_text(encoding="utf-8")
+
+    assert HITL_MARKER in text
+    assert "Detection pattern" in text
+    missing = TEMPLATE_REQUIRED_SECTIONS - set(_template_section_headings(text))
+    assert not missing, f"TEMPLATE.md missing sections: {sorted(missing)}"
+    # The template must teach the facts-vs-interpretation split explicitly.
+    assert "Public Facts" in text
+    assert "Interpretation For Detection Patterns" in text
+    # The template must teach the structured learner-output exercise format.
+    assert "### Exercise" in text
+    assert "Learner output" in text
+    # The template must reference the frozen pattern vocabulary rather than IDs.
+    assert "PATTERN_IDS" in text
+
+
+def test_case_template_documents_front_matter_and_pattern_id() -> None:
+    """The template must teach pattern_id referencing the shared registry."""
+    text = CASE_TEMPLATE.read_text(encoding="utf-8")
+
+    assert "pattern_id" in text
+    for pattern_id in WORKED_EXAMPLE_PATTERN_IDS:
+        assert pattern_id in text, f"TEMPLATE.md should mention {pattern_id}"
+    assert "detection_pattern" in text
+    assert "linked_modules" in text
+
+
+def test_case_quality_rubric_weights_source_types() -> None:
+    """The source-quality rubric must weight each source type tier."""
+    text = CASE_QUALITY_RUBRIC.read_text(encoding="utf-8")
+    normalized = text.lower()
+
+    assert HITL_MARKER in text
+    for source_type in (
+        "regulator",
+        "court",
+        "official regulatory disclosure",
+        "journalism",
+        "industry",
+    ):
+        assert source_type in normalized, f"Rubric missing source type: {source_type}"
+    # The rubric must teach non-reconstruction and non-affiliation discipline.
+    assert "reconstruct" in normalized
+    assert "affiliation" in normalized
+    assert "Detection pattern" in text
+
+
+def test_case_contributing_checklist_covers_required_disciplines() -> None:
+    """The contributor checklist must cover the v0.5 disciplines."""
+    text = CASE_CONTRIBUTING.read_text(encoding="utf-8")
+
+    assert HITL_MARKER in text
+    for discipline in (
+        "source discipline",
+        "non-reconstruction",
+        "non-affiliation",
+        "official-source linking",
+        "learner-output exercise",
+    ):
+        assert discipline in text.lower(), f"CONTRIBUTING missing: {discipline}"
+    # The checklist must reference the canonical template and rubric.
+    assert "TEMPLATE.md" in text
+    assert "source_quality_rubric.md" in text
+    # The checklist must reinforce the frozen pattern vocabulary.
+    assert "PATTERN_IDS" in text
+
+
+def test_worked_example_source_pack_conforms_to_template() -> None:
+    """The v0.5 worked-example pack must carry every template section."""
+    text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
+
+    assert HITL_MARKER in text
+    headings = _section_headings(text)
+    missing = TEMPLATE_REQUIRED_SECTIONS - headings
+    assert not missing, f"Worked example missing sections: {sorted(missing)}"
+
+
+def test_worked_example_source_pack_has_learner_output_exercises() -> None:
+    """The worked example must include structured learner-output exercises."""
+    text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
+    exercise_section = _section_text(text, "## Linked Modules And Exercises")
+    exercise_blocks = _exercise_blocks(exercise_section)
+
+    assert exercise_blocks, "Worked example needs at least one exercise"
+    # Each exercise block must carry a Pattern, Module, Prompt, and output.
+    for block in exercise_blocks:
+        for label in ("Pattern:", "Module:", "Prompt:", "Learner output:"):
+            assert label in block, f"Exercise block missing field: {label}"
+
+
+def test_worked_example_source_pack_exercises_reference_valid_pattern_ids() -> None:
+    """Worked-example exercises must cite frozen private-banking pattern IDs."""
+    text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
+    exercise_section = _section_text(text, "## Linked Modules And Exercises")
+    exercise_blocks = _exercise_blocks(exercise_section)
+
+    referenced_pattern_ids: set[str] = set()
+    for block in exercise_blocks:
+        referenced_pattern_ids.update(_exercise_pattern_ids(block))
+    assert referenced_pattern_ids & WORKED_EXAMPLE_PATTERN_IDS, (
+        "Worked-example exercises must reference at least one of "
+        f"{sorted(WORKED_EXAMPLE_PATTERN_IDS)}"
+    )
+    invalid = referenced_pattern_ids - set(PATTERN_IDS)
+    assert not invalid, f"Worked example cites unknown pattern_id(s): {sorted(invalid)}"
+
+
+def test_worked_example_source_pack_exercises_link_existing_modules() -> None:
+    """Worked-example exercise module paths must exist, checked per exercise."""
+    text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
+    exercise_section = _section_text(text, "## Linked Modules And Exercises")
+    exercise_blocks = _exercise_blocks(exercise_section)
+
+    assert exercise_blocks, "Worked example needs at least one exercise"
+    for index, block in enumerate(exercise_blocks, start=1):
+        module_paths = re.findall(r"Module: `(notebooks/[^`]+)`", block)
+        assert module_paths, f"Exercise {index} must name a Module path"
+        for module_path in module_paths:
+            assert Path(module_path).is_file(), (
+                f"Exercise {index} links missing module: {module_path}"
+            )
+
+
+def _exercise_blocks(exercise_section: str) -> list[str]:
+    """Split the exercise section into one text block per ``### Exercise N``."""
+    blocks = re.findall(
+        r"(### Exercise \d+[\s\S]*?)(?=\n### Exercise \d+|\Z)", exercise_section
+    )
+    return [block.strip() for block in blocks]
+
+
+def _exercise_pattern_ids(exercise_block: str) -> set[str]:
+    """Extract every backticked ``pattern_id`` a ``Pattern:`` line references.
+
+    A pattern line may name more than one id, for example
+    ``Pattern: `pb_transaction_fraud` (overlaps `pb_high_value_movement`)``. All
+    backticked ids on that line are returned so a typo in the overlap id is
+    caught by the caller's registry check, not just the primary id. The line is
+    matched whether or not it is written as a markdown bullet.
+    """
+    pattern_line_match = re.search(
+        r"^\s*(?:-\s*)?Pattern:\s*(.+)$", exercise_block, re.MULTILINE
+    )
+    if not pattern_line_match:
+        return set()
+    return set(re.findall(r"`([a-z0-9_]+)`", pattern_line_match.group(1)))
+
+
+def _template_section_headings(text: str) -> set[str]:
+    """Return the level-two section names a template documents.
+
+    TEMPLATE.md describes each required section as a ``### ## Heading`` line and
+    also mentions section names in backticks, so this helper collects real
+    ``## `` headings, the documented ``### ## Heading`` lines, and backticked
+    ``## Heading`` references.
+    """
+    headings = {line.strip() for line in text.splitlines() if line.startswith("## ")}
+    documented = {line.removeprefix("### ").strip() for line in text.splitlines() if line.startswith("### ## ")}
+    backticked = set(re.findall(r"`(## [A-Z][^`]+)`", text))
+    return headings | documented | backticked
 
 
 def _source_pack_paths() -> tuple[Path, ...]:

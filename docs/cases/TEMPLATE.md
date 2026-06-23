@@ -127,8 +127,9 @@ least one **learner-output exercise** as a level-three subsection:
   on synthetic data only.
 - Learner output: the concrete artifact the learner produces (a SQL result, a
   feature interpretation, a short investigation note, or a threshold tradeoff
-  discussion). No right/wrong answer is encoded here; learners compare against
-  the protected answer key in the notebook.
+  discussion). No right/wrong answer is encoded here; learners self-assess
+  against the notebook's alert-aware metrics and discussion prompts. Note that
+  learner-facing views do not expose the protected answer key.
 ```
 
 Exercises must reference only existing notebooks and the existing synthetic data

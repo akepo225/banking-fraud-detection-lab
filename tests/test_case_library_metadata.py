@@ -358,16 +358,19 @@ def test_worked_example_source_pack_exercises_reference_valid_pattern_ids() -> N
 
 
 def test_worked_example_source_pack_exercises_link_existing_modules() -> None:
-    """Worked-example exercise module paths must exist in the repository."""
+    """Worked-example exercise module paths must exist, checked per exercise."""
     text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
     exercise_section = _section_text(text, "## Linked Modules And Exercises")
+    exercise_blocks = _exercise_blocks(exercise_section)
 
-    module_paths = re.findall(r"Module: `(notebooks/[^`]+)`", exercise_section)
-    assert module_paths, "Worked-example exercises must name a Module path"
-    for module_path in module_paths:
-        assert Path(module_path).is_file(), (
-            f"Worked-example exercise links missing module: {module_path}"
-        )
+    assert exercise_blocks, "Worked example needs at least one exercise"
+    for index, block in enumerate(exercise_blocks, start=1):
+        module_paths = re.findall(r"Module: `(notebooks/[^`]+)`", block)
+        assert module_paths, f"Exercise {index} must name a Module path"
+        for module_path in module_paths:
+            assert Path(module_path).is_file(), (
+                f"Exercise {index} links missing module: {module_path}"
+            )
 
 
 def _exercise_blocks(exercise_section: str) -> list[str]:
@@ -379,8 +382,20 @@ def _exercise_blocks(exercise_section: str) -> list[str]:
 
 
 def _exercise_pattern_ids(exercise_block: str) -> set[str]:
-    """Extract the ``Pattern:`` `pattern_id` values from one exercise block."""
-    return set(re.findall(r"Pattern:\s*`([a-z0-9_]+)`", exercise_block))
+    """Extract every backticked ``pattern_id`` a ``Pattern:`` line references.
+
+    A pattern line may name more than one id, for example
+    ``Pattern: `pb_transaction_fraud` (overlaps `pb_high_value_movement`)``. All
+    backticked ids on that line are returned so a typo in the overlap id is
+    caught by the caller's registry check, not just the primary id. The line is
+    matched whether or not it is written as a markdown bullet.
+    """
+    pattern_line_match = re.search(
+        r"^\s*(?:-\s*)?Pattern:\s*(.+)$", exercise_block, re.MULTILINE
+    )
+    if not pattern_line_match:
+        return set()
+    return set(re.findall(r"`([a-z0-9_]+)`", pattern_line_match.group(1)))
 
 
 def _template_section_headings(text: str) -> set[str]:

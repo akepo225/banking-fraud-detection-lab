@@ -17,17 +17,20 @@ Assign the `source_quality` field from the highest tier the primary source
 qualifies for. When a pack cites several sources, weight by the **primary**
 source and note the others in the Source Links section.
 
-| Tier | Source type | `source_quality` value | What it can anchor |
+| Tier | Source type | `source_quality` value family | What it can anchor |
 | --- | --- | --- | --- |
-| 1 | Regulator publication | `official regulator source candidate` | Supervisory expectations, control-failure framing, governance and documentation questions, and **Detection patterns** at the level of behavior classes. |
+| 1 | Regulator publication | `official regulator source candidate` (and the source-specific phrases already in use, e.g. `official payment regulator source candidate`, `official supervisory guidance source candidate`, `official cyber-security authority source candidate`, `official law-enforcement source candidate`) | Supervisory expectations, control-failure framing, governance and documentation questions, and **Detection patterns** at the level of behavior classes. |
 | 1 | Court record | `court record source candidate` | Procedural facts on the public record, charge/adjudication framing, and observable signal classes. |
-| 2 | Official regulatory disclosure (bank/issuer annual report, enforcement notice, regulator data page) | `official disclosure source candidate` | Official aggregate data (for example APP scam performance figures), disclosed control posture, and documentation expectations. |
+| 2 | Official regulatory disclosure (bank/issuer annual report, enforcement notice, regulator data page, payment-system operator data) | `official disclosure source candidate` (incl. `official payment-system operator source candidate`) | Official aggregate data (for example APP scam performance figures), disclosed control posture, and documentation expectations. |
 | 3 | Reputable journalism | `reputable journalism source candidate` | Public narrative context and chronology for framing — always corroborated against a tier 1–2 source where possible. |
-| 4 | Industry research / typology report | `industry research source candidate` | Cross-sector typologies, common control gaps, and feature-design inspiration. |
+| 4 | Industry research / typology report | `industry research source candidate` (incl. `reputable industry report candidate`) | Cross-sector typologies, common control gaps, and feature-design inspiration. |
 
-The existing v0.1 source packs use the human-readable phrase that fits their
-primary source (for example `official regulator source candidate`). Keep that
-phrase style during v0.5 migration so existing metadata stays stable.
+Each cell lists the canonical phrase for the tier plus the existing source-specific
+phrases already used in the case library. The `source_quality` value is a family
+name, not a single exact string: when migrating a pack, keep its existing
+human-readable phrase (which names the specific source body) and confirm it falls
+under the correct tier above. The metadata tests do not enforce an exact
+`source_quality` vocabulary, so existing phrases stay stable during v0.5 migration.
 
 ## How each tier anchors learning without reconstructing events
 
@@ -82,16 +85,26 @@ level of signal families and are explicitly non-specific to any institution.
    **Detection pattern**. Cross-track governance or graph packs may reference
    more than one but must never invent a new `pattern_id`.
 
-## Prohibited content (enforced by metadata tests)
+## Prohibited content
+
+The first three bullets are enforced by automated metadata tests
+(`tests/test_case_library_metadata.py`); the remaining bullets are
+review-enforced and must be checked by a human reviewer during HITL review
+before publication.
+
+Automated checks block:
 
 - Direct quote blocks (`>`) in draft packs.
 - Imperative compliance wording: "you must", "must comply", "must report",
   "required to comply", "legal requirement for learners".
 - Reconstruction claims: "reconstructs the", "reproduces the", "recreation of",
   "based on actual", "replicate the", "exact case".
-- Real Client, account, or transaction data.
-- Real-bank affiliation claims or framing that implies the synthetic institution
-  is a stand-in for a named firm.
+
+Human review must also confirm:
+
+- No real Client, account, or transaction data.
+- No real-bank affiliation claims, and no framing that implies the synthetic
+  institution is a stand-in for a named firm.
 
 ## Contributor checklist
 

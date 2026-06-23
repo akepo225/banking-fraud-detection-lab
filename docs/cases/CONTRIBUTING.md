@@ -70,7 +70,9 @@ Every source pack must include, in order, the level-two sections from
 
 - [ ] Front matter `source_authority` matches the publishing body of the
       primary source.
-- [ ] Front matter `source_quality` matches a tier value from the rubric.
+- [ ] Front matter `source_quality` falls under the correct tier's value family
+      in the [source-quality rubric](source_quality_rubric.md) (a family name,
+      not a single exact string; preserve existing source-specific phrases).
 - [ ] Front matter `pattern_id` (when present) is a value from `PATTERN_IDS`.
 - [ ] Front matter `linked_modules` lists only repository paths that exist when
       the pack is added.

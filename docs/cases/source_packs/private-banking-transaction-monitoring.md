@@ -77,13 +77,13 @@ investigation questions.
 - Pattern: `pb_transaction_fraud` (overlaps `pb_high_value_movement`)
 - Module: `notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb`
 - Prompt: On the synthetic Alpine Crest Private Bank data, select a transaction and compare its amount against the relationship-scale baseline rather than treating the raw amount as the signal. Use a progressive view or the SQLite learner path.
-- Learner output: A short table or query result comparing one transaction's amount to its Banking relationship baseline, plus one sentence on why relationship-scale context changes the read. No single right answer; compare against the protected answer key in the notebook.
+- Learner output: A short table or query result comparing one transaction's amount to its Banking relationship baseline, plus one sentence on why relationship-scale context changes the read. Compare your read against the notebook's alert-aware metrics; learner-facing views do not expose the protected answer key.
 
 ### Exercise 2 — Interpret a feature against the control-failure pattern
 
 - Pattern: `pb_transaction_fraud`
 - Module: `notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb`
-- Prompt: Pick one `pb_` feature produced by the feature-engineering module and explain, in learner-facing terms, how it operationalizes a monitoring-control-failure signal from this source pack. Connect the feature to relationship-manager responsibility or counterparty novelty.
+- Prompt: Pick one feature the feature-engineering module emits (for example `amount_to_aum_ratio`, `amount_to_relationship_baseline_ratio`, `is_new_counterparty`, or `is_cross_border`) and explain, in learner-facing terms, how it operationalizes a monitoring-control-failure signal from this source pack. Connect the feature to relationship-manager responsibility or counterparty novelty.
 - Learner output: Two or three sentences naming the feature, the signal it captures, and one limitation of using it alone.
 
 ### Exercise 3 — Write a monitoring investigation note

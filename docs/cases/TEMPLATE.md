@@ -8,9 +8,10 @@ public material and turns it into a learner-facing exercise. v0.5 upgrades the
 existing v0.1/v0.3/v0.4 packs onto this template in place; it does not create a
 new module.
 
-The section headings below are the required ones. They match the headings
-already enforced by `tests/test_case_library_metadata.py`, plus the `## Summary`
-section introduced in v0.5. Keep the heading text exactly so the metadata
+The section headings below are required for every v0.5 template-conformant
+pack. The `## Summary` section is new in v0.5; the remaining sections were
+already required by `tests/test_case_library_metadata.py` and stay mandatory as
+packs migrate in #119/#120/#121. Keep the heading text exactly so the metadata
 validators and the case index can parse them. Do not add headings between the
 required ones.
 
@@ -131,7 +132,9 @@ least one **learner-output exercise** as a level-three subsection:
 ```
 
 Exercises must reference only existing notebooks and the existing synthetic data
-model. No new generator scenarios, no new schema, no new `pattern_id` values.
+model. No new generator scenarios, no new schema. Exercises may only reference
+`pattern_id` values from the frozen `PATTERN_IDS` registry that exist at the
+time the pack is created; never introduce a new `pattern_id`.
 
 ### ## Regulatory Hooks
 

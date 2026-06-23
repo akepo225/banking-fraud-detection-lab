@@ -43,7 +43,9 @@ Every source pack must include, in order, the level-two sections from
 - [ ] Every source URL is HTTPS and resolves.
 - [ ] For regulatory notes, every domain is on the allowed official-source list
       (`fedlex.admin.ch`, `finma.ch`, `psr.org.uk`, `fatf-gafi.org`,
-      `federalreserve.gov`).
+      `federalreserve.gov`). This list may change; verify the current values
+      against `docs/cases/source_quality_rubric.md` and the authoritative set in
+      `tests/test_regulatory_source_index.py` before relying on it.
 - [ ] Facts and interpretation are separated into their own sections.
 - [ ] No direct quote blocks (`>`) in the draft.
 

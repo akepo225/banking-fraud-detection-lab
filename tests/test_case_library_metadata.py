@@ -331,26 +331,25 @@ def test_worked_example_source_pack_has_learner_output_exercises() -> None:
     """The worked example must include structured learner-output exercises."""
     text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
     exercise_section = _section_text(text, "## Linked Modules And Exercises")
+    exercise_blocks = _exercise_blocks(exercise_section)
 
-    exercise_blocks = re.findall(r"### Exercise \d", text)
-    assert len(exercise_blocks) >= 1, "Worked example needs at least one exercise"
+    assert exercise_blocks, "Worked example needs at least one exercise"
     # Each exercise block must carry a Pattern, Module, Prompt, and output.
-    for label in ("Pattern:", "Module:", "Prompt:", "Learner output:"):
-        assert label in exercise_section, f"Exercise missing field: {label}"
+    for block in exercise_blocks:
+        for label in ("Pattern:", "Module:", "Prompt:", "Learner output:"):
+            assert label in block, f"Exercise block missing field: {label}"
 
 
 def test_worked_example_source_pack_exercises_reference_valid_pattern_ids() -> None:
     """Worked-example exercises must cite frozen private-banking pattern IDs."""
     text = WORKED_EXAMPLE_PACK.read_text(encoding="utf-8")
     exercise_section = _section_text(text, "## Linked Modules And Exercises")
+    exercise_blocks = _exercise_blocks(exercise_section)
 
-    referenced_pattern_ids = {
-        match.group(0)
-        for pattern_id in WORKED_EXAMPLE_PATTERN_IDS
-        for match in [re.search(re.escape(pattern_id), exercise_section)]
-        if match
-    }
-    assert referenced_pattern_ids, (
+    referenced_pattern_ids: set[str] = set()
+    for block in exercise_blocks:
+        referenced_pattern_ids.update(_exercise_pattern_ids(block))
+    assert referenced_pattern_ids & WORKED_EXAMPLE_PATTERN_IDS, (
         "Worked-example exercises must reference at least one of "
         f"{sorted(WORKED_EXAMPLE_PATTERN_IDS)}"
     )
@@ -369,6 +368,19 @@ def test_worked_example_source_pack_exercises_link_existing_modules() -> None:
         assert Path(module_path).is_file(), (
             f"Worked-example exercise links missing module: {module_path}"
         )
+
+
+def _exercise_blocks(exercise_section: str) -> list[str]:
+    """Split the exercise section into one text block per ``### Exercise N``."""
+    blocks = re.findall(
+        r"(### Exercise \d[\s\S]*?)(?=\n### Exercise \d|\Z)", exercise_section
+    )
+    return [block.strip() for block in blocks]
+
+
+def _exercise_pattern_ids(exercise_block: str) -> set[str]:
+    """Extract the ``Pattern:`` `pattern_id` values from one exercise block."""
+    return set(re.findall(r"Pattern:\s*`([a-z0-9_]+)`", exercise_block))
 
 
 def _template_section_headings(text: str) -> set[str]:

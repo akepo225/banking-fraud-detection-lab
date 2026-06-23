@@ -29,19 +29,6 @@ REQUIRED_V0_4_DIGITAL_SOURCE_PACKS = {
     "digital-online-bank-control-failures.md",
     "digital-payment-system-guidance.md",
 }
-# The six source packs upgraded to the v0.5 template by #121 (PR #130),
-# including the cross-listed graph/network pack. ``_digital_packs()`` selects
-# by this explicit filename set rather than by ``track`` so the graph pack —
-# whose ``track`` is ``Future graph/network analytics``, not the digital-banking
-# track — is still covered by the v0.5 conformance and exercise validators.
-DIGITAL_V0_5_SOURCE_PACKS = {
-    "digital-app-scam-payments.md",
-    "digital-money-mule-behavior.md",
-    "digital-online-bank-control-failures.md",
-    "digital-payment-system-guidance.md",
-    "digital-scam-to-mule.md",
-    "graph-network-money-mules.md",
-}
 REQUIRED_METADATA_FIELDS = {
     "title",
     "status",
@@ -120,9 +107,6 @@ BANNED_RECONSTRUCTION_PHRASES = (
 CASE_TEMPLATE = Path("docs/cases/TEMPLATE.md")
 CASE_QUALITY_RUBRIC = Path("docs/cases/source_quality_rubric.md")
 CASE_CONTRIBUTING = Path("docs/cases/CONTRIBUTING.md")
-WORKED_EXAMPLE_PACK = Path(
-    "docs/cases/source_packs/private-banking-transaction-monitoring.md"
-)
 TEMPLATE_REQUIRED_SECTIONS = REQUIRED_SECTIONS | {"## Summary"}
 WORKED_EXAMPLE_PATTERN_IDS = {"pb_transaction_fraud", "pb_high_value_movement"}
 # Every source pack on the private-banking track must reach v0.5 template
@@ -644,18 +628,22 @@ def _private_banking_packs() -> tuple[Path, ...]:
 
 
 def _digital_packs() -> tuple[Path, ...]:
-    """Return the six source packs upgraded to the v0.5 template by #121 (PR #130).
+    """Return every source pack on the digital-banking track (or carrying a
+    digital ``pattern_id``).
 
-    These span the Digital-banking track plus the cross-listed graph/network
-    pack (``track`` ``Future graph/network analytics``, ``pattern_id
-    digital_scam_to_mule``). Selection is by explicit filename set rather than
-    by ``track`` so the graph pack is covered too — a track-only filter would
-    exclude it and leave #121's six-pack conformance unguarded.
+    These are the packs #121 (PR #130) brings to v0.5 template conformance.
+    Selection is dynamic — ``track`` OR ``pattern_id`` — so the graph/network
+    pack (``track`` ``Future graph/network analytics`` but ``pattern_id
+    digital_scam_to_mule``) is covered, and a newly added digital pack is
+    governed the moment it lands, without editing a filename list. The OR is
+    what distinguishes this from the track-only filter that previously excluded
+    the graph pack.
     """
     packs = tuple(
         path
         for path in _source_pack_paths()
-        if path.name in DIGITAL_V0_5_SOURCE_PACKS
+        if _metadata(path).get("track") == DIGITAL_TRACK
+        or _metadata(path).get("pattern_id") in DIGITAL_V0_4_PATTERN_IDS
     )
     assert packs, "No digital source packs found to validate"
     return packs

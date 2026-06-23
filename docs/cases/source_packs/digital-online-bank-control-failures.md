@@ -71,8 +71,8 @@ with `new_beneficiary_payment` for the beneficiary side.
 
 - Pattern: `session_payment_velocity`
 - Module: `notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb`
-- Prompt: Using `sql/examples/09_digital_session_channel_features.sql` as a pattern, write a SQLite query that returns sessions where elevated payment velocity (`db_session_payment_count`) combines with a network-risk signal (`db_is_high_risk_network` or `db_is_vpn_or_proxy`) or a high `db_asn_risk_score`. Join to the session context so the result is reviewable.
-- Learner output: A runnable SQL result listing flagged sessions with the velocity and network-risk context alongside, plus one sentence on why velocity alone is not enough and the network signal adds review evidence. Compare your read against the notebook's alert-aware metrics; learner-facing views do not expose the protected answer key.
+- Prompt: Using the feature-engineering module, identify sessions where elevated payment velocity (`db_session_payment_count`) combines with a network-risk signal (`db_is_high_risk_network` or `db_is_vpn_or_proxy`) or a high `db_asn_risk_score`. Note that the session-velocity feature is built by `sql/examples/11_digital_velocity_account_features.sql`, while the network-risk fields come from `sql/examples/09_digital_session_channel_features.sql`; the feature-engineering notebook emits all of them on one row.
+- Learner output: A short table or feature-output slice listing flagged sessions with the velocity and network-risk context alongside, plus one sentence on why velocity alone is not enough and the network signal adds review evidence. Compare your read against the notebook's alert-aware metrics; learner-facing views do not expose the protected answer key.
 
 ## Regulatory Hooks
 

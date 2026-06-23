@@ -66,12 +66,12 @@ pattern.
 - `notebooks/05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb`
 - `notebooks/05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb`
 
-### Exercise 1 — Interpret new-beneficiary control features across confirmed cases
+### Exercise 1 — Interpret new-beneficiary control features
 
 - Pattern: `new_beneficiary_payment`
-- Module: `notebooks/05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb`
-- Prompt: Using the alert-triage module, analyze how `db_is_new_beneficiary` and `db_is_beneficiary_country_risky` distribute across confirmed-fraud versus non-confirmed alerts. Note that confirmed-fraud is an imperfect, noisy label.
-- Learner output: A short interpretation (counts or rates by flag) plus two or three sentences on what the flags add to triage and one limitation (for example, legitimate first-time payments to a new country).
+- Module: `notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb`
+- Prompt: Using the feature-engineering module (which emits `db_is_new_beneficiary` and `db_is_beneficiary_country_risky`), summarize how often each flag is set and how often they co-occur across the synthetic NovaBank Digital payments. Consider what the combination suggests for new-beneficiary confirmation controls.
+- Learner output: A short interpretation (counts or co-occurrence rates) plus two or three sentences on what the flags add to review evidence and one limitation (for example, legitimate first-time payments to a new country).
 
 ## Regulatory Hooks
 

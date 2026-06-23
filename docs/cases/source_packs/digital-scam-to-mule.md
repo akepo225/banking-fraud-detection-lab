@@ -51,7 +51,6 @@ This source pack supports a **Detection pattern** around authorised scam payment
 - Receiving account with short account age (`db_account_age_days`, `db_is_early_life_account`).
 - Shared device or network signals across Users (`db_is_shared_device`, `db_device_user_count`).
 - Rapid onward transfer after incoming victim payment (`db_is_rapid_pass_through`, `db_hours_since_prior_credit`, `db_prior_credit_amount_chf`).
-- Noisy case outcomes where some alerts close without confirmation.
 
 ## Linked Modules And Exercises
 
@@ -74,6 +73,7 @@ This source pack supports a **Detection pattern** around authorised scam payment
 
 - This draft does not provide legal or compliance advice.
 - This draft does not imply that NovaBank Digital is based on any named payment firm.
+- Case outcomes are noisy: some alerts close without confirmation, so confirmed-fraud labels are imperfect and should not be treated as ground truth.
 - Human review is required before publication.
 
 ## Human Review

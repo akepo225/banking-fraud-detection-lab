@@ -59,10 +59,10 @@ investigation questions.
 
 ## Likely Data Signals
 
-- High transaction amount relative to account or Banking relationship context (`pb_amount_to_aum_ratio`, `pb_amount_to_relationship_baseline_ratio`).
+- High transaction amount relative to account or Banking relationship context (`amount_to_aum_ratio`, `amount_to_relationship_baseline_ratio`).
 - Relationship-manager concentration or repeated exceptions (effective-dated relationship-manager responsibility at the time of the transaction).
-- Cross-border movement involving higher-risk relationship context (`pb_is_cross_border`).
-- Counterparty novelty against relationship history (`pb_counterparty_age_days`, `pb_is_new_counterparty`).
+- Cross-border movement involving higher-risk relationship context (`is_cross_border`).
+- Counterparty novelty against relationship history (`counterparty_age_days`, `is_new_counterparty`).
 - Weak linkage between alert explanation and case outcome documentation (governance, not a feature).
 
 ## Linked Modules And Exercises

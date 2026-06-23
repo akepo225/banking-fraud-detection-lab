@@ -108,10 +108,15 @@ to reconstruct the public matter.
 ### ## Likely Data Signals
 
 Bulleted candidate features or signals a learner could derive from the synthetic
-data model. Use the track's feature prefix: `pb_` for private-banking packs,
-`db_` for digital-banking packs. Tie each signal back to the `pattern_id`
-narrative in the interpretation section. These are teaching candidates, not
-definitive feature lists.
+data model. Use the **exact feature names the feature module emits** so a learner
+can find them in notebook output: verify each name against
+`src/banking_fraud_lab/features/private_banking.py` (private-banking packs) or
+`src/banking_fraud_lab/features/digital_banking.py` (digital-banking packs).
+Digital-banking features are `db_`-prefixed (for example `db_is_new_beneficiary`,
+`db_session_payment_count`); private-banking features are emitted unprefixed (for
+example `amount_to_aum_ratio`, `is_new_counterparty`). Tie each signal back to the
+`pattern_id` narrative in the interpretation section. These are teaching
+candidates, not definitive feature lists.
 
 ### ## Linked Modules And Exercises
 

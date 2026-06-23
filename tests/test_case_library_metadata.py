@@ -376,7 +376,7 @@ def test_worked_example_source_pack_exercises_link_existing_modules() -> None:
 def _exercise_blocks(exercise_section: str) -> list[str]:
     """Split the exercise section into one text block per ``### Exercise N``."""
     blocks = re.findall(
-        r"(### Exercise \d[\s\S]*?)(?=\n### Exercise \d|\Z)", exercise_section
+        r"(### Exercise \d+[\s\S]*?)(?=\n### Exercise \d+|\Z)", exercise_section
     )
     return [block.strip() for block in blocks]
 

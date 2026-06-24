@@ -285,6 +285,7 @@ def test_digital_sql_beneficiary_passthrough_exercise_produces_valid_age_days(
             encoding="utf-8"
         )
         rows = connection.execute(sql).fetchall()
+        assert rows, "Beneficiary pass-through SQL exercise returned no rows"
         columns = rows[0].keys()
 
         assert "db_beneficiary_age_days" in columns
@@ -352,6 +353,7 @@ def test_digital_sql_velocity_account_exercise_produces_valid_account_age_days(
             encoding="utf-8"
         )
         rows = connection.execute(sql).fetchall()
+        assert rows, "Velocity/account SQL exercise returned no rows"
         columns = rows[0].keys()
 
         assert "db_account_age_days" in columns
@@ -417,9 +419,7 @@ def test_digital_sql_velocity_account_exercise_early_life_boundary_is_inclusive(
     connection.row_factory = sqlite3.Row
 
     try:
-        rows = connection.execute(
-            DIGITAL_SQL_EXERCISES["db_velocity_account_features"].read_text(encoding="utf-8")
-        ).fetchall()
+        rows = connection.execute(sql_text).fetchall()
         # Every early-life flag must correspond to an age of 0-30 days (inclusive).
         for row in rows:
             if row["db_is_early_life_account"] == 1:

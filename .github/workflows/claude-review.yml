@@ -1,0 +1,31 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
+        with:
+          fetch-depth: 0 # full history so Claude can see context
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this pull request for the banking fraud detection project.
+            Focus on:
+            - Logic errors or bugs that could affect fraud detection accuracy
+            - Security issues (PII handling, data leakage, SQL injection, etc.)
+            - Regressions against existing detection patterns
+            - Performance concerns on large transaction datasets
+            Post findings as inline comments on the relevant lines.
+          claude_args: "--max-turns 5"

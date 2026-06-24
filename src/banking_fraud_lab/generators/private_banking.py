@@ -636,10 +636,12 @@ def _write_tables(tables: Mapping[str, pd.DataFrame], output_dir: Path) -> None:
     output_path.mkdir(parents=True, exist_ok=True)
     for table_name in TABLE_NAMES:
         if table_name in tables:
-            # Pin LF line endings for cross-platform byte-identity (see issue #158).
+            # Pin LF line endings for cross-platform byte-identity (see issue #158)
+            # and UTF-8 encoding for parity with minimal_world.py (see issue #162).
             tables[table_name].to_csv(
                 output_path / f"{table_name}.csv",
                 index=False,
+                encoding="utf-8",
                 lineterminator="\n",
             )
 

@@ -6,6 +6,8 @@ __pycache__/
 .ruff_cache/
 .codex/
 .scratch*
+# Windows null-device redirection artifact (a stray file named `nul` can appear on Windows checkouts)
+nul
 .ipynb_checkpoints/
 *.egg-info/
 data/generated/

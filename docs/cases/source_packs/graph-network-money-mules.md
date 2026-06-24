@@ -26,7 +26,7 @@ compliance, audit, investment, regulatory, or professional advice.
 
 This source pack anchors the `digital_scam_to_mule` **Detection pattern** at the
 network level — money-mule networks and shared-account movement across multiple accounts —
-using an Europol law-enforcement publication as a public source candidate. It supports the
+using a Europol law-enforcement publication as a public source candidate. It supports the
 digital-banking track at **NovaBank Digital** and frames future graph/network analytics. The
 learner outcome is to reason about multi-account mule indicators (shared devices, beneficiary
 reuse, clustered pass-through) from tabular features and to draft a network-hypothesis note

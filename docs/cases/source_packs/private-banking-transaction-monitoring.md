@@ -12,7 +12,7 @@ source_type: regulator
 geography: Switzerland / cross-border
 product: private-banking transactions
 source_quality: official regulator source candidate
-linked_modules: notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb, notebooks/03_alert_governance/alert_governance_memo.ipynb, notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb, notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb
+linked_modules: notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb, notebooks/01_private_banking_transaction_fraud/alpine_crest_case_narrative.ipynb, notebooks/03_alert_governance/alert_governance_memo.ipynb, notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb, notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb
 ---
 
 # Private-Banking Transaction Monitoring Source Pack

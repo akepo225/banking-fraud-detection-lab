@@ -1296,7 +1296,12 @@ def _write_tables(tables: Mapping[str, pd.DataFrame], output_dir: Path) -> None:
     output_path.mkdir(parents=True, exist_ok=True)
     for table_name in TABLE_NAMES:
         if table_name in tables:
-            tables[table_name].to_csv(output_path / f"{table_name}.csv", index=False)
+            # Pin LF line endings for cross-platform byte-identity (see issue #158).
+            tables[table_name].to_csv(
+                output_path / f"{table_name}.csv",
+                index=False,
+                lineterminator="\n",
+            )
 
 
 __all__ = [

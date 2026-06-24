@@ -225,7 +225,15 @@ def generate_minimal_banking_world(
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
         for table_name, frame in ordered_tables.items():
-            frame.to_csv(output_path / f"{table_name}.csv", index=False, encoding="utf-8")
+            # Pin LF line endings so generated CSVs are byte-identical on every platform
+            # (pandas defaults to os.linesep, which is CRLF on Windows). The committed
+            # data/sample CSVs are normalized to LF by .gitattributes (issue #158).
+            frame.to_csv(
+                output_path / f"{table_name}.csv",
+                index=False,
+                encoding="utf-8",
+                lineterminator="\n",
+            )
 
     return ordered_tables
 
@@ -244,7 +252,13 @@ def generate_learner_facing_minimal_banking_world(
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
         for table_name, frame in learner_tables.items():
-            frame.to_csv(output_path / f"{table_name}.csv", index=False, encoding="utf-8")
+            # Pin LF line endings for cross-platform byte-identity (see issue #158).
+            frame.to_csv(
+                output_path / f"{table_name}.csv",
+                index=False,
+                encoding="utf-8",
+                lineterminator="\n",
+            )
 
     return learner_tables
 

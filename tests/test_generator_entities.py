@@ -446,6 +446,34 @@ def test_committed_sample_csvs_match_canonical_seed_output(tmp_path: Path) -> No
         assert committed_bytes == expected_bytes, f"{table_name}.csv does not match seed=42 output"
 
 
+def test_generated_csvs_use_lf_line_endings(tmp_path: Path) -> None:
+    """Generated CSVs must use LF line endings on every platform.
+
+    Regression guard for issue #158: pandas defaults to ``os.linesep``, which is
+    CRLF on Windows, so the byte-identity check above failed whenever the
+    generator ran on Windows. The generators now pin ``lineterminator="\\n"``.
+    """
+    generate_minimal_banking_world(seed=42, output_dir=tmp_path)
+
+    for table_name in TABLE_NAMES:
+        csv_bytes = (tmp_path / f"{table_name}.csv").read_bytes()
+        assert b"\r" not in csv_bytes, f"{table_name}.csv must not contain CRLF (\\r\\n)"
+
+
+def test_committed_sample_csvs_use_lf_line_endings() -> None:
+    """Committed sample CSVs must use LF line endings, matching .gitattributes.
+
+    Regression guard for issue #158 acceptance criterion: the ``data/sample``
+    blobs are normalized to LF by ``.gitattributes`` (``* text=auto eol=lf``),
+    so the committed files must never carry CRLF regardless of platform.
+    """
+    sample_dir = Path("data/sample")
+
+    for table_name in TABLE_NAMES:
+        csv_bytes = (sample_dir / f"{table_name}.csv").read_bytes()
+        assert b"\r" not in csv_bytes, f"{table_name}.csv must not contain CRLF (\\r\\n)"
+
+
 def _assert_fk(
     tables: dict[str, pd.DataFrame],
     child_table: str,

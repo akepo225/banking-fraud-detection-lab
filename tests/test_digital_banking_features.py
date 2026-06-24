@@ -420,6 +420,7 @@ def test_digital_sql_velocity_account_exercise_early_life_boundary_is_inclusive(
 
     try:
         rows = connection.execute(sql_text).fetchall()
+        assert rows, "Velocity/account SQL exercise returned no rows"
         # Every early-life flag must correspond to an age of 0-30 days (inclusive).
         for row in rows:
             if row["db_is_early_life_account"] == 1:

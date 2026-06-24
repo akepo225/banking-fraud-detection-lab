@@ -65,7 +65,7 @@ Authorised scam payment to a mule or fraudster account, and early-life mule beha
 | --- | --- | --- | --- | --- | --- |
 | [Digital scam-to-mule](source_packs/digital-scam-to-mule.md) | Digital-banking | PSP / digital bank | Payment Systems Regulator | regulator | United Kingdom / payments |
 | [Digital money mule behavior](source_packs/digital-money-mule-behavior.md) | Digital-banking | PSP / digital bank | UK Finance | industry_report | United Kingdom / cross-border payments |
-| [Graph network money mules](source_packs/graph-network-money-mules.md) | Future graph/network | digital banking & payments network | Europol | enforcement | Europe / international |
+| [Graph network money mules](source_packs/graph-network-money-mules.md) | Future graph/network analytics | digital banking & payments network | Europol | enforcement | Europe / international |
 
 ### `new_beneficiary_payment`
 

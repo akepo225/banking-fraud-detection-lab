@@ -25,14 +25,14 @@ compliance, audit, investment, regulatory, or professional advice.
 
 This source pack anchors the cross-track **Detection pattern** behind model-output governance
 — threshold rationale, limitation statements, monitoring evidence, and stakeholder communication —
-using official Federal Reserve SR 11-7 guidance as a public source candidate. It supports the
+using the Federal Reserve's supervisory guidance on model risk management (SR 11-7, 2011) as a public source candidate. It supports the
 alert-governance module across both the **Alpine Crest Private Bank** and **NovaBank Digital**
 tracks. The learner outcome is to treat transparent scoring rules as models that need
 documentation and review, and to draft governance artifacts without overclaiming.
 
 ## Source Links
 
-- Federal Reserve SR 11-7 page: https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm
+- Federal Reserve — Supervisory Guidance on Model Risk Management (SR 11-7, 2011): https://www.federalreserve.gov/frrs/guidance/supervisory-guidance-on-model-risk-management.htm
 
 ## Public Facts
 
@@ -77,6 +77,6 @@ This source pack supports the governance **Detection pattern** behind the alert-
 
 <!-- HITL-REVIEW-REQUIRED -->
 
-- Confirm whether SR 11-7 should be paired with another model-risk or AI-governance source.
+- Source URL replaced with the Board's canonical model-risk-management supervisory guidance page (SR 11-7, 2011); re-confirm it resolves at publication and decide whether to pair it with another model-risk or AI-governance source.
 - Review for overreach in governance wording.
 - Decide whether this belongs in the case library or only in the regulatory source index.

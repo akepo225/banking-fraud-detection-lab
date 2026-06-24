@@ -14,7 +14,7 @@ learning_use:
   - governance
 track: cross-track governance
 primary_official_sources:
-  - https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm
+  - https://www.federalreserve.gov/frrs/guidance/supervisory-guidance-on-model-risk-management.htm
 linked_modules:
   - notebooks/00_foundations/foundations_data_tour.ipynb
   - notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb
@@ -47,7 +47,7 @@ and governance review (threshold rationale, effective challenge) interact across
 
 ## Official Sources
 
-- [Federal Reserve SR 11-7: Guidance on Model Risk Management](https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm)
+- [Federal Reserve SR 11-7: Guidance on Model Risk Management](https://www.federalreserve.gov/frrs/guidance/supervisory-guidance-on-model-risk-management.htm)
 
 ## Learning Implications
 

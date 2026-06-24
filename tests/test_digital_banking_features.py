@@ -264,3 +264,168 @@ def test_digital_sql_guide_documents_digital_exercises() -> None:
     assert "new_beneficiary_payment" in sql_guide
     assert "session_payment_velocity" in sql_guide
     assert "db_" in sql_guide
+
+
+def test_digital_sql_beneficiary_passthrough_exercise_produces_valid_age_days(
+    tmp_path: Path,
+) -> None:
+    """SQL 10 must produce non-negative beneficiary age days using datetime strings.
+
+    Regression guard for CAST(pb.created_at AS REAL), which would silently return
+    0 or NULL on an ISO datetime string; the exercise instead passes the ISO
+    string directly to julianday().
+    """
+    connection = create_minimal_banking_world_sqlite(
+        tmp_path / "learner_world.sqlite", seed=42, scale="small"
+    )
+    connection.row_factory = sqlite3.Row
+
+    try:
+        sql = DIGITAL_SQL_EXERCISES["db_beneficiary_passthrough_features"].read_text(
+            encoding="utf-8"
+        )
+        rows = connection.execute(sql).fetchall()
+        columns = rows[0].keys()
+
+        assert "db_beneficiary_age_days" in columns
+        assert "db_is_new_beneficiary" in columns
+        assert "db_is_rapid_pass_through" in columns
+
+        # Rows with a known beneficiary must have a non-negative age in days.
+        rows_with_beneficiary = [
+            row
+            for row in rows
+            if row["db_beneficiary_age_days"] != -1
+        ]
+        assert rows_with_beneficiary, "Expected at least one row with a known beneficiary"
+        for row in rows_with_beneficiary:
+            assert row["db_beneficiary_age_days"] >= 0, (
+                f"Negative beneficiary age detected: {row['db_beneficiary_age_days']}. "
+                "This suggests CAST(AS REAL) epoch arithmetic was applied instead of "
+                "direct julianday() on an ISO datetime string."
+            )
+
+        # Rows without a beneficiary link must return the sentinel -1.
+        rows_without_beneficiary = [
+            row
+            for row in rows
+            if row["db_beneficiary_age_days"] == -1
+        ]
+        assert rows_without_beneficiary, (
+            "Expected at least one row with a NULL beneficiary (sentinel -1)"
+        )
+    finally:
+        connection.close()
+
+
+def test_digital_sql_beneficiary_passthrough_exercise_uses_datetime_column_not_epoch() -> None:
+    """SQL 10 must reference beneficiary_created_at (datetime), not an epoch alias.
+
+    An epoch alias derived via CAST(pb.created_at AS REAL) produced incorrect
+    arithmetic; the exercise passes the ISO string directly to julianday().
+    """
+    sql_text = DIGITAL_SQL_EXERCISES["db_beneficiary_passthrough_features"].read_text(
+        encoding="utf-8"
+    )
+    assert "beneficiary_created_epoch" not in sql_text, (
+        "SQL 10 still contains a 'beneficiary_created_epoch' alias. "
+        "It should use 'beneficiary_created_at' to pass ISO datetimes to julianday()."
+    )
+    assert "beneficiary_created_at" in sql_text
+
+
+def test_digital_sql_velocity_account_exercise_produces_valid_account_age_days(
+    tmp_path: Path,
+) -> None:
+    """SQL 11 must produce non-negative account age days using ISO datetime strings.
+
+    Regression guard for CAST(a.opened_at AS REAL), which broke julianday()
+    arithmetic on an ISO datetime string.
+    """
+    connection = create_minimal_banking_world_sqlite(
+        tmp_path / "learner_world.sqlite", seed=42, scale="small"
+    )
+    connection.row_factory = sqlite3.Row
+
+    try:
+        sql = DIGITAL_SQL_EXERCISES["db_velocity_account_features"].read_text(
+            encoding="utf-8"
+        )
+        rows = connection.execute(sql).fetchall()
+        columns = rows[0].keys()
+
+        assert "db_account_age_days" in columns
+        assert "db_is_early_life_account" in columns
+        assert "db_session_payment_count" in columns
+
+        for row in rows:
+            age = row["db_account_age_days"]
+            assert age >= 0, (
+                f"Negative account age detected: {age}. "
+                "This suggests CAST(AS REAL) epoch arithmetic broke julianday()."
+            )
+            early_life = row["db_is_early_life_account"]
+            assert early_life in (0, 1)
+            if 0 <= age <= 30:
+                assert early_life == 1, (
+                    f"Account with age {age} days should be flagged as early-life."
+                )
+            else:
+                assert early_life == 0, (
+                    f"Account with age {age} days should NOT be flagged as early-life."
+                )
+    finally:
+        connection.close()
+
+
+def test_digital_sql_velocity_account_exercise_uses_datetime_column_not_epoch() -> None:
+    """SQL 11 must reference opened_at (datetime column), not an epoch alias.
+
+    An epoch alias derived via CAST(a.opened_at AS REAL) broke the julianday()
+    arithmetic in SQLite when opened_at is an ISO datetime string.
+    """
+    sql_text = DIGITAL_SQL_EXERCISES["db_velocity_account_features"].read_text(
+        encoding="utf-8"
+    )
+    assert "account_opened_epoch" not in sql_text, (
+        "SQL 11 still contains an 'account_opened_epoch' alias. "
+        "It should use 'opened_at' directly for julianday() arithmetic."
+    )
+    assert "opened_at" in sql_text
+
+
+def test_digital_sql_velocity_account_exercise_early_life_boundary_is_inclusive(
+    tmp_path: Path,
+) -> None:
+    """SQL 11 BETWEEN 0 AND 30 must include the boundaries (0 and 30 days exactly).
+
+    A bare '<= 30' would allow negative account ages to be flagged as early-life;
+    BETWEEN 0 AND 30 guards against that even when dates are stored as ISO strings.
+    """
+    sql_text = DIGITAL_SQL_EXERCISES["db_velocity_account_features"].read_text(
+        encoding="utf-8"
+    )
+    # The BETWEEN 0 AND 30 phrasing must be present (not just <= 30).
+    assert "BETWEEN 0 AND 30" in sql_text, (
+        "SQL 11 must use 'BETWEEN 0 AND 30' for the early-life account boundary. "
+        "A bare '<= 30' would allow negative account ages to be flagged."
+    )
+
+    connection = create_minimal_banking_world_sqlite(
+        tmp_path / "learner_world.sqlite", seed=42, scale="small"
+    )
+    connection.row_factory = sqlite3.Row
+
+    try:
+        rows = connection.execute(
+            DIGITAL_SQL_EXERCISES["db_velocity_account_features"].read_text(encoding="utf-8")
+        ).fetchall()
+        # Every early-life flag must correspond to an age of 0-30 days (inclusive).
+        for row in rows:
+            if row["db_is_early_life_account"] == 1:
+                assert 0 <= row["db_account_age_days"] <= 30, (
+                    f"Row flagged as early-life has age {row['db_account_age_days']} days "
+                    "(out of the 0-30 day window)."
+                )
+    finally:
+        connection.close()

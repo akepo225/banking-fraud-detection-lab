@@ -1,0 +1,22 @@
+# Dependabot configuration for the GitHub Actions ecosystem.
+#
+# The CI workflow pins its actions by SHA (e.g.
+# `actions/checkout@<sha> # v4`) for supply-chain hardening. Dependabot keeps
+# those pins monitored: when upstream releases a new version it opens a PR that
+# updates the SHA to the latest release commit, preserving the pin (it does not
+# switch to a floating tag). See .github/workflows/ci.yml for the pinned actions.
+#
+# Scope is intentionally limited to github-actions per issue #132. Other
+# ecosystems (pip, uv, npm, etc.) are out of scope here.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Group all github-actions bumps into a single PR so the two pinned actions
+    # (actions/checkout, astral-sh/setup-uv) are reviewed together, reducing PR
+    # noise for low-risk CI-infra dependencies.
+    groups:
+      github-actions:
+        patterns: ["*"]

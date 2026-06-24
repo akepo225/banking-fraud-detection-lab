@@ -1,0 +1,27 @@
+# Normalize line endings so the committed repository uses LF on every platform.
+#
+# This repo has no .gitattributes and relied on Windows-only `core.autocrlf=true`.
+# That caused phantom "every file modified" diffs (29k+ insertions == deletions)
+# whenever the same working tree was read by WSL/Linux git (e.g. CI is
+# ubuntu-latest), because the on-disk CRLF did not match the committed LF.
+#
+# The committed files are already pure LF, so declaring `text eol=lf` here is
+# non-destructive: it pins the current state and makes it consistent across
+# Windows, WSL, and CI. Binary files are listed explicitly so they are never
+# touched.
+
+# Default: treat as text and store with LF in the repo.
+* text=auto eol=lf
+
+# --- Binary files (never normalize) ---
+# No binary files are currently tracked, but these rules protect any future
+# additions from accidental line-ending mangling.
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.pdf     binary
+*.sqlite  binary
+*.db      binary
+*.parquet binary

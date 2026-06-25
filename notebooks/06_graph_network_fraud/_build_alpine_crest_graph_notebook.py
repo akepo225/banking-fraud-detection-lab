@@ -1,7 +1,12 @@
 """Build the Alpine Crest private-banking graph-investigation notebook.
 
+This script is the deterministic regeneration source for
+``alpine_crest_graph_investigation.ipynb``: it generates the ``.ipynb``, but the
+notebook is the tested artifact (the smoke test in
+``tests/test_alpine_crest_graph_notebook.py`` runs the ``.ipynb`` directly, not
+this script). Run manually to regenerate — it is not a CI or test dependency.
+
 Run with: uv run python notebooks/06_graph_network_fraud/_build_alpine_crest_graph_notebook.py
-This script generates the .ipynb; it is not committed as a test dependency.
 """
 
 from __future__ import annotations

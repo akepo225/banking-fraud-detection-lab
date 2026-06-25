@@ -1,5 +1,11 @@
 """Build the NovaBank Digital graph-investigation notebook.
 
+This script is the deterministic regeneration source for
+``novabank_graph_investigation.ipynb``: it generates the ``.ipynb``, but the
+notebook is the tested artifact (the smoke test in
+``tests/test_novabank_graph_notebook.py`` runs the ``.ipynb`` directly, not this
+script). Run manually to regenerate — it is not a CI or test dependency.
+
 Run with: uv run python notebooks/06_graph_network_fraud/_build_novabank_graph_notebook.py
 """
 

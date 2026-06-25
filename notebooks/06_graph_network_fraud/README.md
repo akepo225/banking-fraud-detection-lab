@@ -27,9 +27,9 @@ infrastructure. Neo4j is optional and not required (see
 
 ## Case library and regulatory context
 
-Graph-network source packs are linked from the
-[case library index](../../docs/cases/index.md) under the graph-network facet.
-See the full catalog:
+Graph-network source packs will be linked from the
+[case library index](../../docs/cases/index.md) under the graph-network facet as
+they are added. See the full catalog:
 
 - [Case library index](../../docs/cases/index.md)
 - [Regulatory source index](../../docs/regulation/index.md)

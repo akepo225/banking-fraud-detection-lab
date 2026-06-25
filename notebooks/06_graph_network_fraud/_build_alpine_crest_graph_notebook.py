@@ -82,7 +82,9 @@ def build_notebook() -> nbf.NotebookNode:
     ))
 
     nb.cells.append(new_code_cell(
-        "components = build_all_graph_features(graph)['graph_connected_component']\n"
+        "# Compute every graph feature family once and reuse it through the notebook.\n"
+        "features = build_all_graph_features(graph)\n"
+        "components = features['graph_connected_component']\n"
         "ownership_clusters = (\n"
         "    components[components['component_size'] > 1]\n"
         "    .sort_values('component_size', ascending=False)\n"
@@ -100,7 +102,7 @@ def build_notebook() -> nbf.NotebookNode:
     ))
 
     nb.cells.append(new_code_cell(
-        "degree = build_all_graph_features(graph)['graph_node_degree']\n"
+        "degree = features['graph_node_degree']\n"
         "beneficiary_hubs = (\n"
         "    degree[degree['node_type'] == 'beneficiary']\n"
         "    .sort_values('node_degree', ascending=False)\n"
@@ -120,13 +122,33 @@ def build_notebook() -> nbf.NotebookNode:
     ))
 
     nb.cells.append(new_code_cell(
-        "bridge = build_all_graph_features(graph)['graph_bridge_node']\n"
+        "bridge = features['graph_bridge_node']\n"
         "bridge_accounts = bridge[\n"
         "    (bridge['node_type'].isin(['account', 'transaction']))\n"
         "    & (bridge['is_bridge_endpoint'] == 1)\n"
         "]\n"
         "print(f'Bridge-edge accounts/transactions: {len(bridge_accounts)}')\n"
         "bridge_accounts.head(10)"
+    ))
+
+    nb.cells.append(new_markdown_cell(
+        "### Path Length From a Starting Account\n"
+        "\n"
+        "Path-length features measure how close a starting account is to other "
+        "nodes in its network. Short return paths to the starting point are the "
+        "structural signature of circular funds movement — funds that leave an "
+        "account and quickly find a route back through related entities."
+    ))
+
+    nb.cells.append(new_code_cell(
+        "accounts = [node for node, data in graph.nodes(data=True) if data['node_type'] == 'account']\n"
+        "focus = accounts[0] if accounts else None\n"
+        "path_lengths = build_all_graph_features(graph, focus_nodes=[focus] if focus else None)[\n"
+        "    'graph_path_length'\n"
+        "]\n"
+        "# Nodes reachable from the starting account, nearest first (length 0 is the focus itself).\n"
+        "reachable = path_lengths[path_lengths['shortest_path_length'] >= 0].head(10)\n"
+        "reachable"
     ))
 
     nb.cells.append(new_markdown_cell(

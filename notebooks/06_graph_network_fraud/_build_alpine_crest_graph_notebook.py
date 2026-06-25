@@ -1,0 +1,205 @@
+"""Build the Alpine Crest private-banking graph-investigation notebook.
+
+Run with: uv run python notebooks/06_graph_network_fraud/_build_alpine_crest_graph_notebook.py
+This script generates the .ipynb; it is not committed as a test dependency.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import nbformat as nbf
+from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
+
+
+def build_notebook() -> nbf.NotebookNode:
+    """Assemble the Alpine Crest graph-investigation notebook."""
+    nb = new_notebook()
+
+    nb.cells.append(new_markdown_cell(
+        "# Alpine Crest Private-Banking Graph Investigation\n"
+        "\n"
+        "This notebook introduces relationship and network analysis for the "
+        "**Alpine Crest Private Bank** private-banking track. A learner builds a "
+        "graph from the canonical generated tables, computes explainable network "
+        "features, and investigates private-banking network structures: "
+        "beneficial ownership, shared counterparties, related entities, and "
+        "circular funds movement.\n"
+        "\n"
+        "Graph evidence **extends** the existing tabular investigation — it does "
+        "not replace it. Every network signal is connected back to the v0.3 "
+        "private-banking tabular signals (amount-to-AUM, new counterparty, "
+        "cross-border) and the v0.5 case context."
+    ))
+
+    nb.cells.append(new_code_cell(
+        "import pandas as pd\n"
+        "\n"
+        "from banking_fraud_lab import (\n"
+        "    build_all_graph_features,\n"
+        "    build_banking_graph,\n"
+        "    build_foundation_progressive_views,\n"
+        "    generate_minimal_banking_world,\n"
+        "    join_graph_features_to_view,\n"
+        ")\n"
+        "\n"
+        "pd.set_option('display.max_columns', None)"
+    ))
+
+    nb.cells.append(new_markdown_cell(
+        "## Build the Banking Graph\n"
+        "\n"
+        "The graph is derived purely from the canonical generated tables — there "
+        "is no separate graph-only dataset. Partners, Clients, Banking "
+        "relationships, accounts, beneficiaries, transactions, alerts, and cases "
+        "become nodes; ownership, payment, counterparty, alert, and case "
+        "relationships become typed edges."
+    ))
+
+    nb.cells.append(new_code_cell(
+        "tables = generate_minimal_banking_world(seed=42, scale='tiny')\n"
+        "graph = build_banking_graph(tables)\n"
+        "\n"
+        "print(f'Nodes: {graph.number_of_nodes()}')\n"
+        "print(f'Edges: {graph.number_of_edges()}')\n"
+        "\n"
+        "node_type_counts = (\n"
+        "    pd.Series([d['node_type'] for _, d in graph.nodes(data=True)])\n"
+        "    .value_counts()\n"
+        "    .sort_index()\n"
+        ")\n"
+        "node_type_counts"
+    ))
+
+    nb.cells.append(new_markdown_cell(
+        "## Beneficial Ownership and Related Entities\n"
+        "\n"
+        "A **Banking relationship** is the Swiss-bank-style container that groups "
+        "related Partners, Clients, and accounts. Connected components reveal "
+        "which entities belong to the same ownership cluster. Large components "
+        "that span many Partners or accounts can signal layered structures worth "
+        "investigating."
+    ))
+
+    nb.cells.append(new_code_cell(
+        "# Compute every graph feature family once and reuse it through the notebook.\n"
+        "features = build_all_graph_features(graph)\n"
+        "components = features['graph_connected_component']\n"
+        "ownership_clusters = (\n"
+        "    components[components['component_size'] > 1]\n"
+        "    .sort_values('component_size', ascending=False)\n"
+        ")\n"
+        "ownership_clusters.head(10)"
+    ))
+
+    nb.cells.append(new_markdown_cell(
+        "## Shared Counterparties\n"
+        "\n"
+        "Beneficiaries shared across Clients or accounts are a network signal: a "
+        "single counterparty receiving funds from several otherwise-unrelated "
+        "Banking relationships can indicate coordinated movement. Node degree "
+        "highlights counterparties and accounts that act as hubs."
+    ))
+
+    nb.cells.append(new_code_cell(
+        "degree = features['graph_node_degree']\n"
+        "beneficiary_hubs = (\n"
+        "    degree[degree['node_type'] == 'beneficiary']\n"
+        "    .sort_values('node_degree', ascending=False)\n"
+        "    .head(5)\n"
+        ")\n"
+        "beneficiary_hubs"
+    ))
+
+    nb.cells.append(new_markdown_cell(
+        "## Circular Funds Movement\n"
+        "\n"
+        "Bridge nodes are single points through which funds pass between "
+        "otherwise separate clusters. A transaction or account sitting on a "
+        "bridge edge can be the linchpin of circular funds movement among related "
+        "entities. Path-length features then show how close a starting account is "
+        "to returning funds through the network."
+    ))
+
+    nb.cells.append(new_code_cell(
+        "bridge = features['graph_bridge_node']\n"
+        "bridge_accounts = bridge[\n"
+        "    (bridge['node_type'].isin(['account', 'transaction']))\n"
+        "    & (bridge['is_bridge_endpoint'] == 1)\n"
+        "]\n"
+        "print(f'Bridge-edge accounts/transactions: {len(bridge_accounts)}')\n"
+        "bridge_accounts.head(10)"
+    ))
+
+    nb.cells.append(new_markdown_cell(
+        "### Path Length From a Starting Account\n"
+        "\n"
+        "Path-length features measure how close a starting account is to other "
+        "nodes in its network. Short return paths to the starting point are the "
+        "structural signature of circular funds movement — funds that leave an "
+        "account and quickly find a route back through related entities."
+    ))
+
+    nb.cells.append(new_code_cell(
+        "accounts = [node for node, data in graph.nodes(data=True) if data['node_type'] == 'account']\n"
+        "focus = accounts[0] if accounts else None\n"
+        "path_lengths = build_all_graph_features(graph, focus_nodes=[focus] if focus else None)[\n"
+        "    'graph_path_length'\n"
+        "]\n"
+        "# Nodes reachable from the starting account, nearest first (length 0 is the focus itself).\n"
+        "reachable = path_lengths[path_lengths['shortest_path_length'] >= 0].head(10)\n"
+        "reachable"
+    ))
+
+    nb.cells.append(new_markdown_cell(
+        "## Connect Graph Evidence to the Investigation\n"
+        "\n"
+        "Graph features are joined back to the foundation "
+        "`foundation_client_relationships` Progressive data view so network "
+        "evidence supports the relationship-level investigation. The join does "
+        "not drop or duplicate any keyed row — it adds network context to the "
+        "existing tabular view."
+    ))
+
+    nb.cells.append(new_code_cell(
+        "views = build_foundation_progressive_views(tables)\n"
+        "client_view = views['foundation_client_relationships']\n"
+        "augmented = join_graph_features_to_view(degree, client_view)\n"
+        "network_columns = [c for c in augmented.columns if c.startswith('node_degree_')]\n"
+        "augmented[['banking_relationship_id', 'client_id', *network_columns]].head()"
+    ))
+
+    nb.cells.append(new_markdown_cell(
+        "## Interpretation and Limitations\n"
+        "\n"
+        "Network signals here are **investigative leads**, not proof of fraud. "
+        "A large component or a bridge node is a reason to look more closely at "
+        "the v0.3 tabular signals (amount-to-AUM, new counterparty, cross-border) "
+        "and the v0.5 case context, not a verdict. This notebook avoids headline "
+        "accuracy claims and frames outputs for business, risk, and compliance "
+        "discussion.\n"
+        "\n"
+        "- **Beneficial ownership** clusters show related entities; confirm with "
+        "KYC and relationship-manager context.\n"
+        "- **Shared counterparties** are leads; confirm with payment-purpose and "
+        "beneficiary-change history.\n"
+        "- **Circular funds movement** through bridge nodes is a structural "
+        "signal; confirm with transaction-level review.\n"
+        "\n"
+        "All data is synthetic (Alpine Crest Private Bank). No real client data, "
+        "no reconstruction of real events, and no legal advice is provided."
+    ))
+
+    return nb
+
+
+def main() -> None:
+    """Write the notebook to disk next to this script."""
+    out_path = Path(__file__).resolve().parent / "alpine_crest_graph_investigation.ipynb"
+    nb = build_notebook()
+    nbf.write(nb, out_path)
+    print(f"Wrote {out_path}")
+
+
+if __name__ == "__main__":
+    main()

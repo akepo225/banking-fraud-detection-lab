@@ -72,6 +72,12 @@ modules in order:
 - [`05_digital_session_and_payment_fraud`](notebooks/05_digital_session_and_payment_fraud/novabank_feature_engineering.ipynb):
   NovaBank Digital session and payment fraud feature engineering, supervised
   baseline, and alert triage.
+- [`06_graph_network_fraud`](notebooks/06_graph_network_fraud/alpine_crest_graph_investigation.ipynb):
+  v0.6 graph and network analytics. Build a NetworkX graph from the canonical
+  generated tables and investigate relationship and transaction networks
+  (beneficial ownership, shared counterparties, related entities, circular
+  funds movement). Graph evidence extends, not replaces, the tabular
+  investigation.
 
 Optional canonical-data refreshers for Python, pandas, SQL, and sklearn live in
 [`00_foundations/warmups`](notebooks/00_foundations/warmups/). They are outside

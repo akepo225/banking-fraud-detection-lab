@@ -22,6 +22,13 @@ Track extension notebook naming and module-layout conventions are defined in
   `05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb`,
   then run
   `05_digital_session_and_payment_fraud/novabank_alert_triage.ipynb`.
+- `06_graph_network_fraud/`: v0.6 graph and network analytics. Learners build a
+  NetworkX graph from the canonical generated tables and investigate relationship
+  and transaction networks. The private-banking notebook starts with
+  `06_graph_network_fraud/alpine_crest_graph_investigation.ipynb` (Alpine Crest
+  Private Bank: beneficial ownership, shared counterparties, related entities,
+  and circular funds movement). These notebooks extend — and do not replace —
+  the v0.1–v0.5 tabular investigation.
 
 ## Case Library And Regulatory Context
 
@@ -34,6 +41,7 @@ to the relevant case source packs and regulatory source notes. See:
 - [03_alert_governance/README.md](03_alert_governance/README.md)
 - [04_private_banking_feature_engineering/README.md](04_private_banking_feature_engineering/README.md)
 - [05_digital_session_and_payment_fraud/README.md](05_digital_session_and_payment_fraud/README.md)
+- [06_graph_network_fraud/README.md](06_graph_network_fraud/README.md)
 
 For the full catalogs, see the [case library index](../docs/cases/index.md) and
 the [regulatory source index](../docs/regulation/index.md).

@@ -26,6 +26,14 @@ from banking_fraud_lab.sqlite_loader import (
     load_tables_to_sqlite,
 )
 from banking_fraud_lab.evaluation import evaluate_alert_scores
+from banking_fraud_lab.interpretability import (
+    EXPLANATION_FAMILY_IDS,
+    EXPLANATION_FAMILY_SPECS,
+    ExplanationFamilySpec,
+    build_partial_dependence_grid,
+    explain_feature_family,
+    extract_feature_importance,
+)
 from banking_fraud_lab.features import (
     DIGITAL_BANKING_FEATURE_FAMILIES,
     FEATURE_FAMILY_IDS,
@@ -75,12 +83,15 @@ __all__ = [
     "EDGE_CATEGORY_IDS",
     "EDGE_SPECS",
     "EDGE_TYPE_IDS",
+    "EXPLANATION_FAMILY_IDS",
+    "EXPLANATION_FAMILY_SPECS",
     "FEATURE_FAMILY_IDS",
     "FOUNDATION_PROGRESSIVE_VIEW_SPECS",
     "GRAPH_FEATURE_FAMILIES",
     "GRAPH_FEATURE_FAMILY_IDS",
     "PRIVATE_BANKING_FEATURE_FAMILIES",
     "EdgeSpec",
+    "ExplanationFamilySpec",
     "FeatureFamilySpec",
     "GraphFeatureFamilySpec",
     "NodeSpec",
@@ -101,6 +112,7 @@ __all__ = [
     "build_foundation_progressive_views",
     "build_learner_facing_views",
     "build_node_degree_features",
+    "build_partial_dependence_grid",
     "build_path_length_features",
     "build_private_banking_features",
     "calculate_amount_to_aum_features",
@@ -119,6 +131,8 @@ __all__ = [
     "calculate_velocity_features",
     "create_minimal_banking_world_sqlite",
     "evaluate_alert_scores",
+    "explain_feature_family",
+    "extract_feature_importance",
     "generate_dataset_quality_report",
     "generate_digital_fraud_scenarios_world",
     "generate_digital_scam_to_mule_world",

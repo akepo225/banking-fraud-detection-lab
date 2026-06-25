@@ -4,6 +4,8 @@ from banking_fraud_lab import (
     EDGE_CATEGORY_IDS,
     EDGE_SPECS,
     EDGE_TYPE_IDS,
+    EXPLANATION_FAMILY_IDS,
+    EXPLANATION_FAMILY_SPECS,
     FEATURE_FAMILY_IDS,
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
     GRAPH_FEATURE_FAMILIES,
@@ -13,6 +15,7 @@ from banking_fraud_lab import (
     PRIVATE_BANKING_FEATURE_FAMILIES,
     DatasetQualityReport,
     EdgeSpec,
+    ExplanationFamilySpec,
     FeatureFamilySpec,
     GraphFeatureFamilySpec,
     NodeSpec,
@@ -26,6 +29,7 @@ from banking_fraud_lab import (
     build_connected_component_features,
     build_node_degree_features,
     build_path_length_features,
+    build_partial_dependence_grid,
     build_learner_facing_views,
     build_foundation_progressive_views,
     build_private_banking_features,
@@ -38,6 +42,8 @@ from banking_fraud_lab import (
     calculate_velocity_features,
     create_minimal_banking_world_sqlite,
     evaluate_alert_scores,
+    explain_feature_family,
+    extract_feature_importance,
     generate_dataset_quality_report,
     generate_digital_scam_to_mule_world,
     generate_learner_facing_digital_scam_to_mule_world,
@@ -63,12 +69,15 @@ def test_package_imports() -> None:
     assert GraphFeatureFamilySpec
     assert NodeSpec
     assert EdgeSpec
+    assert ExplanationFamilySpec
     assert ProgressiveViewSpec
     assert EDGE_CATEGORY_IDS
     assert EDGE_SPECS
     assert EDGE_TYPE_IDS
     assert GRAPH_FEATURE_FAMILIES
     assert GRAPH_FEATURE_FAMILY_IDS
+    assert EXPLANATION_FAMILY_IDS
+    assert EXPLANATION_FAMILY_SPECS
     assert NODE_SPECS
     assert NODE_TYPE_IDS
     assert callable(generate_minimal_banking_world)
@@ -80,6 +89,9 @@ def test_package_imports() -> None:
     assert callable(build_connected_component_features)
     assert callable(build_node_degree_features)
     assert callable(build_path_length_features)
+    assert callable(build_partial_dependence_grid)
+    assert callable(extract_feature_importance)
+    assert callable(explain_feature_family)
     assert callable(join_graph_features_to_view)
     assert callable(build_learner_facing_views)
     assert callable(build_foundation_progressive_views)

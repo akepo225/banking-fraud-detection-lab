@@ -31,7 +31,10 @@ Track extension notebook naming and module-layout conventions are defined in
   `06_graph_network_fraud/novabank_graph_investigation.ipynb` (NovaBank Digital:
   mule rings, shared devices, shared beneficiaries, pass-through clusters) both
   run on tiny data. These notebooks extend — and do not replace — the v0.1–v0.5
-  tabular investigation.
+  tabular investigation. This module also ships committed `_build_*.py` generator
+  scripts that deterministically regenerate the notebooks; elsewhere notebooks are
+  authored directly. The `.ipynb` files are the tested artifacts (see the module's
+  [README](06_graph_network_fraud/README.md) for the regeneration convention).
 
 ## Case Library And Regulatory Context
 

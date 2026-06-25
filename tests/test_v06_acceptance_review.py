@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 from pathlib import Path
 
 import networkx as nx
@@ -176,6 +177,46 @@ def test_v03_v04_v05_notebook_test_modules_are_collectable() -> None:
         assert importlib.util.find_spec(module_name) is not None, (
             f"notebook regression module not collectable: {module_name}"
         )
+
+
+@pytest.mark.regression_execution
+def test_v03_v04_v05_notebooks_execute_end_to_end() -> None:
+    """The gate alone must prove the prior-version notebooks still execute.
+
+    Runs each v0.3/v0.4/v0.5 notebook smoke-test module directly via an isolated
+    ``uv run pytest`` subprocess — the same canonical invocation CI uses for the
+    full suite, so the Jupyter kernel environment (e.g. ``networkx`` for the v0.6
+    graph module imported by these notebooks) matches CI exactly. This strengthens
+    the presence/importability checks above into a real regression guarantee: a
+    hollowed-out module (present and importable but executing nothing) would make
+    this gate fail.
+
+    Each module is invoked in its own subprocess so a per-module regression
+    (broken execution, or a module whose test function was removed, yielding
+    pytest exit code ``5`` "no tests collected") is caught on its own rather than
+    masked by the other modules collecting tests.
+    """
+    failures: list[str] = []
+    for name in V03_V04_V05_NOTEBOOK_TEST_MODULES:
+        module_path = ROOT / "tests" / f"{name}.py"
+        try:
+            result = subprocess.run(  # noqa: S603 - "uv" is the project-mandated runner; argv is controlled.
+                ["uv", "run", "pytest", str(module_path), "-q"],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=300,
+            )
+        except subprocess.TimeoutExpired as exc:
+            failures.append(f"{name} (timed out after 300s): {exc}")
+            continue
+        if result.returncode != 0:
+            failures.append(
+                f"{name} (exit {result.returncode}):\n" + result.stdout + result.stderr
+            )
+
+    assert not failures, "prior-version notebook execution failed:\n" + "\n".join(failures)
 
 
 # --- Acceptance review artifact -------------------------------------------

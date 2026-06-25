@@ -1,13 +1,21 @@
 """Tests for package-level imports and version."""
 
 from banking_fraud_lab import (
+    EDGE_CATEGORY_IDS,
+    EDGE_SPECS,
+    EDGE_TYPE_IDS,
     FEATURE_FAMILY_IDS,
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
+    NODE_SPECS,
+    NODE_TYPE_IDS,
     PRIVATE_BANKING_FEATURE_FAMILIES,
     DatasetQualityReport,
+    EdgeSpec,
     FeatureFamilySpec,
+    NodeSpec,
     ProgressiveViewSpec,
     __version__,
+    build_banking_graph,
     build_learner_facing_views,
     build_foundation_progressive_views,
     build_private_banking_features,
@@ -41,8 +49,16 @@ def test_package_imports() -> None:
     assert PRIVATE_BANKING_FEATURE_FAMILIES
     assert DatasetQualityReport
     assert FeatureFamilySpec
+    assert NodeSpec
+    assert EdgeSpec
     assert ProgressiveViewSpec
+    assert EDGE_CATEGORY_IDS
+    assert EDGE_SPECS
+    assert EDGE_TYPE_IDS
+    assert NODE_SPECS
+    assert NODE_TYPE_IDS
     assert callable(generate_minimal_banking_world)
+    assert callable(build_banking_graph)
     assert callable(build_learner_facing_views)
     assert callable(build_foundation_progressive_views)
     assert callable(build_private_banking_features)

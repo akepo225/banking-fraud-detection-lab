@@ -472,17 +472,26 @@ def test_private_banking_source_packs_have_learner_output_exercises() -> None:
 
 
 def test_private_banking_source_pack_exercises_reference_valid_pattern_ids() -> None:
-    """Private-banking exercises must cite frozen private-banking pattern IDs."""
+    """Private-banking exercises must cite frozen pattern IDs.
+
+    v0.3 private-banking packs cite the private tabular pattern IDs; the v0.6
+    graph pack on the private-banking track cites the graph-native
+    ``circular_funds_movement`` pattern. Either is acceptable as long as every
+    cited id is present in the frozen registry.
+    """
     private_banking_pattern_ids = set(PRIVATE_BANKING_V0_3_PATTERN_IDS)
+    graph_private_pattern_ids = {"circular_funds_movement"}
     for pack in _private_banking_packs():
         text = pack.read_text(encoding="utf-8")
         exercise_section = _section_text(text, "## Linked Modules And Exercises")
         referenced_pattern_ids: set[str] = set()
         for block in _exercise_blocks(exercise_section):
             referenced_pattern_ids.update(_exercise_pattern_ids(block))
-        assert referenced_pattern_ids & private_banking_pattern_ids, (
+        assert referenced_pattern_ids & (
+            private_banking_pattern_ids | graph_private_pattern_ids
+        ), (
             f"{pack.name} exercises must reference at least one of "
-            f"{sorted(private_banking_pattern_ids)}"
+            f"{sorted(private_banking_pattern_ids | graph_private_pattern_ids)}"
         )
         invalid = referenced_pattern_ids - set(PATTERN_IDS)
         assert not invalid, (
@@ -543,17 +552,23 @@ def test_digital_source_packs_have_learner_output_exercises() -> None:
 
 
 def test_digital_source_pack_exercises_reference_valid_pattern_ids() -> None:
-    """Digital exercises must cite frozen digital pattern IDs."""
+    """Digital exercises must cite frozen pattern IDs.
+
+    v0.4 digital packs cite the digital tabular pattern IDs; v0.6 graph packs
+    on the digital track cite the graph-native ``mule_ring`` pattern. Either is
+    acceptable as long as every cited id is present in the frozen registry.
+    """
     digital_pattern_ids = set(DIGITAL_V0_4_PATTERN_IDS)
+    graph_digital_pattern_ids = {"mule_ring"}
     for pack in _digital_packs():
         text = pack.read_text(encoding="utf-8")
         exercise_section = _section_text(text, "## Linked Modules And Exercises")
         referenced_pattern_ids: set[str] = set()
         for block in _exercise_blocks(exercise_section):
             referenced_pattern_ids.update(_exercise_pattern_ids(block))
-        assert referenced_pattern_ids & digital_pattern_ids, (
+        assert referenced_pattern_ids & (digital_pattern_ids | graph_digital_pattern_ids), (
             f"{pack.name} exercises must reference at least one of "
-            f"{sorted(digital_pattern_ids)}"
+            f"{sorted(digital_pattern_ids | graph_digital_pattern_ids)}"
         )
         invalid = referenced_pattern_ids - set(PATTERN_IDS)
         assert not invalid, (
@@ -587,15 +602,12 @@ def test_every_core_module_has_an_inbound_case_or_regulatory_link() -> None:
     (every core module in one assertion set) rather than a per-module one-off,
     so a newly added module is governed the moment it lands under
     ``notebooks/``.
-
-    The v0.6 graph module's inbound source packs land in #155, so the v0.6
-    module is excluded here until that slice ships.
     """
     inbound_sources = _inbound_module_links()
     uncovered = sorted(
         str(module)
         for module in CORE_NOTEBOOK_MODULES
-        if "06_" not in module.name and not inbound_sources.get(module)
+        if not inbound_sources.get(module)
     )
     assert not uncovered, (
         "Core modules with no inbound link from any source pack or regulatory "

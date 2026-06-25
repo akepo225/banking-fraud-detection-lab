@@ -48,3 +48,6 @@ target-version = "py311"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+  "regression_execution: re-executes prior-version notebooks end-to-end via nbconvert; heavier than a presence check",
+]

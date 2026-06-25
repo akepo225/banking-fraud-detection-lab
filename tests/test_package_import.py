@@ -1,6 +1,7 @@
 """Tests for package-level imports and version."""
 
 from banking_fraud_lab import (
+    DEFAULT_FP_SEGMENT_COLUMNS,
     EDGE_CATEGORY_IDS,
     EDGE_SPECS,
     EDGE_TYPE_IDS,
@@ -36,8 +37,10 @@ from banking_fraud_lab import (
     calculate_off_hours_features,
     calculate_rm_concentration_features,
     calculate_velocity_features,
+    concentrate_false_positives,
     create_minimal_banking_world_sqlite,
     evaluate_alert_scores,
+    recommend_lowest_cost_threshold,
     generate_dataset_quality_report,
     generate_digital_scam_to_mule_world,
     generate_learner_facing_digital_scam_to_mule_world,
@@ -101,4 +104,7 @@ def test_package_imports() -> None:
     assert callable(inject_private_banking_transaction_fraud)
     assert callable(load_tables_to_sqlite)
     assert callable(evaluate_alert_scores)
+    assert callable(concentrate_false_positives)
+    assert callable(recommend_lowest_cost_threshold)
+    assert DEFAULT_FP_SEGMENT_COLUMNS
     assert callable(generate_dataset_quality_report)

@@ -25,7 +25,12 @@ from banking_fraud_lab.sqlite_loader import (
     create_minimal_banking_world_sqlite,
     load_tables_to_sqlite,
 )
-from banking_fraud_lab.evaluation import evaluate_alert_scores
+from banking_fraud_lab.evaluation import (
+    DEFAULT_FP_SEGMENT_COLUMNS,
+    concentrate_false_positives,
+    evaluate_alert_scores,
+    recommend_lowest_cost_threshold,
+)
 from banking_fraud_lab.features import (
     DIGITAL_BANKING_FEATURE_FAMILIES,
     FEATURE_FAMILY_IDS,
@@ -72,6 +77,7 @@ from banking_fraud_lab.graph import (
 
 __all__ = [
     "DIGITAL_BANKING_FEATURE_FAMILIES",
+    "DEFAULT_FP_SEGMENT_COLUMNS",
     "EDGE_CATEGORY_IDS",
     "EDGE_SPECS",
     "EDGE_TYPE_IDS",
@@ -118,7 +124,9 @@ __all__ = [
     "calculate_rm_concentration_features",
     "calculate_velocity_features",
     "create_minimal_banking_world_sqlite",
+    "concentrate_false_positives",
     "evaluate_alert_scores",
+    "recommend_lowest_cost_threshold",
     "generate_dataset_quality_report",
     "generate_digital_fraud_scenarios_world",
     "generate_digital_scam_to_mule_world",

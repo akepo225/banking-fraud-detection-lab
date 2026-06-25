@@ -6,16 +6,26 @@ from banking_fraud_lab import (
     EDGE_TYPE_IDS,
     FEATURE_FAMILY_IDS,
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
+    GRAPH_FEATURE_FAMILIES,
+    GRAPH_FEATURE_FAMILY_IDS,
     NODE_SPECS,
     NODE_TYPE_IDS,
     PRIVATE_BANKING_FEATURE_FAMILIES,
     DatasetQualityReport,
     EdgeSpec,
     FeatureFamilySpec,
+    GraphFeatureFamilySpec,
     NodeSpec,
     ProgressiveViewSpec,
     __version__,
+    build_all_graph_features,
     build_banking_graph,
+    build_bridge_node_features,
+    build_centrality_features,
+    build_community_features,
+    build_connected_component_features,
+    build_node_degree_features,
+    build_path_length_features,
     build_learner_facing_views,
     build_foundation_progressive_views,
     build_private_banking_features,
@@ -37,6 +47,7 @@ from banking_fraud_lab import (
     generate_private_banking_transaction_fraud_world,
     inject_digital_scam_to_mule_flow,
     inject_private_banking_transaction_fraud,
+    join_graph_features_to_view,
     load_tables_to_sqlite,
 )
 
@@ -49,16 +60,27 @@ def test_package_imports() -> None:
     assert PRIVATE_BANKING_FEATURE_FAMILIES
     assert DatasetQualityReport
     assert FeatureFamilySpec
+    assert GraphFeatureFamilySpec
     assert NodeSpec
     assert EdgeSpec
     assert ProgressiveViewSpec
     assert EDGE_CATEGORY_IDS
     assert EDGE_SPECS
     assert EDGE_TYPE_IDS
+    assert GRAPH_FEATURE_FAMILIES
+    assert GRAPH_FEATURE_FAMILY_IDS
     assert NODE_SPECS
     assert NODE_TYPE_IDS
     assert callable(generate_minimal_banking_world)
+    assert callable(build_all_graph_features)
     assert callable(build_banking_graph)
+    assert callable(build_bridge_node_features)
+    assert callable(build_centrality_features)
+    assert callable(build_community_features)
+    assert callable(build_connected_component_features)
+    assert callable(build_node_degree_features)
+    assert callable(build_path_length_features)
+    assert callable(join_graph_features_to_view)
     assert callable(build_learner_facing_views)
     assert callable(build_foundation_progressive_views)
     assert callable(build_private_banking_features)

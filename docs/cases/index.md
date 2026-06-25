@@ -65,7 +65,6 @@ Authorised scam payment to a mule or fraudster account, and early-life mule beha
 | --- | --- | --- | --- | --- | --- |
 | [Digital scam-to-mule](source_packs/digital-scam-to-mule.md) | Digital-banking | PSP / digital bank | Payment Systems Regulator | regulator | United Kingdom / payments |
 | [Digital money mule behavior](source_packs/digital-money-mule-behavior.md) | Digital-banking | PSP / digital bank | UK Finance | industry_report | United Kingdom / cross-border payments |
-| [Graph network money mules](source_packs/graph-network-money-mules.md) | Future graph/network analytics | digital banking & payments network | Europol | enforcement | Europe / international |
 
 ### `new_beneficiary_payment`
 
@@ -83,6 +82,22 @@ Account-takeover with elevated session payment velocity in online banking.
 | Pack | Track | Institution | Source authority | Source type | Geography |
 | --- | --- | --- | --- | --- | --- |
 | [Online-bank account control failure](source_packs/digital-online-bank-control-failures.md) | Digital-banking | PSP / digital bank | National Cyber Security Centre | cyber_authority | United Kingdom / online banking |
+
+### `mule_ring`
+
+Networked mule and rented accounts moving funds through shared beneficiaries and devices; a graph-native pattern.
+
+| Pack | Track | Institution | Source authority | Source type | Geography |
+| --- | --- | --- | --- | --- | --- |
+| [Graph network money mules](source_packs/graph-network-money-mules.md) | Digital-banking | digital bank | Europol | enforcement | Europe / international |
+
+### `circular_funds_movement`
+
+Funds cycling among related Partner, Client, and Banking relationship entities through layered accounts; a graph-native pattern.
+
+| Pack | Track | Institution | Source authority | Source type | Geography |
+| --- | --- | --- | --- | --- | --- |
+| [Circular funds movement](source_packs/circular-funds-movement.md) | Private-banking | private bank | FINMA | regulator | Switzerland / cross-border |
 
 ## Cross-Pattern and Governance
 

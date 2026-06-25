@@ -14,6 +14,10 @@ features and case context.
   **Alpine Crest Private Bank** private-banking graph investigation covering
   beneficial ownership, shared counterparties, related entities, and circular
   funds movement.
+- [novabank_graph_investigation.ipynb](novabank_graph_investigation.ipynb):
+  **NovaBank Digital** digital-banking graph investigation covering mule rings,
+  shared devices, shared beneficiaries, and pass-through clusters. Respects the
+  **User** (digital login identity) vs **Client** (legal customer) distinction.
 
 ## How to run
 

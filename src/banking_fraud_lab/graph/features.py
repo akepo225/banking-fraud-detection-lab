@@ -271,10 +271,10 @@ def join_graph_features_to_view(
             renamed.rename(columns=suffixed),
             on=column,
             how="left",
-            # The right-hand feature keys are unique by construction, so this
-            # asserts the merge is many-to-one (the view side may repeat keys).
-            # A duplicate-keyed feature frame would otherwise silently multiply
-            # view rows; this fails loudly instead.
+            # The right-hand feature frame is deduped above, so its keys are
+            # unique by construction; this asserts the merge is many-to-one (the
+            # view side may repeat keys). It guards against any future caller that
+            # joins a feature frame without the dedup step.
             validate="many_to_one",
         )
     return result

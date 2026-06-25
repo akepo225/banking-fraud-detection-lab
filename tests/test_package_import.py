@@ -11,6 +11,10 @@ from banking_fraud_lab import (
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
     GRAPH_FEATURE_FAMILIES,
     GRAPH_FEATURE_FAMILY_IDS,
+    MODEL_DOCUMENTATION_SECTIONS,
+    MODEL_DOCUMENTATION_SECTION_IDS,
+    MONITORING_CHECKLIST_DIMENSIONS,
+    MONITORING_CHECKLIST_DIMENSION_IDS,
     NODE_SPECS,
     NODE_TYPE_IDS,
     PRIVATE_BANKING_FEATURE_FAMILIES,
@@ -19,6 +23,8 @@ from banking_fraud_lab import (
     ExplanationFamilySpec,
     FeatureFamilySpec,
     GraphFeatureFamilySpec,
+    ModelDocumentationSectionSpec,
+    MonitoringChecklistDimensionSpec,
     NodeSpec,
     ProgressiveViewSpec,
     __version__,
@@ -28,6 +34,8 @@ from banking_fraud_lab import (
     build_centrality_features,
     build_community_features,
     build_connected_component_features,
+    build_model_documentation,
+    build_monitoring_checklist,
     build_node_degree_features,
     build_path_length_features,
     build_partial_dependence_grid,
@@ -73,6 +81,8 @@ def test_package_imports() -> None:
     assert NodeSpec
     assert EdgeSpec
     assert ExplanationFamilySpec
+    assert ModelDocumentationSectionSpec
+    assert MonitoringChecklistDimensionSpec
     assert ProgressiveViewSpec
     assert EDGE_CATEGORY_IDS
     assert EDGE_SPECS
@@ -81,6 +91,10 @@ def test_package_imports() -> None:
     assert GRAPH_FEATURE_FAMILY_IDS
     assert EXPLANATION_FAMILY_IDS
     assert EXPLANATION_FAMILY_SPECS
+    assert MODEL_DOCUMENTATION_SECTIONS
+    assert MODEL_DOCUMENTATION_SECTION_IDS
+    assert MONITORING_CHECKLIST_DIMENSIONS
+    assert MONITORING_CHECKLIST_DIMENSION_IDS
     assert NODE_SPECS
     assert NODE_TYPE_IDS
     assert callable(generate_minimal_banking_world)
@@ -95,6 +109,8 @@ def test_package_imports() -> None:
     assert callable(build_partial_dependence_grid)
     assert callable(extract_feature_importance)
     assert callable(explain_feature_family)
+    assert callable(build_model_documentation)
+    assert callable(build_monitoring_checklist)
     assert callable(join_graph_features_to_view)
     assert callable(build_learner_facing_views)
     assert callable(build_foundation_progressive_views)

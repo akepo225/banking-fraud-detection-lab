@@ -19,6 +19,31 @@ associated with a curriculum track and a synthetic institution.
 | `pb_transaction_fraud` | Private-banking transaction fraud | Private-banking fraud detection | Alpine Crest Private Bank | `private_banking_transaction_fraud` |
 | `digital_scam_to_mule` | Digital scam-to-mule flow | Digital-banking fraud detection | NovaBank Digital | `digital_scam_to_mule_flow` |
 
+## Graph-Native Patterns (v0.6)
+
+The v0.6 graph and network analytics work adds two graph-derived patterns.
+Unlike the foundation patterns above, these have **no generator `activity_type`**:
+they express network structure that is computed by graph feature utilities
+(components, degree, centrality, community, path length, bridge nodes) rather
+than emitted by a single generator signal. Their `activity_types` tuple is
+intentionally empty, so they do not appear in `ACTIVITY_TYPE_TO_PATTERN` and do
+not change any generated data. They are the stable targets that graph features
+and notebooks map onto.
+
+| Pattern ID | Display Name | Track | Institution | Activity Type(s) | Graph-Feature Target |
+| --- | --- | --- | --- | --- | --- |
+| `mule_ring` | Mule ring and shared-beneficiary cluster | Digital-banking fraud detection | NovaBank Digital | _(none — graph-derived)_ | connected components, degree, community detection |
+| `circular_funds_movement` | Circular funds movement among related entities | Private-banking fraud detection | Alpine Crest Private Bank | _(none — graph-derived)_ | cycles, path length, bridge nodes |
+
+- `mule_ring` captures networked mule-account behaviour (several mule or rented
+  accounts moving funds through shared beneficiaries and devices) that the
+  single-edge `digital_scam_to_mule` pattern does not capture on its own.
+- `circular_funds_movement` captures funds cycling among related Partner,
+  Client, and Banking relationship entities through layered accounts and
+  counterparties, complementing `pb_transaction_fraud` and
+  `pb_high_value_movement`.
+
+
 ## Relationships
 
 ### `pattern_id` to `activity_type`

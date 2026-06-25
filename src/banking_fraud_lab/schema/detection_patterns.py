@@ -85,12 +85,47 @@ DIGITAL_SCAM_TO_MULE = PatternSpec(
     institution="NovaBank Digital",
 )
 
+MULE_RING = PatternSpec(
+    pattern_id="mule_ring",
+    display_name="Mule ring and shared-beneficiary cluster",
+    description=(
+        "A digital-banking network pattern where several mule or rented "
+        "accounts move funds through shared beneficiaries and devices, forming "
+        "a connected ring that the single-edge scam-to-mule flow does not "
+        "capture on its own. This pattern is graph-derived: it is the target of "
+        "connected-component, degree, and community graph features rather than "
+        "a single generator activity type."
+    ),
+    track="digital_banking",
+    activity_types=(),
+    institution="NovaBank Digital",
+)
+
+CIRCULAR_FUNDS_MOVEMENT = PatternSpec(
+    pattern_id="circular_funds_movement",
+    display_name="Circular funds movement among related entities",
+    description=(
+        "A private-banking network pattern where funds cycle among related "
+        "Partner, Client, and Banking relationship entities through layered "
+        "accounts and counterparties, forming circular transaction structures "
+        "that the high-value-movement and transaction-fraud patterns do not "
+        "capture on their own. This pattern is graph-derived: it is the target "
+        "of cycle, path-length, and bridge-node graph features rather than a "
+        "single generator activity type."
+    ),
+    track="private_banking",
+    activity_types=(),
+    institution="Alpine Crest Private Bank",
+)
+
 FOUNDATION_DETECTION_PATTERNS: tuple[PatternSpec, ...] = (
     PB_HIGH_VALUE_MOVEMENT,
     NEW_BENEFICIARY_PAYMENT,
     SESSION_PAYMENT_VELOCITY,
     PB_TRANSACTION_FRAUD,
     DIGITAL_SCAM_TO_MULE,
+    MULE_RING,
+    CIRCULAR_FUNDS_MOVEMENT,
 )
 
 PATTERN_IDS: tuple[str, ...] = tuple(p.pattern_id for p in FOUNDATION_DETECTION_PATTERNS)
@@ -103,8 +138,10 @@ ACTIVITY_TYPE_TO_PATTERN: dict[str, str] = {
 
 __all__ = [
     "ACTIVITY_TYPE_TO_PATTERN",
+    "CIRCULAR_FUNDS_MOVEMENT",
     "DIGITAL_SCAM_TO_MULE",
     "FOUNDATION_DETECTION_PATTERNS",
+    "MULE_RING",
     "NEW_BENEFICIARY_PAYMENT",
     "PB_HIGH_VALUE_MOVEMENT",
     "PB_TRANSACTION_FRAUD",

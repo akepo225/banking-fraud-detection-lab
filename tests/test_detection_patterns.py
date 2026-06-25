@@ -28,6 +28,10 @@ REQUIRED_ACTIVITY_TYPES = {
 
 VALID_TRACKS = {"private_banking", "digital_banking"}
 
+# Graph-derived patterns express network structure rather than a single
+# generator activity type, so their activity_types tuple is intentionally empty.
+GRAPH_DERIVED_PATTERN_IDS = {"mule_ring", "circular_funds_movement"}
+
 VALID_INSTITUTIONS = {"Alpine Crest Private Bank", "NovaBank Digital"}
 
 PROHIBITED_TERMS = (
@@ -48,8 +52,18 @@ def test_every_pattern_has_non_empty_required_fields() -> None:
         assert pattern.display_name, f"display_name is empty for {pattern}"
         assert pattern.description, f"description is empty for {pattern}"
         assert pattern.track, f"track is empty for {pattern}"
-        assert pattern.activity_types, f"activity_types is empty for {pattern}"
         assert pattern.institution, f"institution is empty for {pattern}"
+        if pattern.pattern_id not in GRAPH_DERIVED_PATTERN_IDS:
+            assert pattern.activity_types, f"activity_types is empty for {pattern}"
+
+
+def test_graph_derived_patterns_have_empty_activity_types() -> None:
+    """Graph-derived patterns intentionally carry no generator activity type."""
+    for pattern in FOUNDATION_DETECTION_PATTERNS:
+        if pattern.pattern_id in GRAPH_DERIVED_PATTERN_IDS:
+            assert pattern.activity_types == (), (
+                f"{pattern.pattern_id} should be graph-derived with empty activity_types"
+            )
 
 
 @pytest.mark.parametrize("field_name", ["pattern_id", "display_name", "description"])
@@ -112,3 +126,44 @@ def test_pattern_spec_is_frozen() -> None:
     pattern = FOUNDATION_DETECTION_PATTERNS[0]
     with pytest.raises(dataclasses.FrozenInstanceError):
         pattern.pattern_id = "mutated"
+
+
+def test_graph_native_pattern_ids_are_registered() -> None:
+    """The v0.6 graph-native patterns must be in the registry."""
+    assert "mule_ring" in PATTERN_IDS
+    assert "circular_funds_movement" in PATTERN_IDS
+
+
+def test_graph_native_patterns_track_and_institution() -> None:
+    """Graph-native patterns must use the correct track and synthetic institution."""
+    by_id = {p.pattern_id: p for p in FOUNDATION_DETECTION_PATTERNS}
+    mule_ring = by_id["mule_ring"]
+    assert mule_ring.track == "digital_banking"
+    assert mule_ring.institution == "NovaBank Digital"
+    circular = by_id["circular_funds_movement"]
+    assert circular.track == "private_banking"
+    assert circular.institution == "Alpine Crest Private Bank"
+
+
+def test_graph_native_patterns_document_graph_target() -> None:
+    """Graph-derived pattern descriptions must state they are graph-feature targets."""
+    by_id = {p.pattern_id: p for p in FOUNDATION_DETECTION_PATTERNS}
+    for pattern_id in GRAPH_DERIVED_PATTERN_IDS:
+        description = by_id[pattern_id].description.lower()
+        assert "graph-derived" in description, (
+            f"{pattern_id} description must document it is graph-derived"
+        )
+        assert "graph feature" in description, (
+            f"{pattern_id} description must name the graph-feature target"
+        )
+
+
+def test_patterns_doc_documents_graph_native_patterns() -> None:
+    """The patterns doc must cover the graph-native patterns and their graph nature."""
+    doc_text = PATTERNS_DOC.read_text(encoding="utf-8")
+    for pattern_id in GRAPH_DERIVED_PATTERN_IDS:
+        assert pattern_id in doc_text, f"{pattern_id} missing from patterns doc"
+    assert "graph-derived" in doc_text.lower() or "graph-derived" in doc_text
+    assert "mule_ring" in doc_text
+    assert "circular_funds_movement" in doc_text
+

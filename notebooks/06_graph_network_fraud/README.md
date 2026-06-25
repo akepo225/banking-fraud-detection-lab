@@ -29,6 +29,32 @@ The notebook runs end-to-end on the tiny seed-42 canonical dataset with no extra
 infrastructure. Neo4j is optional and not required (see
 [../../docs/graph/neo4j_export.md](../../docs/graph/neo4j_export.md)).
 
+## Notebook generation / regeneration
+
+The `.ipynb` notebooks above are the **executed and tested artifacts**: the smoke
+tests in [`tests/test_alpine_crest_graph_notebook.py`](../../tests/test_alpine_crest_graph_notebook.py)
+and [`tests/test_novabank_graph_notebook.py`](../../tests/test_novabank_graph_notebook.py)
+run the notebooks directly and are the source of truth for behaviour.
+
+The committed generator scripts are the **deterministic regeneration source** —
+they document exactly how each notebook was produced and let it be rebuilt
+verbatim. They are run manually; they are not a CI dependency and are never
+imported or executed by the test suite.
+
+- [`_build_alpine_crest_graph_notebook.py`](_build_alpine_crest_graph_notebook.py)
+- [`_build_novabank_graph_notebook.py`](_build_novabank_graph_notebook.py)
+
+To regenerate a notebook from its generator:
+
+```bash
+uv run python notebooks/06_graph_network_fraud/_build_alpine_crest_graph_notebook.py
+uv run python notebooks/06_graph_network_fraud/_build_novabank_graph_notebook.py
+```
+
+Regeneration is **optional and manual**. The committed `.ipynb` files are
+authoritative; only re-run a generator when intentionally changing notebook
+content, then re-run the smoke tests.
+
 ## Case library and regulatory context
 
 Graph-network source packs will be linked from the

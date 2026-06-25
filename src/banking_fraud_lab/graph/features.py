@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 
 import networkx as nx
 import pandas as pd
@@ -50,9 +50,9 @@ def _base_node_frame(graph: nx.MultiDiGraph) -> pd.DataFrame:
 def build_connected_component_features(graph: nx.MultiDiGraph) -> pd.DataFrame:
     """Compute weakly-connected component membership for every node.
 
-    Each node is labelled with a stable component id (the smallest node key in
-    its component) and the component size, so analysts can size relationship
-    clusters and isolate ring-shaped sub-networks.
+    Each node is labelled with a stable component id (the enumeration index of
+    its weakly-connected component) and the component size, so analysts can size
+    relationship clusters and isolate ring-shaped sub-networks.
     """
     undirected = nx.MultiGraph(graph)
     component_of: dict[tuple[str, object], int] = {}
@@ -78,12 +78,18 @@ def build_node_degree_features(graph: nx.MultiDiGraph) -> pd.DataFrame:
 
 
 def build_centrality_features(graph: nx.MultiDiGraph) -> pd.DataFrame:
-    """Compute degree centrality for every node."""
+    """Compute degree centrality for every node.
+
+    Centrality is computed on a collapsed simple graph so parallel edges do not
+    inflate a node's degree above its true number of distinct neighbours.
+    """
     base = _base_node_frame(graph)
-    # networkx degree_centrality is defined on the MultiGraph view too; fall back
-    # to a manual ratio when the graph is too small for a meaningful denominator.
-    denominator = max(len(graph) - 1, 1)
-    base["degree_centrality"] = [graph.degree(node) / denominator for node in graph.nodes()]
+    simple = nx.Graph()
+    simple.add_nodes_from(graph.nodes(data=True))
+    for source, target, data in graph.edges(data=True):
+        simple.add_edge(source, target, **data)
+    denominator = max(len(simple) - 1, 1)
+    base["degree_centrality"] = [simple.degree(node) / denominator for node in graph.nodes()]
     return base.sort_values(["node_type", "node_key"], kind="stable").reset_index(drop=True)
 
 
@@ -182,7 +188,7 @@ def build_bridge_node_features(graph: nx.MultiDiGraph) -> pd.DataFrame:
 
 # Map each graph feature family id to its builder. PATH_LENGTH takes an extra
 # focus-nodes argument, so it is handled by callers directly.
-GRAPH_FEATURE_BUILDERS: Mapping[str, callable] = {  # type: ignore[type-arg]
+GRAPH_FEATURE_BUILDERS: Mapping[str, Callable[[nx.MultiDiGraph], pd.DataFrame]] = {
     "graph_connected_component": build_connected_component_features,
     "graph_node_degree": build_node_degree_features,
     "graph_centrality": build_centrality_features,

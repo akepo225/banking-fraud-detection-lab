@@ -104,8 +104,22 @@ def test_known_bridge_node_is_flagged() -> None:
 
 
 def test_centrality_is_bounded_between_zero_and_one() -> None:
-    """Degree centrality must fall within [0, 1] on the hand fixture."""
+    """Degree centrality must fall within [0, 1] even with parallel edges."""
+    # Hand fixture (no parallel edges).
     features = build_centrality_features(_hand_fixture_graph())
+    assert (features["degree_centrality"] >= 0).all()
+    assert (features["degree_centrality"] <= 1).all()
+
+
+def test_centrality_bounded_on_multidigraph(
+    tiny_banking_graph: nx.MultiDiGraph,
+) -> None:
+    """Centrality must stay within [0, 1] on the MultiDiGraph tiny graph.
+
+    The tiny graph can contain parallel edges; collapsing to a simple graph
+    before computing degree centrality keeps the ratio bounded.
+    """
+    features = build_centrality_features(tiny_banking_graph)
     assert (features["degree_centrality"] >= 0).all()
     assert (features["degree_centrality"] <= 1).all()
 

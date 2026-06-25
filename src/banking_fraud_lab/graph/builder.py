@@ -34,6 +34,9 @@ def _add_table_nodes(
 ) -> None:
     """Add one node per distinct key value found in a generated table column."""
     for value in table[key_column].tolist():
+        # Skip null/NA keys so no phantom nodes (e.g. (device, NaN)) are added.
+        if pd.isna(value):
+            continue
         node_id = _node_key(node_type, value)
         if not graph.has_node(node_id):
             graph.add_node(node_id, node_type=node_type)
@@ -99,7 +102,9 @@ def build_banking_graph(tables: dict[str, pd.DataFrame]) -> nx.MultiDiGraph:
             continue
         if spec.node_type == DEVICE:
             # Devices have no dedicated table: one node per distinct fingerprint.
-            fingerprints = pd.Series(table[spec.key_column]).drop_duplicates().tolist()
+            fingerprints = (
+                pd.Series(table[spec.key_column]).dropna().drop_duplicates().tolist()
+            )
             for value in fingerprints:
                 node_id = _node_key(DEVICE, value)
                 if not graph.has_node(node_id):
@@ -116,6 +121,11 @@ def build_banking_graph(tables: dict[str, pd.DataFrame]) -> nx.MultiDiGraph:
             continue
         table = tables.get(spec.source_table)
         if table is None:
+            continue
+        # Skip partial inputs whose table is missing a required edge column so
+        # the builder degrades gracefully instead of raising at row iteration.
+        required_columns = {spec.source_key_column, spec.target_key_column}
+        if not required_columns.issubset(table.columns):
             continue
         _add_table_driven_edges(
             graph,

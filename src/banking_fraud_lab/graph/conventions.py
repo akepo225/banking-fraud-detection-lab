@@ -367,22 +367,6 @@ DEVICE_USER = EdgeSpec(
     target_key_column="user_id",
 )
 
-SESSION_DEVICE = EdgeSpec(
-    edge_type="session_device",
-    category=SHARED_DEVICE,
-    display_name="session to device",
-    description=(
-        "A session was observed on a device. Shared-device signals arise when "
-        "distinct sessions (and therefore Users) connect to the same device "
-        "fingerprint."
-    ),
-    source_table=SESSIONS,
-    source_node_type=SESSION,
-    target_node_type=DEVICE,
-    source_key_column="session_id",
-    target_key_column="device_fingerprint_hash",
-)
-
 ALERT_TRANSACTION = EdgeSpec(
     edge_type="alert_transaction",
     category=ALERT_RELATION,

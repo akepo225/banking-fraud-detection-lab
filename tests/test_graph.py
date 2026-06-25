@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from collections import Counter
 
 import networkx as nx
 import pytest
@@ -72,11 +73,15 @@ def test_graph_is_deterministic_across_seeded_runs() -> None:
     assert first_graph.number_of_edges() == second_graph.number_of_edges()
     assert set(first_graph.nodes()) == set(second_graph.nodes())
 
-    def edge_signature(graph: nx.MultiDiGraph) -> set[tuple[object, object, str]]:
-        return {
+    def edge_signature(
+        graph: nx.MultiDiGraph,
+    ) -> Counter[tuple[object, object, str]]:
+        # A Counter (multiset) preserves parallel-edge multiplicity, which a set
+        # would collapse on a MultiDiGraph.
+        return Counter(
             (source, target, data["edge_type"])
             for source, target, data in graph.edges(data=True)
-        }
+        )
 
     assert edge_signature(first_graph) == edge_signature(second_graph)
 

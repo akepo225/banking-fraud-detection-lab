@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Any
 
@@ -314,4 +314,386 @@ def _round_money(value: float) -> float:
     return round(float(value), 2)
 
 
-__all__ = ["DEFAULT_THRESHOLDS", "LIMITATION_SUMMARY", "evaluate_alert_scores"]
+# --- v0.7: false-positive concentration + threshold recommender -----------
+# These utilities are ADDITIVE to ``evaluate_alert_scores``: its signature and
+# output are unchanged. They reuse the same scored-outcome join so a learner can
+# hand in the same frames and see (a) where false positives burden specific
+# segments/workflows and (b) a recommended threshold reflecting operational
+# tradeoffs across alert capacity and cost parameters.
+
+#: Segment columns recognised by default when measuring false-positive
+#: concentration. Each maps a facet of the alert lifecycle a reviewer can slice
+#: on: the Detection pattern that raised the alert (``alert_type``), the track it
+#: belongs to (``track``), and the Banking relationship container
+#: (``banking_relationship_id``).
+DEFAULT_FP_SEGMENT_COLUMNS: tuple[str, ...] = (
+    "alert_type",
+    "track",
+    "banking_relationship_id",
+)
+
+
+def concentrate_false_positives(
+    cases: pd.DataFrame,
+    case_outcomes: pd.DataFrame,
+    alert_scores: pd.DataFrame,
+    *,
+    threshold: float,
+    segment_columns: Sequence[str] = DEFAULT_FP_SEGMENT_COLUMNS,
+    alerts: pd.DataFrame | None = None,
+    activity_type_to_track: Mapping[str, str] | None = None,
+) -> pd.DataFrame:
+    """Measure where false positives concentrate by segment.
+
+    Joins cases, outcomes, and alert scores exactly as
+    :func:`evaluate_alert_scores` does, then selects the alerts whose score meets
+    ``threshold`` and groups the false positives (scored above threshold but not
+    confirmed fraud) by the requested ``segment_columns``. The result lets a
+    learner see which ``alert_type``, track, or Banking relationship bears the
+    heaviest review burden so investigation capacity can be planned.
+
+    Args:
+        cases: Cases frame with at least ``case_id`` and ``alert_id``.
+        case_outcomes: Outcomes frame with ``case_id`` and ``confirmed_fraud``.
+        alert_scores: Scores frame with ``alert_id`` and ``score`` in [0, 1].
+        threshold: The score threshold defining an alerted case. Must be in
+            [0, 1].
+        segment_columns: The columns to group false positives by. Defaults to
+            :data:`DEFAULT_FP_SEGMENT_COLUMNS`; only columns present in the joined
+            frame (or enriched via ``alerts``) are used, so missing columns are
+            skipped rather than raising.
+        alerts: Optional alerts frame used to enrich the join with segment
+            columns not present on ``cases`` (e.g. ``alert_type``). Joined on
+            ``alert_id``.
+        activity_type_to_track: Optional mapping from ``alert_type``/activity
+            type to track label (e.g. ``"private_banking"`` /
+            ``"digital_banking"``). When supplied, a ``track`` column is derived
+            so concentration can be read by Detection track. When omitted, the
+            ``track`` segment column is skipped if not already present.
+
+    Returns:
+        A DataFrame with one row per segment combination that produced at least
+        one false positive, columns ``false_positive_count``, ``false_positive_share``
+        (share of all false positives at this threshold), ``alerted_count``
+        (total alerts above threshold in the segment, for precision context),
+        and ``false_positive_rate`` (FPs / alerted in the segment), sorted by
+        descending ``false_positive_count`` then the segment columns for
+        deterministic ordering. Empty when no alerts clear the threshold.
+
+    Raises:
+        ValueError: If ``threshold`` is outside [0, 1] or no segment columns
+            resolve to a present column.
+    """
+    if not math.isfinite(threshold) or threshold < 0.0 or threshold > 1.0:
+        raise ValueError("threshold must be a finite value between 0 and 1")
+
+    scored = _prepare_scored_outcomes(cases, case_outcomes, alert_scores)
+    if alerts is not None:
+        _require_columns(alerts, {"alert_id"}, "alerts")
+        # Pull every requested segment column that lives on the alerts frame,
+        # PLUS alert_type when a track mapping is supplied (the track column is
+        # derived from alert_type below, so it must be present even if the caller
+        # only asked for the derived ``track`` segment).
+        wanted = set(segment_columns)
+        if activity_type_to_track is not None:
+            wanted.add("alert_type")
+        enrich_columns = [
+            column
+            for column in wanted
+            if column not in scored.columns and column in alerts.columns
+        ]
+        if enrich_columns:
+            scored = scored.merge(
+                alerts[["alert_id", *enrich_columns]],
+                on="alert_id",
+                how="left",
+                validate="many_to_one",
+            )
+
+    if activity_type_to_track is not None and "alert_type" in scored.columns:
+        scored = scored.assign(
+            track=scored["alert_type"].map(activity_type_to_track)
+        )
+
+    resolved_segments = [column for column in segment_columns if column in scored.columns]
+    if not resolved_segments:
+        raise ValueError(
+            "no segment_columns resolve to a column in the joined frame; pass "
+            "an alerts frame or activity_type_to_track mapping to enrich it"
+        )
+
+    alerted = scored[scored["_score"] >= threshold]
+    false_positives = alerted[~alerted["_label"]]
+    if false_positives.empty:
+        return pd.DataFrame(
+            columns=[
+                *resolved_segments,
+                "false_positive_count",
+                "false_positive_share",
+                "alerted_count",
+                "false_positive_rate",
+            ]
+        )
+
+    total_fp = int(len(false_positives))
+    grouped = (
+        false_positives.groupby(list(resolved_segments), dropna=False, sort=False)
+        .size()
+        .rename("false_positive_count")
+        .reset_index()
+    )
+    alerted_grouped = (
+        alerted.groupby(list(resolved_segments), dropna=False, sort=False)
+        .size()
+        .rename("alerted_count")
+        .reset_index()
+    )
+    result = grouped.merge(alerted_grouped, on=list(resolved_segments), how="left")
+    result["false_positive_count"] = result["false_positive_count"].astype(int)
+    result["alerted_count"] = result["alerted_count"].astype(int)
+    result["false_positive_share"] = result["false_positive_count"].map(
+        lambda count: _round_metric(count / total_fp)
+    )
+    result["false_positive_rate"] = result.apply(
+        lambda row: _round_metric(row["false_positive_count"] / row["alerted_count"]),
+        axis=1,
+    )
+    sort_keys = ["false_positive_count", *resolved_segments]
+    ascending = [False] + [True] * len(resolved_segments)
+    return result.sort_values(sort_keys, ascending=ascending, kind="stable").reset_index(
+        drop=True
+    )
+
+
+def recommend_lowest_cost_threshold(
+    cases: pd.DataFrame,
+    case_outcomes: pd.DataFrame,
+    alert_scores: pd.DataFrame,
+    *,
+    candidate_thresholds: Sequence[float] = DEFAULT_THRESHOLDS,
+    alert_capacities: Sequence[int] = (5, 10, 25),
+    investigation_cost_chf: float = 75.0,
+    false_positive_cost_chf: float = 25.0,
+    missed_fraud_cost_chf: float | None = None,
+) -> dict[str, Any]:
+    """Recommend the lowest-cost alert threshold across capacity and cost settings.
+
+    Sweeps the cost surface across every combination of ``candidate_thresholds``
+    and ``alert_capacities`` using the same cost model as
+    :func:`evaluate_alert_scores`, then reports the threshold with the lowest
+    total cost for each capacity (``per_capacity``) and the single global
+    recommendation (``recommended_threshold``) plus its full summary. Lets a
+    learner read a recommended threshold that reflects operational tradeoffs
+    rather than eyeballing a single threshold.
+
+    Args:
+        cases: Cases frame with at least ``case_id`` and ``alert_id``.
+        case_outcomes: Outcomes frame with ``case_id`` and ``confirmed_fraud``.
+        alert_scores: Scores frame with ``alert_id`` and ``score`` in [0, 1].
+        candidate_thresholds: Thresholds to evaluate. Must be non-empty, each in
+            [0, 1]. Defaults to :data:`DEFAULT_THRESHOLDS`.
+        alert_capacities: Alert-investigation capacities to sweep. Must be
+            non-empty, each positive.
+        investigation_cost_chf: Per-alert investigation cost (non-negative).
+        false_positive_cost_chf: Per-false-positive cost (non-negative).
+        missed_fraud_cost_chf: Per-missed-fraud cost (non-negative). When
+            ``None``, missed cost is driven by the joined ``loss_amount_chf``
+            exactly as in :func:`evaluate_alert_scores`.
+
+    Returns:
+        A dict with ``per_capacity`` (one entry per alert capacity, each carrying
+        its lowest-cost threshold and summary), ``recommended_threshold`` (the
+        global lowest-cost threshold), ``recommended_summary`` (its full
+        threshold summary), ``recommended_alert_capacity`` (the capacity at which
+        the global minimum occurs), and ``cost_surface`` (one row per
+        threshold × capacity combination).
+
+    Raises:
+        ValueError: If thresholds/capacities are empty/invalid or costs are
+            negative.
+    """
+    normalized_thresholds = _normalize_thresholds(candidate_thresholds)
+    capacities = _normalize_capacities(alert_capacities)
+    _validate_non_negative_cost("investigation_cost_chf", investigation_cost_chf)
+    _validate_non_negative_cost("false_positive_cost_chf", false_positive_cost_chf)
+    if missed_fraud_cost_chf is not None:
+        _validate_non_negative_cost("missed_fraud_cost_chf", missed_fraud_cost_chf)
+
+    scored = _prepare_scored_outcomes(cases, case_outcomes, alert_scores)
+
+    cost_surface: list[dict[str, Any]] = []
+    per_capacity: dict[int, dict[str, Any]] = {}
+    global_best: tuple[float, int, dict[str, Any]] | None = None
+
+    for capacity in capacities:
+        capacity_summaries = [
+            _capacity_aware_summary(
+                scored,
+                threshold=threshold,
+                alert_capacity=capacity,
+                investigation_cost_chf=investigation_cost_chf,
+                false_positive_cost_chf=false_positive_cost_chf,
+                missed_fraud_cost_chf=missed_fraud_cost_chf,
+            )
+            for threshold in normalized_thresholds
+        ]
+        # Same tie-break as evaluate_alert_scores: total cost, then recall
+        # (maximised), then alert volume (minimised).
+        best_summary = min(
+            capacity_summaries,
+            key=lambda summary: (
+                summary["total_cost_chf"],
+                -summary["recall"],
+                summary["alert_volume"],
+            ),
+        )
+        per_capacity[capacity] = {
+            "alert_capacity": capacity,
+            "lowest_cost_threshold": best_summary["threshold"],
+            "lowest_cost_summary": best_summary,
+        }
+        for threshold, summary in zip(normalized_thresholds, capacity_summaries, strict=True):
+            cost_surface.append(
+                {
+                    "alert_capacity": capacity,
+                    "threshold": threshold,
+                    "total_cost_chf": summary["total_cost_chf"],
+                    "recall": summary["recall"],
+                    "precision": summary["precision"],
+                    "alert_volume": summary["alert_volume"],
+                    "over_capacity_alerts": summary["over_capacity_alerts"],
+                }
+            )
+            candidate = (summary["total_cost_chf"], capacity, summary)
+            if global_best is None or _cost_key(candidate) < _cost_key(global_best):
+                global_best = candidate
+
+    assert global_best is not None  # capacities is guaranteed non-empty above
+    _total_cost, best_capacity, recommended_summary = global_best
+    return {
+        "per_capacity": per_capacity,
+        "recommended_threshold": recommended_summary["threshold"],
+        "recommended_summary": recommended_summary,
+        "recommended_alert_capacity": best_capacity,
+        "cost_surface": cost_surface,
+    }
+
+
+def _capacity_aware_summary(
+    scored: pd.DataFrame,
+    *,
+    threshold: float,
+    alert_capacity: int,
+    investigation_cost_chf: float,
+    false_positive_cost_chf: float,
+    missed_fraud_cost_chf: float | None,
+) -> dict[str, Any]:
+    """Build a threshold summary whose cost respects investigation capacity.
+
+    Mirrors :func:`_threshold_summary` but makes ``alert_capacity`` drive the
+    cost, not just the reporting fields: when more alerts clear ``threshold``
+    than the team can investigate, only the top ``alert_capacity`` alerts (by
+    score) are investigated. Any over-capacity TRUE positive is then effectively
+    missed (it was alerted but never reviewed), so missed-fraud cost applies to
+    it. This is the operational reality the recommender must reflect so that
+    sweeping capacity actually changes the recommendation.
+    """
+    selected = scored["_score"] >= threshold
+    positives = scored["_label"]
+    alert_volume = int(selected.sum())
+    over_capacity = max(0, alert_volume - alert_capacity)
+
+    # Investigate only the highest-scoring alerts, up to capacity. Ties at the
+    # capacity boundary are broken by score (descending) then label so the
+    # investigated set is deterministic.
+    if over_capacity == 0:
+        investigated = selected
+        overflow = pd.Series(False, index=scored.index)
+    else:
+        ranked = scored.loc[selected].sort_values(
+            "_score", ascending=False, kind="stable"
+        )
+        investigated_ids = ranked.head(alert_capacity).index
+        overflow_ids = ranked.tail(over_capacity).index
+        investigated = pd.Series(False, index=scored.index)
+        investigated.loc[investigated_ids] = True
+        overflow = pd.Series(False, index=scored.index)
+        overflow.loc[overflow_ids] = True
+
+    tp = int((investigated & positives).sum())
+    fp = int((investigated & ~positives).sum())
+    # Over-capacity true positives were alerted but not investigated: they slip
+    # through and count as missed fraud. Over-capacity false positives are
+    # dropped (no investigation, no FP cost).
+    missed_overflow_tp = int((overflow & positives).sum())
+    fn = int((~selected & positives).sum()) + missed_overflow_tp
+    tn = int((~investigated & ~positives & ~overflow).sum())
+
+    missed_cost = (
+        fn * missed_fraud_cost_chf
+        if missed_fraud_cost_chf is not None
+        else float(
+            scored.loc[~selected & positives, "_loss_amount_chf"].sum()
+            + scored.loc[overflow & positives, "_loss_amount_chf"].sum()
+        )
+    )
+    investigation_cost = int(investigated.sum()) * investigation_cost_chf
+    false_positive_cost = fp * false_positive_cost_chf
+
+    return {
+        "threshold": threshold,
+        "precision": _safe_divide(tp, tp + fp),
+        "recall": _safe_divide(tp, tp + fn),
+        "true_positives": tp,
+        "false_positives": fp,
+        "true_negatives": tn,
+        "false_negatives": fn,
+        "alert_volume": alert_volume,
+        "alert_capacity": alert_capacity,
+        "capacity_utilization": _round_metric(alert_volume / alert_capacity),
+        "over_capacity_alerts": over_capacity,
+        "investigation_cost_chf": _round_money(investigation_cost),
+        "false_positive_cost_chf": _round_money(false_positive_cost),
+        "missed_fraud_cost_chf": _round_money(missed_cost),
+        "total_cost_chf": _round_money(
+            investigation_cost + false_positive_cost + missed_cost
+        ),
+    }
+
+
+def _normalize_capacities(capacities: Sequence[int]) -> tuple[int, ...]:
+    """Validate and de-duplicate alert capacities, returning them sorted ascending.
+
+    Rejects booleans and non-integral values rather than silently coercing them,
+    so an accidental float (e.g. ``1.5``) or ``True`` raises instead of being
+    truncated.
+    """
+    values: set[int] = set()
+    for capacity in capacities:
+        if isinstance(capacity, bool):
+            raise ValueError("alert_capacities must contain integer values")
+        numeric = float(capacity)
+        if not numeric.is_integer():
+            raise ValueError("alert_capacities must contain integer values")
+        values.add(int(numeric))
+    if not values:
+        raise ValueError("alert_capacities must contain at least one capacity")
+    if any(value <= 0 for value in values):
+        raise ValueError("alert_capacities must contain positive integers")
+    return tuple(sorted(values))
+
+
+def _cost_key(candidate: tuple[float, int, dict[str, Any]]) -> tuple[float, float, int]:
+    """Project a cost candidate onto the comparable (cost, -recall, volume) key."""
+    _cost, _capacity, summary = candidate
+    return (summary["total_cost_chf"], -summary["recall"], summary["alert_volume"])
+
+
+__all__ = [
+    "DEFAULT_FP_SEGMENT_COLUMNS",
+    "DEFAULT_THRESHOLDS",
+    "LIMITATION_SUMMARY",
+    "concentrate_false_positives",
+    "evaluate_alert_scores",
+    "recommend_lowest_cost_threshold",
+]

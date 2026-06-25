@@ -203,6 +203,53 @@ def test_graph_features_join_back_to_alert_lifecycle_view() -> None:
     assert bridge_columns
 
 
+def test_join_helper_tolerates_duplicate_feature_keys_without_row_loss() -> None:
+    """Duplicate keys on the feature (right) side must not multiply view rows.
+
+    ``join_graph_features_to_view`` deduplicates the feature frame's keys before
+    merging, so the ``validate="many_to_one"`` merge stays sound even when the
+    feature frame repeats a node key. This guards the foundation-view join path.
+    """
+    feature_frame = pd.DataFrame(
+        {
+            "node_type": ["client", "client", "partner"],
+            "node_key": ["C-1", "C-1", "P-1"],  # C-1 duplicated -> must be deduped.
+            "node_degree": [2, 3, 1],
+        }
+    )
+    view = pd.DataFrame(
+        {
+            "client_id": ["C-1", "C-2"],
+            "partner_id": ["P-1", "P-2"],
+        }
+    )
+
+    joined = join_graph_features_to_view(feature_frame, view)
+
+    # No row loss, no duplication: the view's two rows survive intact.
+    assert len(joined) == 2
+    # The first (keep="first") degree value for the duplicated C-1 wins.
+    assert joined.loc[joined["client_id"] == "C-1", "node_degree_client"].iloc[0] == 2
+
+
+def test_merge_validate_many_to_one_fails_loudly_on_duplicate_right_keys() -> None:
+    """A duplicate-keyed right frame must raise MergeError under many_to_one.
+
+    This exercises the merge contract directly. The helper deduplicates feature
+    keys before this merge, so the guard is the safety net for any future code
+    path that joins feature frames without pre-deduplication. ``MergeError`` is
+    a ``ValueError`` subclass.
+    """
+    from pandas.errors import MergeError
+
+    left = pd.DataFrame({"client_id": ["C-1", "C-2"], "marker": ["a", "b"]})
+    # Duplicate right-hand keys violate many_to_one (the right keys must be unique).
+    right = pd.DataFrame({"client_id": ["C-1", "C-1"], "node_degree_client": [2, 3]})
+
+    with pytest.raises(MergeError):
+        left.merge(right, on="client_id", how="left", validate="many_to_one")
+
+
 # --- Spec layer and pattern guard ------------------------------------------
 
 

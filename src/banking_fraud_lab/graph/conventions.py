@@ -519,6 +519,16 @@ if _UNKNOWN_EDGE_CATEGORIES:
         f"Edge specs reference unknown edge categories: {_UNKNOWN_EDGE_CATEGORIES}"
     )
 
+# Reverse check: every category declared in EDGE_CATEGORY_IDS must be referenced
+# by at least one EdgeSpec. A declared-but-unused (orphan) category is a stale
+# vocabulary entry that should not survive the import-time guard.
+_USED_EDGE_CATEGORIES = {spec.category for spec in EDGE_SPECS}
+_ORPHAN_EDGE_CATEGORIES = sorted(set(EDGE_CATEGORY_IDS) - _USED_EDGE_CATEGORIES)
+if _ORPHAN_EDGE_CATEGORIES:
+    raise ValueError(
+        f"Edge categories declared but referenced by no edge spec: {_ORPHAN_EDGE_CATEGORIES}"
+    )
+
 
 __all__ = [
     "ACCOUNT",

@@ -168,6 +168,25 @@ def test_edge_categories_are_unique_and_complete() -> None:
     assert PRD_EDGE_CATEGORIES <= set(EDGE_CATEGORY_IDS)
 
 
+def test_no_edge_category_is_declared_but_unused() -> None:
+    """No category in EDGE_CATEGORY_IDS may be orphaned (unused by every EdgeSpec)."""
+    used_categories = {spec.category for spec in EDGE_SPECS}
+    orphans = set(EDGE_CATEGORY_IDS) - used_categories
+    assert not orphans, f"Orphan edge categories declared but unused: {sorted(orphans)}"
+
+
+def test_orphan_category_expression_flags_a_declared_but_unused_category() -> None:
+    """The orphan-detection expression must flag a synthetic unused category.
+
+    This simulates the guard's condition without reloading the module: a category
+    set that declares an entry no EdgeSpec references is detected as an orphan.
+    """
+    declared = set(EDGE_CATEGORY_IDS) | {"ghost_category"}
+    used = {spec.category for spec in EDGE_SPECS}
+    orphans = sorted(declared - used)
+    assert orphans == ["ghost_category"]
+
+
 def test_glossary_display_names_appear_in_node_catalog() -> None:
     """The glossary node display-name terms must appear verbatim in NODE_SPECS."""
     display_names = {spec.display_name for spec in NODE_SPECS}

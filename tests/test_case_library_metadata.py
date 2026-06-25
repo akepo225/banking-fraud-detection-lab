@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
-from banking_fraud_lab.schema import PATTERN_IDS
+from banking_fraud_lab.schema import FOUNDATION_DETECTION_PATTERNS, PATTERN_IDS
 from private_banking_test_constants import (
     PRIVATE_BANKING_V0_3_MODULE_PREFIX,
     PRIVATE_BANKING_V0_3_PATTERN_IDS,
@@ -220,10 +220,20 @@ def test_template_front_matter_documents_source_type() -> None:
 
 
 def test_case_index_groups_packs_by_detection_pattern() -> None:
-    """The case index must expose a section per pattern_id and one for cross-track packs."""
+    """The case index must expose a section per tabular pattern_id and one for cross-track packs.
+
+    Graph-derived patterns (v0.6) carry no generator activity type and their case
+    source packs land in #155, so the index is only required to cover patterns
+    that already have tabular signal and source packs.
+    """
     index_text = CASE_LIBRARY_INDEX.read_text(encoding="utf-8")
 
-    for pattern_id in PATTERN_IDS:
+    tabular_pattern_ids = {
+        spec.pattern_id
+        for spec in FOUNDATION_DETECTION_PATTERNS
+        if spec.activity_types
+    }
+    for pattern_id in tabular_pattern_ids:
         assert f"### `{pattern_id}`" in index_text, (
             f"Index missing Detection-pattern section: {pattern_id}"
         )

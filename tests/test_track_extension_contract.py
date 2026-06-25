@@ -63,7 +63,11 @@ def test_track_extension_contract_reuses_detection_pattern_registry() -> None:
     ]:
         assert term in contract
 
-    for pattern in FOUNDATION_DETECTION_PATTERNS:
+    # This contract governs the v0.3/v0.4 tabular tracks, so it must mention
+    # every pattern that carries a generator activity type. Graph-derived v0.6
+    # patterns (no activity type) are out of scope for this contract.
+    tabular_patterns = [p for p in FOUNDATION_DETECTION_PATTERNS if p.activity_types]
+    for pattern in tabular_patterns:
         assert pattern.pattern_id in contract
 
 

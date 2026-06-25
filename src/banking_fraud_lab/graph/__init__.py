@@ -3,6 +3,12 @@
 from __future__ import annotations
 
 from banking_fraud_lab.graph.builder import build_banking_graph
+from banking_fraud_lab.graph.export_neo4j import (
+    NEO4J_DRIVER_AVAILABLE,
+    export_graph_to_cypher,
+    export_graph_to_neo4j_csvs,
+    push_graph_to_neo4j,
+)
 from banking_fraud_lab.graph.conventions import (
     ACCOUNT,
     ACCOUNT_NODE,
@@ -123,5 +129,9 @@ __all__ = [
     "USER",
     "USER_CLIENT",
     "USER_NODE",
+    "NEO4J_DRIVER_AVAILABLE",
     "build_banking_graph",
+    "export_graph_to_cypher",
+    "export_graph_to_neo4j_csvs",
+    "push_graph_to_neo4j",
 ]

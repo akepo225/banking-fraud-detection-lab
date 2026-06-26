@@ -1,20 +1,30 @@
 """Tests for package-level imports and version."""
 
 from banking_fraud_lab import (
+    DEFAULT_FP_SEGMENT_COLUMNS,
     EDGE_CATEGORY_IDS,
     EDGE_SPECS,
     EDGE_TYPE_IDS,
+    EXPLANATION_FAMILY_IDS,
+    EXPLANATION_FAMILY_SPECS,
     FEATURE_FAMILY_IDS,
     FOUNDATION_PROGRESSIVE_VIEW_SPECS,
     GRAPH_FEATURE_FAMILIES,
     GRAPH_FEATURE_FAMILY_IDS,
+    MODEL_DOCUMENTATION_SECTIONS,
+    MODEL_DOCUMENTATION_SECTION_IDS,
+    MONITORING_CHECKLIST_DIMENSIONS,
+    MONITORING_CHECKLIST_DIMENSION_IDS,
     NODE_SPECS,
     NODE_TYPE_IDS,
     PRIVATE_BANKING_FEATURE_FAMILIES,
     DatasetQualityReport,
     EdgeSpec,
+    ExplanationFamilySpec,
     FeatureFamilySpec,
     GraphFeatureFamilySpec,
+    ModelDocumentationSectionSpec,
+    MonitoringChecklistDimensionSpec,
     NodeSpec,
     ProgressiveViewSpec,
     __version__,
@@ -24,8 +34,11 @@ from banking_fraud_lab import (
     build_centrality_features,
     build_community_features,
     build_connected_component_features,
+    build_model_documentation,
+    build_monitoring_checklist,
     build_node_degree_features,
     build_path_length_features,
+    build_partial_dependence_grid,
     build_learner_facing_views,
     build_foundation_progressive_views,
     build_private_banking_features,
@@ -36,8 +49,14 @@ from banking_fraud_lab import (
     calculate_off_hours_features,
     calculate_rm_concentration_features,
     calculate_velocity_features,
+    concentrate_false_positives,
     create_minimal_banking_world_sqlite,
     evaluate_alert_scores,
+    recommend_lowest_cost_threshold,
+    explain_feature_family,
+    explain_with_shap,
+    extract_feature_importance,
+    SHAP_AVAILABLE,
     generate_dataset_quality_report,
     generate_digital_scam_to_mule_world,
     generate_learner_facing_digital_scam_to_mule_world,
@@ -63,12 +82,21 @@ def test_package_imports() -> None:
     assert GraphFeatureFamilySpec
     assert NodeSpec
     assert EdgeSpec
+    assert ExplanationFamilySpec
+    assert ModelDocumentationSectionSpec
+    assert MonitoringChecklistDimensionSpec
     assert ProgressiveViewSpec
     assert EDGE_CATEGORY_IDS
     assert EDGE_SPECS
     assert EDGE_TYPE_IDS
     assert GRAPH_FEATURE_FAMILIES
     assert GRAPH_FEATURE_FAMILY_IDS
+    assert EXPLANATION_FAMILY_IDS
+    assert EXPLANATION_FAMILY_SPECS
+    assert MODEL_DOCUMENTATION_SECTIONS
+    assert MODEL_DOCUMENTATION_SECTION_IDS
+    assert MONITORING_CHECKLIST_DIMENSIONS
+    assert MONITORING_CHECKLIST_DIMENSION_IDS
     assert NODE_SPECS
     assert NODE_TYPE_IDS
     assert callable(generate_minimal_banking_world)
@@ -80,6 +108,13 @@ def test_package_imports() -> None:
     assert callable(build_connected_component_features)
     assert callable(build_node_degree_features)
     assert callable(build_path_length_features)
+    assert callable(build_partial_dependence_grid)
+    assert callable(extract_feature_importance)
+    assert callable(explain_feature_family)
+    assert callable(explain_with_shap)
+    assert isinstance(SHAP_AVAILABLE, bool)
+    assert callable(build_model_documentation)
+    assert callable(build_monitoring_checklist)
     assert callable(join_graph_features_to_view)
     assert callable(build_learner_facing_views)
     assert callable(build_foundation_progressive_views)
@@ -101,4 +136,7 @@ def test_package_imports() -> None:
     assert callable(inject_private_banking_transaction_fraud)
     assert callable(load_tables_to_sqlite)
     assert callable(evaluate_alert_scores)
+    assert callable(concentrate_false_positives)
+    assert callable(recommend_lowest_cost_threshold)
+    assert DEFAULT_FP_SEGMENT_COLUMNS
     assert callable(generate_dataset_quality_report)

@@ -35,6 +35,21 @@ Track extension notebook naming and module-layout conventions are defined in
   scripts that deterministically regenerate the notebooks; elsewhere notebooks are
   authored directly. The `.ipynb` files are the tested artifacts (see the module's
   [README](06_graph_network_fraud/README.md) for the regeneration convention).
+- `07_interpretability_model_risk/`: v0.7 interpretability, governance, and
+  model-risk. Learners explain model behaviour, choose thresholds, document
+  limitations, and write governance-ready summaries. Start with
+  `07_interpretability_model_risk/alpine_crest_interpretability.ipynb`
+  (**Alpine Crest Private Bank**: per-alert "why", feature importance and
+  partial-dependence explanations, threshold selection, false-positive
+  concentration, and model documentation), then run
+  `07_interpretability_model_risk/novabank_interpretability.ipynb`
+  (**NovaBank Digital**: rule/model/graph/case comparison), then run
+  `07_interpretability_model_risk/governance_memo.ipynb` (stakeholder
+  governance memo synthesising both tracks). This module extends — and does not
+  replace — the v0.1–v0.6 investigation, and ships committed `_build_*.py`
+  generator scripts (see the module's
+  [README](07_interpretability_model_risk/README.md) for the regeneration
+  convention).
 
 ## Case Library And Regulatory Context
 
@@ -48,6 +63,7 @@ to the relevant case source packs and regulatory source notes. See:
 - [04_private_banking_feature_engineering/README.md](04_private_banking_feature_engineering/README.md)
 - [05_digital_session_and_payment_fraud/README.md](05_digital_session_and_payment_fraud/README.md)
 - [06_graph_network_fraud/README.md](06_graph_network_fraud/README.md)
+- [07_interpretability_model_risk/README.md](07_interpretability_model_risk/README.md)
 
 For the full catalogs, see the [case library index](../docs/cases/index.md) and
 the [regulatory source index](../docs/regulation/index.md).

@@ -23,6 +23,7 @@ linked_modules:
   - notebooks/04_private_banking_feature_engineering/alpine_crest_feature_engineering.ipynb
   - notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb
   - notebooks/07_interpretability_model_risk/alpine_crest_interpretability.ipynb
+  - notebooks/07_interpretability_model_risk/novabank_interpretability.ipynb
 ---
 
 # Model-Risk Governance For Fraud Scoring

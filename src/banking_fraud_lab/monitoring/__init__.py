@@ -15,6 +15,10 @@ from banking_fraud_lab.monitoring.decisions import (
     decide_alerts,
     record_reviewer_action,
 )
+from banking_fraud_lab.monitoring.operations import (
+    inspect_alert_queue,
+    summarise_alert_operations,
+)
 from banking_fraud_lab.monitoring.scoring import BatchScoringResult, run_batch_scoring
 from banking_fraud_lab.monitoring.spec import (
     ALERT_DECISION,
@@ -52,6 +56,8 @@ __all__ = [
     "SCORE",
     "THRESHOLD",
     "decide_alerts",
+    "inspect_alert_queue",
     "record_reviewer_action",
     "run_batch_scoring",
+    "summarise_alert_operations",
 ]

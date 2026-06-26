@@ -15,34 +15,43 @@ existing feature, case, and graph evidence.
   notebook covering per-alert "why", feature importance and partial-dependence
   explanations, threshold selection, false-positive concentration, and model
   documentation.
-- (NovaBank digital-banking notebook and the governance memo land in later
-  v0.7 slices.)
+- [novabank_interpretability.ipynb](novabank_interpretability.ipynb):
+  **NovaBank Digital** digital-banking interpretability and model-risk notebook
+  covering per-alert "why", feature importance and partial-dependence
+  explanations, a rule / model / graph (`mule_ring`) / case comparison, threshold
+  selection, false-positive concentration, and model documentation. Respects the
+  **User** (digital login identity) vs **Client** (legal customer) distinction.
 
 ## How to run
 
 ```bash
-uv run jupyter notebook notebooks/07_interpretability_model_risk/alpine_crest_interpretability.ipynb
+uv run jupyter notebook notebooks/07_interpretability_model_risk/novabank_interpretability.ipynb
 ```
 
-The notebook runs end-to-end on the seed-42 canonical dataset with no extra
+The notebooks run end-to-end on the seed-42 canonical dataset with no extra
 infrastructure.
 
 ## Notebook generation / regeneration
 
-The `.ipynb` notebooks are the **executed and tested artifacts**: the smoke test
-in [`tests/test_alpine_crest_interpretability_notebook.py`](../../tests/test_alpine_crest_interpretability_notebook.py)
-runs the notebook directly and is the source of truth for behaviour.
+The `.ipynb` notebooks are the **executed and tested artifacts**: the smoke
+tests in
+[`tests/test_alpine_crest_interpretability_notebook.py`](../../tests/test_alpine_crest_interpretability_notebook.py)
+and
+[`tests/test_novabank_interpretability_notebook.py`](../../tests/test_novabank_interpretability_notebook.py)
+run the notebooks directly and are the source of truth for behaviour.
 
 The committed generator scripts are the **deterministic regeneration source** —
 they document exactly how each notebook was produced and let it be rebuilt
 identically:
 
 - [`_build_alpine_crest_interpretability_notebook.py`](_build_alpine_crest_interpretability_notebook.py)
+- [`_build_novabank_interpretability_notebook.py`](_build_novabank_interpretability_notebook.py)
 
 To regenerate a notebook from its generator:
 
 ```bash
 uv run python notebooks/07_interpretability_model_risk/_build_alpine_crest_interpretability_notebook.py
+uv run python notebooks/07_interpretability_model_risk/_build_novabank_interpretability_notebook.py
 ```
 
 Regeneration is **optional and manual**. The committed `.ipynb` files are
@@ -56,6 +65,7 @@ content, then re-run the smoke tests.
 ## Glossary alignment
 
 - **Client**: the legal customer.
+- **User**: the digital login identity (NovaBank Digital).
 - **Banking relationship**: the Swiss-bank-style relationship container.
 - **Alpine Crest Private Bank** / **NovaBank Digital**: the fictional
   institutions for these scenarios.

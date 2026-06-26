@@ -78,6 +78,11 @@ modules in order:
   (beneficial ownership, shared counterparties, related entities, circular
   funds movement). Graph evidence extends, not replaces, the tabular
   investigation.
+- [`07_interpretability_model_risk`](notebooks/07_interpretability_model_risk/alpine_crest_interpretability.ipynb):
+  v0.7 interpretability, governance, and model-risk. Explain model behaviour,
+  choose thresholds, document limitations, and write governance-ready summaries
+  (per-alert "why", feature importance, partial-dependence, threshold selection,
+  false-positive concentration, model documentation).
 
 Optional canonical-data refreshers for Python, pandas, SQL, and sklearn live in
 [`00_foundations/warmups`](notebooks/00_foundations/warmups/). They are outside

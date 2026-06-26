@@ -403,3 +403,66 @@ def test_explain_feature_family_ignores_extra_columns() -> None:
     result = explain_feature_family(family_model, family_frame, spec, grid_points=5)
     assert set(result["feature_importance"]["feature"]) == set(spec.feature_columns)
     assert len(result["top_feature_grid"]) >= 1
+
+
+# --- Pipeline-with-ColumnTransformer regression ----------------------------
+
+
+def test_partial_dependence_grid_supports_pipeline_with_column_transformer() -> None:
+    """A Pipeline(ColumnTransformer) fit on a named-column DataFrame must score.
+
+    Regression: the partial-dependence grid used to convert the frame to numpy,
+    which broke ColumnTransformer's name-based column selection. The grid must
+    pass the DataFrame through when the model was fit on named columns.
+    """
+    from sklearn.compose import ColumnTransformer
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    rng = np.random.default_rng(11)
+    frame = pd.DataFrame(
+        {
+            "amount_to_aum_ratio": rng.uniform(0.0, 5.0, 60),
+            "is_cross_border": rng.integers(0, 2, 60).astype(float),
+            "is_new_counterparty": rng.integers(0, 2, 60).astype(float),
+        }
+    )
+    labels = (frame["amount_to_aum_ratio"] > 3.0).astype(int)
+    columns = list(frame.columns)
+    model = Pipeline(
+        [
+            ("preprocess", ColumnTransformer([("numeric", StandardScaler(), columns)])),
+            ("model", LogisticRegression(random_state=11, max_iter=1000)),
+        ]
+    )
+    model.fit(frame, labels)
+    grid = build_partial_dependence_grid(model, frame, "amount_to_aum_ratio", grid_points=5)
+    assert len(grid) >= 1
+    assert grid["mean_score"].between(0.0, 1.0).all()
+
+
+def test_extract_feature_importance_supports_pipeline_with_column_transformer() -> None:
+    """Permutation importance must also score a Pipeline(ColumnTransformer)."""
+    from sklearn.compose import ColumnTransformer
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    rng = np.random.default_rng(12)
+    frame = pd.DataFrame(
+        {
+            "amount_to_aum_ratio": rng.uniform(0.0, 5.0, 60),
+            "is_cross_border": rng.integers(0, 2, 60).astype(float),
+        }
+    )
+    labels = (frame["amount_to_aum_ratio"] > 3.0).astype(int)
+    columns = list(frame.columns)
+    model = Pipeline(
+        [
+            ("preprocess", ColumnTransformer([("numeric", StandardScaler(), columns)])),
+            ("model", LogisticRegression(random_state=12, max_iter=1000)),
+        ]
+    )
+    model.fit(frame, labels)
+    result = extract_feature_importance(model, columns, feature_frame=frame)
+    assert "permutation_importance" in result.columns
+    assert len(result) == len(columns)

@@ -341,11 +341,32 @@ def _permutation_importance(
 
 
 def _positive_scores(model: Any, frame: pd.DataFrame) -> np.ndarray:
-    """Return the positive-class probability vector from predict_proba."""
-    scores = model.predict_proba(frame.to_numpy())
+    """Return the positive-class probability vector from predict_proba.
+
+    A Pipeline whose ColumnTransformer was fit on a named-column DataFrame
+    selects columns by name and raises when given a bare numpy array, so the
+    DataFrame is passed directly when the model signals it was fit on named
+    columns (``feature_names_in_`` or a Pipeline wrapping such a transformer).
+    Bare estimators fit on numpy receive a numpy array instead.
+    """
+    array_like = frame.to_numpy() if not _expects_named_columns(model) else frame
+    scores = model.predict_proba(array_like)
     if scores.ndim != 2 or scores.shape[1] < 2:
         raise ValueError("model.predict_proba must return a 2-column probability array")
     return np.asarray(scores[:, 1], dtype=float)
+
+
+def _expects_named_columns(model: Any) -> bool:
+    """Return True when the model was fit on named columns and needs a DataFrame."""
+    estimator = _final_estimator(model)
+    # A Pipeline may wrap a ColumnTransformer that selects columns by name; its
+    # final estimator (or the transformer) records feature_names_in_ in that case.
+    if hasattr(model, "steps"):
+        for _name, step in model.steps:
+            if hasattr(step, "feature_names_in_"):
+                return True
+        return hasattr(estimator, "feature_names_in_")
+    return hasattr(estimator, "feature_names_in_")
 
 
 def _require_predict_proba(model: Any) -> None:

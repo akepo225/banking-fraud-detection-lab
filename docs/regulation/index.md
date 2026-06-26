@@ -67,6 +67,7 @@ Sources relevant to alert lifecycle, investigation capacity, and noisy labels.
 - [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md)
 - [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md)
 - [Ongoing model monitoring for fraud scoring](source_notes/model-monitoring.md) — drift, stability, false-positive concentration, and data quality.
+- [Production-pattern monitoring](source_notes/production-pattern-monitoring.md) — batch scoring, alert queues with alert aging, drift checks, reviewer actions, and audit trails across both tracks.
 
 ### Governance
 
@@ -79,6 +80,7 @@ Sources that frame stakeholder review, threshold tradeoffs, and model-risk habit
 - [Independent model validation for fraud scoring](source_notes/model-validation.md)
 - [Model documentation for fraud scoring](source_notes/model-documentation.md)
 - [Ongoing model monitoring for fraud scoring](source_notes/model-monitoring.md)
+- [Production-pattern monitoring](source_notes/production-pattern-monitoring.md) — batch scoring, alert queues with alert aging, drift checks, reviewer actions, and audit trails.
 
 ## By Source Family
 
@@ -88,4 +90,4 @@ publication-ready educational material.
 - **Swiss AMLA, AMLO, FINMA, and MROS-related sources** — [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md).
 - **APP scam or payment guidance from EU or UK sources** — [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md).
 - **FATF typologies** — [FATF typologies for money-mule networks](source_notes/fatf-money-mule-typologies.md).
-- **Model-risk, explainability, and governance references** — [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md).
+- **Model-risk, explainability, and governance references** — [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md), [Ongoing model monitoring for fraud scoring](source_notes/model-monitoring.md), [Production-pattern monitoring](source_notes/production-pattern-monitoring.md).

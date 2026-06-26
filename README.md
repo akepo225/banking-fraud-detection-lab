@@ -93,7 +93,11 @@ modules in order:
   [`alpine_crest_monitoring.ipynb`](notebooks/08_production_monitoring_patterns/alpine_crest_monitoring.ipynb)
   (private banking, `pb_high_value_movement`) and
   [`novabank_monitoring.ipynb`](notebooks/08_production_monitoring_patterns/novabank_monitoring.ipynb)
-  (digital banking, `digital_scam_to_mule`).
+  (digital banking, `digital_scam_to_mule`). The capstone
+  [`alert_review_governance.ipynb`](notebooks/08_production_monitoring_patterns/alert_review_governance.ipynb)
+  runs both tracks side by side, reuses a v0.7 explanation as alert-review
+  evidence, and renders a governance-readable summary tying monitoring back to
+  the Alert lifecycle.
 
 Optional canonical-data refreshers for Python, pandas, SQL, and sklearn live in
 [`00_foundations/warmups`](notebooks/00_foundations/warmups/). They are outside

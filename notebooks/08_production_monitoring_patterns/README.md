@@ -30,8 +30,17 @@ the three modules cross-reference each other.
   `digital_scam_to_mule` Detection pattern, carrying **Banking relationship**
   and **User** (digital login identity) lineage through the score / decision /
   reviewer-action chain.
+- [alert_review_governance.ipynb](alert_review_governance.ipynb): the v0.8
+  capstone that runs BOTH tracks' monitoring flow side by side, contrasts their
+  alert-volume / precision / recall / capacity / closure / drift behaviour in
+  one comparison frame, runs an alert-review exercise that reuses a v0.7
+  `explain_feature_family` summary as reviewer-action evidence and walks the
+  audit-event lineage back to **Banking relationship** / Client-or-User /
+  Detection pattern, and renders a governance-readable summary tying the
+  monitoring outputs back to the Alert lifecycle and the v0.7
+  monitoring-checklist dimensions.
 
-The two notebooks are track counterparts and respect the **User** (digital
+The three notebooks are track counterparts and respect the **User** (digital
 login identity) vs **Client** (legal customer) distinction.
 
 ## How to run
@@ -56,6 +65,7 @@ identically:
 
 - [`_build_alpine_crest_monitoring_notebook.py`](_build_alpine_crest_monitoring_notebook.py)
 - [`_build_novabank_monitoring_notebook.py`](_build_novabank_monitoring_notebook.py)
+- [`_build_alert_review_governance_notebook.py`](_build_alert_review_governance_notebook.py)
 
 To regenerate a notebook from its generator:
 

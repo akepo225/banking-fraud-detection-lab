@@ -50,6 +50,23 @@ Track extension notebook naming and module-layout conventions are defined in
   generator scripts (see the module's
   [README](07_interpretability_model_risk/README.md) for the regeneration
   convention).
+- `08_production_monitoring_patterns/`: v0.8 production-monitoring patterns.
+  Learners turn a fitted score into the production monitoring tables (score,
+  threshold, alert_decision, reviewer_action, audit_event), inspect an alert
+  queue and its aging, summarise operational metrics, run score/feature drift
+  and data-quality checks, and trace a monitoring anomaly back to Client /
+  Banking relationship / Detection pattern records. Start with
+  `08_production_monitoring_patterns/alpine_crest_monitoring.ipynb`
+  (**Alpine Crest Private Bank**, `pb_high_value_movement`), then run
+  `08_production_monitoring_patterns/novabank_monitoring.ipynb`
+  (**NovaBank Digital**, `digital_scam_to_mule`), then run
+  `08_production_monitoring_patterns/alert_review_governance.ipynb` (the
+  capstone that contrasts both tracks side by side, reuses a v0.7 explanation
+  as alert-review evidence, and renders a governance-readable summary). This
+  module extends — and does not replace — the v0.1–v0.7 investigation, and
+  ships committed `_build_*.py` generator scripts (see the module's
+  [README](08_production_monitoring_patterns/README.md) for the regeneration
+  convention).
 
 ## Case Library And Regulatory Context
 
@@ -64,6 +81,7 @@ to the relevant case source packs and regulatory source notes. See:
 - [05_digital_session_and_payment_fraud/README.md](05_digital_session_and_payment_fraud/README.md)
 - [06_graph_network_fraud/README.md](06_graph_network_fraud/README.md)
 - [07_interpretability_model_risk/README.md](07_interpretability_model_risk/README.md)
+- [08_production_monitoring_patterns/README.md](08_production_monitoring_patterns/README.md)
 
 For the full catalogs, see the [case library index](../docs/cases/index.md) and
 the [regulatory source index](../docs/regulation/index.md).

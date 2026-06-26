@@ -54,7 +54,9 @@ from banking_fraud_lab import (
     evaluate_alert_scores,
     recommend_lowest_cost_threshold,
     explain_feature_family,
+    explain_with_shap,
     extract_feature_importance,
+    SHAP_AVAILABLE,
     generate_dataset_quality_report,
     generate_digital_scam_to_mule_world,
     generate_learner_facing_digital_scam_to_mule_world,
@@ -109,6 +111,8 @@ def test_package_imports() -> None:
     assert callable(build_partial_dependence_grid)
     assert callable(extract_feature_importance)
     assert callable(explain_feature_family)
+    assert callable(explain_with_shap)
+    assert isinstance(SHAP_AVAILABLE, bool)
     assert callable(build_model_documentation)
     assert callable(build_monitoring_checklist)
     assert callable(join_graph_features_to_view)

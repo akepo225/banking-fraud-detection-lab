@@ -47,6 +47,8 @@ Sources that shape how learners document inputs, thresholds, limitations, and ra
 
 - [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md) — separating analytics evidence from legal conclusions.
 - [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md) — intended use, input data, threshold choice, known limitations, monitoring.
+- [Independent model validation for fraud scoring](source_notes/model-validation.md) — effective challenge and the independent-reviewer stance.
+- [Model documentation for fraud scoring](source_notes/model-documentation.md) — purpose, data lineage, assumptions, limitations, monitoring needs.
 
 ### Explainability
 
@@ -55,6 +57,7 @@ Sources that help connect a score to data signals and case notes.
 - [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md)
 - [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md)
 - [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md)
+- [Model explainability for fraud scoring](source_notes/model-explainability.md) — per-alert feature importance and partial-dependence tied to Detection patterns.
 
 ### Alert Handling
 
@@ -63,6 +66,7 @@ Sources relevant to alert lifecycle, investigation capacity, and noisy labels.
 - [Swiss AMLA, AMLO, and FINMA AML anchors](source_notes/swiss-amla-amlo-finma.md)
 - [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md)
 - [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md)
+- [Ongoing model monitoring for fraud scoring](source_notes/model-monitoring.md) — drift, stability, false-positive concentration, and data quality.
 
 ### Governance
 
@@ -71,6 +75,10 @@ Sources that frame stakeholder review, threshold tradeoffs, and model-risk habit
 - [UK APP scam reimbursement guidance](source_notes/uk-app-scam-payment-guidance.md)
 - [FATF typologies for money-mule networks](source_notes/fatf-money-mule-typologies.md)
 - [Model-risk governance for fraud scoring](source_notes/model-risk-governance.md)
+- [Model explainability for fraud scoring](source_notes/model-explainability.md)
+- [Independent model validation for fraud scoring](source_notes/model-validation.md)
+- [Model documentation for fraud scoring](source_notes/model-documentation.md)
+- [Ongoing model monitoring for fraud scoring](source_notes/model-monitoring.md)
 
 ## By Source Family
 

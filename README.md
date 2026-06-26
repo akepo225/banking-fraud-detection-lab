@@ -89,7 +89,11 @@ modules in order:
   audit_event), inspect an alert queue and its aging, summarise operational
   metrics, run score/feature drift and data-quality checks, and trace a
   monitoring anomaly back to Client / Banking relationship / Detection pattern
-  records.
+  records. Runs for both tracks:
+  [`alpine_crest_monitoring.ipynb`](notebooks/08_production_monitoring_patterns/alpine_crest_monitoring.ipynb)
+  (private banking, `pb_high_value_movement`) and
+  [`novabank_monitoring.ipynb`](notebooks/08_production_monitoring_patterns/novabank_monitoring.ipynb)
+  (digital banking, `digital_scam_to_mule`).
 
 Optional canonical-data refreshers for Python, pandas, SQL, and sklearn live in
 [`00_foundations/warmups`](notebooks/00_foundations/warmups/). They are outside

@@ -25,10 +25,14 @@ the three modules cross-reference each other.
   reviewer action with v0.7 explanation evidence, alert-queue inspection and
   aging, operational metrics, and score/feature drift plus monitoring
   data-quality for the `pb_high_value_movement` Detection pattern.
+- [novabank_monitoring.ipynb](novabank_monitoring.ipynb): **NovaBank Digital**
+  digital-banking counterpart covering the same v0.8 monitoring flow for the
+  `digital_scam_to_mule` Detection pattern, carrying **Banking relationship**
+  and **User** (digital login identity) lineage through the score / decision /
+  reviewer-action chain.
 
-A sibling NovaBank Digital notebook covers the digital-banking track and
-respects the **User** (digital login identity) vs **Client** (legal customer)
-distinction.
+The two notebooks are track counterparts and respect the **User** (digital
+login identity) vs **Client** (legal customer) distinction.
 
 ## How to run
 
@@ -51,6 +55,7 @@ they document exactly how each notebook was produced and let it be rebuilt
 identically:
 
 - [`_build_alpine_crest_monitoring_notebook.py`](_build_alpine_crest_monitoring_notebook.py)
+- [`_build_novabank_monitoring_notebook.py`](_build_novabank_monitoring_notebook.py)
 
 To regenerate a notebook from its generator:
 

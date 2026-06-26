@@ -41,7 +41,11 @@ Track extension notebook naming and module-layout conventions are defined in
   `07_interpretability_model_risk/alpine_crest_interpretability.ipynb`
   (**Alpine Crest Private Bank**: per-alert "why", feature importance and
   partial-dependence explanations, threshold selection, false-positive
-  concentration, and model documentation). This module extends — and does not
+  concentration, and model documentation), then run
+  `07_interpretability_model_risk/novabank_interpretability.ipynb`
+  (**NovaBank Digital**: rule/model/graph/case comparison), then run
+  `07_interpretability_model_risk/governance_memo.ipynb` (stakeholder
+  governance memo synthesising both tracks). This module extends — and does not
   replace — the v0.1–v0.6 investigation, and ships committed `_build_*.py`
   generator scripts (see the module's
   [README](07_interpretability_model_risk/README.md) for the regeneration

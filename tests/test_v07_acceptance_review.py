@@ -63,15 +63,14 @@ def test_v07_evaluation_utilities_are_additive() -> None:
 
 
 def test_shap_is_optional_and_outside_core_and_dev() -> None:
-    """shap must live only behind an optional extra, not in core or dev (HITL decision).
+    """shap must live only behind an optional extra, not in core or dev (cost decision).
 
-    The HITL slice #187 (PR #197) declares the shap extra. Until #187 merges this
-    skips, documenting the pending-HITL state; once merged the contract is enforced.
+    Per the accepted HITL decision on slice #187: SHAP stays optional and out of CI.
+    The ``shap`` extra exists; it is NOT a core or dev dependency.
     """
     config = _parse_pyproject()
     optional_extras = config.get("project", {}).get("optional-dependencies", {})
-    if "shap" not in optional_extras:
-        pytest.skip("HITL slice #187 (shap extra) not merged yet; pending human sign-off")
+    assert "shap" in optional_extras, "optional shap extra missing"
     core_deps = config.get("project", {}).get("dependencies", [])
     dev_deps = optional_extras.get("dev", [])
     assert not any("shap" in dep for dep in core_deps), "shap must not be a core dependency"
@@ -81,12 +80,10 @@ def test_shap_is_optional_and_outside_core_and_dev() -> None:
 def test_shap_not_importable_in_ci_environment() -> None:
     """In the CI/default dev environment shap must not be installed (cost decision).
 
-    Enforced once the HITL slice #187 (shap extra) merges; until then it skips,
-    documenting the pending-HITL state.
+    ``uv sync --extra dev`` does NOT install the shap extra, so the package must not be
+    importable in the CI profile. (Skipped only when a developer has the shap extra
+    installed locally.)
     """
-    config = _parse_pyproject()
-    if "shap" not in config.get("project", {}).get("optional-dependencies", {}):
-        pytest.skip("HITL slice #187 (shap extra) not merged yet; pending human sign-off")
     from banking_fraud_lab import SHAP_AVAILABLE
 
     if SHAP_AVAILABLE:

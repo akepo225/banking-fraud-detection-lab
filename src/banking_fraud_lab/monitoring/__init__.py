@@ -9,6 +9,7 @@ drift and data-quality checks) will live in their own submodules.
 
 from __future__ import annotations
 
+from banking_fraud_lab.monitoring.scoring import BatchScoringResult, run_batch_scoring
 from banking_fraud_lab.monitoring.spec import (
     ALERT_DECISION,
     AUDIT_ALERT_DECISION_MADE,
@@ -35,10 +36,12 @@ __all__ = [
     "AUDIT_REVIEWER_ACTION_RECORDED",
     "AUDIT_SCORE_ASSIGNED",
     "AUDIT_THRESHOLD_REVIEWED",
+    "BatchScoringResult",
     "MonitoringTableSpec",
     "MONITORING_TABLES",
     "MONITORING_TABLE_IDS",
     "REVIEWER_ACTION",
     "SCORE",
     "THRESHOLD",
+    "run_batch_scoring",
 ]

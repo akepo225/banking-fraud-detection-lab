@@ -306,8 +306,9 @@ def _native_importance(estimator: Any, columns: Sequence[str]) -> np.ndarray:
         importances = np.asarray(estimator.feature_importances_, dtype=float)
     elif hasattr(estimator, "coef_"):
         coef = np.asarray(estimator.coef_, dtype=float)
-        # Multi-row coef_ (one row per class) is collapsed to the positive-class
-        # row when binary, else to the mean absolute coefficient per feature.
+        # Binary classifiers expose a single-row coef_ (shape (1, n_features)),
+        # flattened via ravel(); multiclass coef_ (>=2 rows) collapses to the
+        # last class row.
         importances = np.abs(coef[-1] if coef.ndim == 2 and coef.shape[0] >= 2 else coef.ravel())
     if importances is None:
         raise ValueError(

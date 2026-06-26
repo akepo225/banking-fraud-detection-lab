@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import nbformat
+
 NOTEBOOK_PATH = (
     Path(__file__).resolve().parents[1]
     / "notebooks"
@@ -43,7 +45,23 @@ def test_governance_memo_notebook_executes(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert (tmp_path / output_name).exists()
+    executed_path = tmp_path / output_name
+    assert executed_path.exists()
+
+    # The executed notebook must render a real stakeholder-readable memo, not just
+    # exit cleanly. Guard against silent regressions where memo assembly produces
+    # empty or placeholder output (issue #186 AC).
+    notebook = nbformat.read(executed_path, as_version=4)
+    rendered = "\n".join(
+        output.get("text", "")
+        for cell in notebook.cells
+        for output in cell.get("outputs", [])
+        if output.get("output_type") == "stream"
+    )
+    assert "Alpine Crest Private Bank" in rendered
+    assert "NovaBank Digital" in rendered
+    assert "should not be judged by headline accuracy" in rendered
+    assert "Monitoring:" in rendered
 
 
 def test_governance_memo_notebook_synthesises_both_tracks() -> None:

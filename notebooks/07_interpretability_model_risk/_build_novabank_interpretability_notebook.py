@@ -386,6 +386,31 @@ CELLS = [
         "    ]\n"
         ")"
     ),
+    _md(
+        "## Optional SHAP Explanation\n"
+        "\n"
+        "SHAP is an optional explainability tool, kept behind the `shap` extra so it does not "
+        "add dependency cost to the core curriculum or CI. When the extra is installed, the cell "
+        "below shows a SHAP-based feature ranking; when it is absent, the cell prints a skip "
+        "message and the notebook continues. SHAP is a complementary view, not a requirement."
+    ),
+    _code(
+        "from banking_fraud_lab import SHAP_AVAILABLE, explain_with_shap\n"
+        "\n"
+        "if SHAP_AVAILABLE:\n"
+        "    shap_explanation = explain_with_shap(\n"
+        "        baseline_model,\n"
+        "        model_frame[numeric_feature_columns],\n"
+        "        numeric_feature_columns,\n"
+        "        detection_pattern_id=\"digital_scam_to_mule\",\n"
+        "    )\n"
+        "    print(shap_explanation)\n"
+        "else:\n"
+        "    print(\n"
+        "        \"SHAP optional extra not installed; skipping SHAP explanation. \"\n"
+        "        \"Install with `uv sync --extra shap` to view SHAP rankings.\"\n"
+        "    )"
+    ),
 ]
 
 

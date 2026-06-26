@@ -45,8 +45,10 @@ from banking_fraud_lab.interpretability import (
     EXPLANATION_FAMILY_IDS,
     EXPLANATION_FAMILY_SPECS,
     ExplanationFamilySpec,
+    SHAP_AVAILABLE,
     build_partial_dependence_grid,
     explain_feature_family,
+    explain_with_shap,
     extract_feature_importance,
 )
 from banking_fraud_lab.features import (
@@ -110,6 +112,7 @@ __all__ = [
     "MONITORING_CHECKLIST_DIMENSIONS",
     "MONITORING_CHECKLIST_DIMENSION_IDS",
     "PRIVATE_BANKING_FEATURE_FAMILIES",
+    "SHAP_AVAILABLE",
     "EdgeSpec",
     "ExplanationFamilySpec",
     "FeatureFamilySpec",
@@ -157,6 +160,7 @@ __all__ = [
     "concentrate_false_positives",
     "evaluate_alert_scores",
     "explain_feature_family",
+    "explain_with_shap",
     "extract_feature_importance",
     "recommend_lowest_cost_threshold",
     "generate_dataset_quality_report",

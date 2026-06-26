@@ -13,6 +13,10 @@ from banking_fraud_lab.interpretability.explanations import (
     explain_feature_family,
     extract_feature_importance,
 )
+from banking_fraud_lab.interpretability.shap_explainer import (
+    SHAP_AVAILABLE,
+    explain_with_shap,
+)
 from banking_fraud_lab.interpretability.spec import (
     DB_NEW_BENEFICIARY_EXPLANATION,
     DB_SCAM_TO_MULE_EXPLANATION,
@@ -35,7 +39,9 @@ __all__ = [
     "PATTERN_TO_EXPLANATION_FAMILY",
     "PB_HIGH_VALUE_EXPLANATION",
     "PB_TRANSACTION_FRAUD_EXPLANATION",
+    "SHAP_AVAILABLE",
     "build_partial_dependence_grid",
     "explain_feature_family",
+    "explain_with_shap",
     "extract_feature_importance",
 ]

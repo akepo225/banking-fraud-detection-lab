@@ -30,6 +30,9 @@ dev = [
 neo4j = [
   "neo4j>=5.0"
 ]
+shap = [
+  "shap>=0.44"
+]
 
 [build-system]
 requires = ["setuptools>=68"]

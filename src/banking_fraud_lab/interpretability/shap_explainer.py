@@ -37,19 +37,30 @@ def explain_with_shap(
     feature_columns: list[str],
     *,
     detection_pattern_id: str | None = None,
+    seed: int = 42,
 ) -> pd.DataFrame:
-    """Compute a deterministic, tolerance-bounded SHAP explanation for a fitted model.
+    """Compute a tolerance-bounded SHAP explanation for a fitted model.
 
     Returns a DataFrame with one row per feature, the mean absolute SHAP value
     per feature (L1-normalised so it is comparable to the native/permutation
     importance from :mod:`banking_fraud_lab.interpretability.explanations`),
     plus the ``detection_pattern_id`` tag column when supplied.
 
+    ``shap.Explainer`` does not natively accept a scikit-learn ``Pipeline``
+    (it cannot introspect the transformer steps), so when ``model`` is a
+    ``Pipeline`` the function passes ``model.predict_proba`` as a black-box
+    callable instead. For models that expose only a prediction function, SHAP
+    falls back to its (stochastic) Permutation explainer; a fixed ``seed`` is
+    forwarded so the same inputs produce the same ranking across runs, within
+    SHAP's sampling tolerance.
+
     Args:
         model: A fitted classifier or Pipeline exposing ``predict_proba``.
         feature_frame: The DataFrame the model was scored on.
         feature_columns: The feature columns to explain.
         detection_pattern_id: Optional Detection pattern id tag.
+        seed: Seed forwarded to the SHAP explainer for reproducibility of the
+            permutation-based path (models without a specialised explainer).
 
     Returns:
         A DataFrame sorted by descending ``mean_abs_shap`` with columns
@@ -70,8 +81,12 @@ def explain_with_shap(
         raise ValueError("feature_columns must contain at least one feature name")
 
     family_frame = feature_frame.loc[:, feature_columns]
-    # shap.Explainer dispatches to Linear/Tree/GradientExplainer based on the model.
-    explainer = shap.Explainer(model, family_frame)  # type: ignore[union-attr]
+    # shap.Explainer cannot introspect a sklearn Pipeline's transformer steps, so
+    # for a Pipeline we pass predict_proba as a black-box callable (the supported
+    # model-agnostic path). A bare estimator is passed directly so SHAP can pick
+    # a specialised explainer (Linear/Tree/Gradient) when applicable.
+    explainer_model = model.predict_proba if hasattr(model, "steps") else model
+    explainer = shap.Explainer(explainer_model, family_frame, seed=seed)  # type: ignore[union-attr]
     # Modern SHAP API: call the explainer to get an Explanation, then read .values.
     explanation = explainer(family_frame)  # type: ignore[operator]
     shap_values = getattr(explanation, "values", explanation)

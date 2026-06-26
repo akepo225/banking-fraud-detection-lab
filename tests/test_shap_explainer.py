@@ -19,8 +19,12 @@ ROOT = Path(__file__).resolve().parents[1]
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 
 
-def _pyproject_text() -> str:
-    return PYPROJECT_PATH.read_text(encoding="utf-8")
+def _parse_pyproject() -> dict:
+    """Parse pyproject.toml with tomllib (Python 3.11+) for robust dep inspection."""
+    import tomllib
+
+    with PYPROJECT_PATH.open("rb") as handle:
+        return tomllib.load(handle)
 
 
 def test_shap_availability_flag_exists() -> None:
@@ -50,19 +54,17 @@ def test_explain_with_shap_raises_when_shap_absent() -> None:
 
 def test_shap_is_optional_and_outside_core_and_dev() -> None:
     """shap must live only behind an optional extra, not in core or dev dependencies."""
-    text = _pyproject_text()
+    config = _parse_pyproject()
+    project = config.get("project", {})
+    optional_extras = project.get("optional-dependencies", {})
     # The optional shap extra exists.
-    assert "shap = [" in text, "optional shap extra missing"
-    # shap is NOT in the core dependencies block.
-    dependencies_start = text.index("dependencies = [")
-    dependencies_end = text.index("]", dependencies_start)
-    dependencies_block = text[dependencies_start:dependencies_end]
-    assert "shap" not in dependencies_block, "shap must not be a core dependency"
-    # shap is NOT in the dev block.
-    dev_start = text.index("dev = [")
-    dev_end = text.index("]", dev_start)
-    dev_block = text[dev_start:dev_end]
-    assert "shap" not in dev_block, "shap must not be a dev dependency"
+    assert "shap" in optional_extras, "optional shap extra missing"
+    # shap is NOT in the core dependencies array.
+    core_deps = project.get("dependencies", [])
+    assert not any("shap" in dep for dep in core_deps), "shap must not be a core dependency"
+    # shap is NOT in the dev extra.
+    dev_deps = optional_extras.get("dev", [])
+    assert not any("shap" in dep for dep in dev_deps), "shap must not be a dev dependency"
 
 
 def test_shap_not_importable_in_ci_environment() -> None:

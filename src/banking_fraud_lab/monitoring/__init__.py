@@ -15,6 +15,13 @@ from banking_fraud_lab.monitoring.decisions import (
     decide_alerts,
     record_reviewer_action,
 )
+from banking_fraud_lab.monitoring.drift import (
+    DataQualityResult,
+    ScoreDriftResult,
+    check_feature_drift,
+    check_monitoring_data_quality,
+    check_score_drift,
+)
 from banking_fraud_lab.monitoring.operations import (
     inspect_alert_queue,
     summarise_alert_operations,
@@ -48,13 +55,18 @@ __all__ = [
     "AUDIT_THRESHOLD_REVIEWED",
     "AlertDecisionResult",
     "BatchScoringResult",
+    "DataQualityResult",
     "MonitoringTableSpec",
     "MONITORING_TABLES",
     "MONITORING_TABLE_IDS",
     "REVIEWER_ACTION",
     "ReviewerActionResult",
     "SCORE",
+    "ScoreDriftResult",
     "THRESHOLD",
+    "check_feature_drift",
+    "check_monitoring_data_quality",
+    "check_score_drift",
     "decide_alerts",
     "inspect_alert_queue",
     "record_reviewer_action",

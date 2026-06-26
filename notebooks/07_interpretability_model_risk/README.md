@@ -21,6 +21,11 @@ existing feature, case, and graph evidence.
   explanations, a rule / model / graph (`mule_ring`) / case comparison, threshold
   selection, false-positive concentration, and model documentation. Respects the
   **User** (digital login identity) vs **Client** (legal customer) distinction.
+- [governance_memo.ipynb](governance_memo.ipynb): converts both track notebooks'
+  outputs (explanations, thresholds, false-positive concentration, model
+  documentation, monitoring checklists) into a single stakeholder-readable
+  governance memo, with educational guardrails (no certification or legal-advice
+  claims).
 
 ## How to run
 
@@ -38,6 +43,8 @@ tests in
 [`tests/test_alpine_crest_interpretability_notebook.py`](../../tests/test_alpine_crest_interpretability_notebook.py)
 and
 [`tests/test_novabank_interpretability_notebook.py`](../../tests/test_novabank_interpretability_notebook.py)
+and
+[`tests/test_governance_memo_notebook.py`](../../tests/test_governance_memo_notebook.py)
 run the notebooks directly and are the source of truth for behaviour.
 
 The committed generator scripts are the **deterministic regeneration source** —
@@ -46,12 +53,14 @@ identically:
 
 - [`_build_alpine_crest_interpretability_notebook.py`](_build_alpine_crest_interpretability_notebook.py)
 - [`_build_novabank_interpretability_notebook.py`](_build_novabank_interpretability_notebook.py)
+- [`_build_governance_memo_notebook.py`](_build_governance_memo_notebook.py)
 
 To regenerate a notebook from its generator:
 
 ```bash
 uv run python notebooks/07_interpretability_model_risk/_build_alpine_crest_interpretability_notebook.py
 uv run python notebooks/07_interpretability_model_risk/_build_novabank_interpretability_notebook.py
+uv run python notebooks/07_interpretability_model_risk/_build_governance_memo_notebook.py
 ```
 
 Regeneration is **optional and manual**. The committed `.ipynb` files are

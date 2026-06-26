@@ -83,6 +83,13 @@ modules in order:
   choose thresholds, document limitations, and write governance-ready summaries
   (per-alert "why", feature importance, partial-dependence, threshold selection,
   false-positive concentration, model documentation).
+- [`08_production_monitoring_patterns`](notebooks/08_production_monitoring_patterns/alpine_crest_monitoring.ipynb):
+  v0.8 production-monitoring patterns. Turn a fitted score into the production
+  monitoring tables (score, threshold, alert_decision, reviewer_action,
+  audit_event), inspect an alert queue and its aging, summarise operational
+  metrics, run score/feature drift and data-quality checks, and trace a
+  monitoring anomaly back to Client / Banking relationship / Detection pattern
+  records.
 
 Optional canonical-data refreshers for Python, pandas, SQL, and sklearn live in
 [`00_foundations/warmups`](notebooks/00_foundations/warmups/). They are outside

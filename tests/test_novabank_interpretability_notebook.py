@@ -64,9 +64,10 @@ def test_novabank_interpretability_notebook_uses_v07_contracts() -> None:
 def test_novabank_interpretability_notebook_compares_signal_types() -> None:
     """The notebook must compare rule/model/graph/case evidence (issue #185 AC)."""
     notebook_text = NOTEBOOK_PATH.read_text(encoding="utf-8")
+    assert "Compare Rule, Model, Graph, And Case Evidence" in notebook_text
+    assert "rule_triggered" in notebook_text
+    assert "graph_pattern" in notebook_text
     assert "mule_ring" in notebook_text
-    assert "graph" in notebook_text.lower()
-    assert "rule" in notebook_text.lower()
 
 
 def test_novabank_interpretability_notebook_keeps_limitations_visible() -> None:

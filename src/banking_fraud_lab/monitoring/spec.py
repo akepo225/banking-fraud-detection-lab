@@ -362,6 +362,13 @@ REVIEWER_ACTION = MonitoringTableSpec(
             False,
             "Learner-readable reason for the reviewer action.",
         ),
+        ColumnSpec(
+            "evidence",
+            "string",
+            True,
+            "v0.7 interpretability summary (e.g. explain_feature_family / "
+            "extract_feature_importance output) supporting the action, where applicable.",
+        ),
     ),
     lineage_keys=(
         "banking_relationship_id",

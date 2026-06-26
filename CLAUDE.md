@@ -51,7 +51,7 @@ Don't "improve" adjacent code. Don't refactor working code. Match existing style
 
 The `data/sample/` CSVs are deterministic seed-42 `tiny` output. If you change schema/generators, regenerate them (works in Bash and PowerShell):
 
-```
+```bash
 uv run python -c "from pathlib import Path; from banking_fraud_lab import generate_minimal_banking_world; generate_minimal_banking_world(seed=42, output_dir=Path('data/sample'))"
 ```
 
@@ -63,7 +63,7 @@ Transform tasks into verifiable goals: "fix the bug" → write a test that repro
 
 ### Commands (CI runs exactly these)
 
-```
+```bash
 uv sync --extra dev
 uv run ruff check .
 uv run pytest

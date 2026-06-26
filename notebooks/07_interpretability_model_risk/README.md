@@ -6,7 +6,10 @@ limitations, and write governance-ready summaries for both tracks.
 
 This module **extends** the v0.1–v0.6 investigation — it does not replace it.
 Every explanation is connected back to a **Detection pattern** id and to the
-existing feature, case, and graph evidence.
+existing feature, case, and graph evidence. It deepens, rather than replaces,
+the first governance bridge in
+[`03_alert_governance`](../03_alert_governance/README.md); the two modules
+cross-reference each other.
 
 ## Notebooks
 

@@ -12,7 +12,7 @@ Before implementing: read `CONTEXT.md` and `docs/adr/`. State assumptions explic
 ### Context First
 
 - This is a pre-publication banking fraud detection **curriculum** repo, private until the v0.1 publication gate passes. Do not add public-release language that implies it is already published.
-- Source of truth for current scope/status: `README.md`, `pyproject.toml`, `.github/workflows/ci.yml`, GitHub Issues, and `docs/ROADMAP.md`.
+- Source of truth for current scope/status: GitHub Issues. Use `README.md`, `pyproject.toml`, `.github/workflows/ci.yml`, and `docs/ROADMAP.md` as supporting context.
 - ADR-0001 establishes two first-class fraud detection tracks; ADR-0005 makes GitHub Issues the operational source of truth (local `.scratch/` and `docs/prds/` are mirrors only).
 
 ### Domain Language (use exactly)

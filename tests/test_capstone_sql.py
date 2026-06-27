@@ -87,7 +87,12 @@ def test_capstone_sql_results_exclude_protected_answer_keys(tmp_path: Path) -> N
 def test_capstone_sql_ties_back_to_glossary_lineage(tmp_path: Path) -> None:
     """Capstone SQL results carry Banking relationship / Client-or-User / Alert lineage."""
     lineage_checks = {
-        "private_banking": {"banking_relationship_id", "client_id", "relationship_manager_code"},
+        "private_banking": {
+            "banking_relationship_id",
+            "client_id",
+            "relationship_manager_code",
+            "alert_id",
+        },
         "digital_banking": {"banking_relationship_id", "client_id", "user_id", "alert_id"},
     }
     generators = {

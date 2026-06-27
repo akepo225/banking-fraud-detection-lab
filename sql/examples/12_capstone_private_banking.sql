@@ -69,6 +69,12 @@ SELECT
   rv.booked_at,
   rv.transaction_type,
   rv.amount_chf,
+  rv.payment_beneficiary_id,
+  pb.beneficiary_change_event,
+  CASE
+    WHEN pb.beneficiary_change_event = 'new_beneficiary_added' THEN 1
+    ELSE 0
+  END AS is_new_counterparty,
   ROUND(rv.aum_chf, 2) AS aum_chf,
   ROUND(rv.account_balance_chf, 2) AS account_balance_chf,
   rv.relationship_debit_count,
@@ -93,6 +99,8 @@ SELECT
   sa.alert_status,
   sa.severity AS alert_severity
 FROM relationship_velocity AS rv
+LEFT JOIN payment_beneficiaries AS pb
+  ON pb.payment_beneficiary_id = rv.payment_beneficiary_id
 LEFT JOIN scenario_alerts AS sa
   ON sa.transaction_id = rv.transaction_id
 ORDER BY rv.amount_chf DESC, rv.transaction_id;

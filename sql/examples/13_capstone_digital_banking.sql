@@ -86,6 +86,31 @@ scenario_alerts AS (
     al.severity
   FROM alerts AS al
   WHERE al.institution_name = 'NovaBank Digital'
+),
+-- Pass-through context: for each debit, the nearest prior credit on the same
+-- account and its amount. A debit booked shortly after a credit is the rapid
+-- pass-through signal behind the digital_scam_to_mule Detection pattern
+-- (mirrors sql/examples/10_digital_beneficiary_passthrough_features.sql).
+prior_credit AS (
+  SELECT
+    d.transaction_id,
+    MAX(c.booked_at) AS nearest_prior_credit_at,
+    (
+      SELECT c2.amount_chf
+      FROM digital_transactions AS c2
+      WHERE c2.account_id = d.account_id
+        AND c2.direction = 'credit'
+        AND c2.booked_at <= d.booked_at
+      ORDER BY c2.booked_at DESC
+      LIMIT 1
+    ) AS nearest_prior_credit_amount_chf
+  FROM digital_transactions AS d
+  LEFT JOIN digital_transactions AS c
+    ON c.account_id = d.account_id
+   AND c.direction = 'credit'
+   AND c.booked_at <= d.booked_at
+  WHERE d.direction = 'debit'
+  GROUP BY d.transaction_id
 )
 SELECT
   dt.transaction_id,
@@ -115,6 +140,23 @@ SELECT
     WHEN bc.beneficiary_change_event = 'new_beneficiary_added' THEN 1
     ELSE 0
   END AS db_is_new_beneficiary_payment,
+  ROUND(COALESCE(pc.nearest_prior_credit_amount_chf, 0), 2) AS db_prior_credit_amount_chf,
+  ROUND(
+    CASE
+      WHEN pc.nearest_prior_credit_at IS NOT NULL
+        THEN (julianday(dt.booked_at) - julianday(pc.nearest_prior_credit_at)) * 24
+      ELSE 25
+    END,
+    2
+  ) AS db_hours_since_prior_credit,
+  CASE
+    WHEN COALESCE(pc.nearest_prior_credit_amount_chf, 0) > 0
+      AND pc.nearest_prior_credit_at IS NOT NULL
+      AND (julianday(dt.booked_at) - julianday(pc.nearest_prior_credit_at)) * 24 BETWEEN 0 AND 24
+      AND dt.payment_beneficiary_id IS NOT NULL
+      THEN 1
+    ELSE 0
+  END AS db_is_rapid_pass_through,
   sa.alert_id,
   sa.alert_type,
   sa.alert_status,
@@ -128,6 +170,8 @@ LEFT JOIN device_user_counts AS duc
   ON duc.device_fingerprint_hash = ts.device_fingerprint_hash
 LEFT JOIN beneficiary_context AS bc
   ON bc.payment_beneficiary_id = dt.payment_beneficiary_id
+LEFT JOIN prior_credit AS pc
+  ON pc.transaction_id = dt.transaction_id
 LEFT JOIN scenario_alerts AS sa
   ON sa.transaction_id = dt.transaction_id
 ORDER BY dt.booked_at, dt.transaction_id;

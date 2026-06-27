@@ -19,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import math
 from dataclasses import dataclass
+from typing import Any
 
 import pandas as pd
 
@@ -150,6 +151,63 @@ def run_batch_scoring(
         batch_id=batch_id,
         score_rows=score_rows,
         threshold_rows=threshold_rows,
+    )
+
+
+def score_from_recommended_threshold(
+    scored_frame: "pd.DataFrame",
+    *,
+    recommendation: "dict[str, Any]",
+    detection_pattern_id: str,
+    scorer: str,
+    score_version: str,
+    seed: int = 42,
+) -> BatchScoringResult:
+    """Run batch scoring using a v0.7 recommender threshold (the PRD #201 path).
+
+    A thin provenance wrapper around :func:`run_batch_scoring` that makes the
+    intended v0.8 path the easy path: the threshold is read verbatim from a
+    :func:`banking_fraud_lab.evaluation.recommend_lowest_cost_threshold`
+    recommendation (``recommendation['recommended_threshold']``) and recorded with
+    its v0.7 provenance, so a reviewer can see the threshold came from the
+    recommender / :func:`evaluate_alert_scores` rather than a hand-picked number.
+
+    Args:
+        scored_frame: Scored frame, same contract as :func:`run_batch_scoring`.
+        recommendation: A
+            :func:`~banking_fraud_lab.evaluation.recommend_lowest_cost_threshold`
+            result dict; must carry a numeric ``recommended_threshold`` in
+            ``(0.0, 1.0]``.
+        detection_pattern_id: Known Detection pattern id.
+        scorer: Identifier of the scorer.
+        score_version: Version of the scorer/model.
+        seed: Determinism seed forwarded to :func:`run_batch_scoring`.
+
+    Returns:
+        A :class:`BatchScoringResult` whose ``threshold_rows`` record the
+        recommender threshold, ``selection_method='v0.7-recommend_lowest_cost_threshold'``
+        and ``evidence_ref='recommend_lowest_cost_threshold'``.
+
+    Raises:
+        ValueError: If ``recommendation`` is missing ``recommended_threshold``
+            or if the recommended threshold fails :func:`run_batch_scoring`'s
+            ``(0.0, 1.0]`` validation.
+    """
+    if not isinstance(recommendation, dict) or "recommended_threshold" not in recommendation:
+        raise ValueError(
+            "recommendation must be a recommend_lowest_cost_threshold result carrying "
+            "'recommended_threshold'"
+        )
+    recommended = recommendation["recommended_threshold"]
+    return run_batch_scoring(
+        scored_frame,
+        detection_pattern_id=detection_pattern_id,
+        threshold=recommended,
+        scorer=scorer,
+        score_version=score_version,
+        seed=seed,
+        selection_method="v0.7-recommend_lowest_cost_threshold",
+        evidence_ref="recommend_lowest_cost_threshold",
     )
 
 
@@ -288,4 +346,5 @@ def _build_threshold_row(
 __all__ = [
     "BatchScoringResult",
     "run_batch_scoring",
+    "score_from_recommended_threshold",
 ]

@@ -19,7 +19,10 @@ Operationalizes two of the v0.7 governance monitoring dimensions defined in
 :func:`check_feature_drift` adds feature-level shift (PRD user story 5: amount,
 geography, channel, device, relationship activity, user behavior) so a reviewer
 can see which input family moved between windows. The caller passes the exact
-column names, so the check stays schema-agnostic.
+column names, so the check stays schema-agnostic. Each result row also references
+the governance ``score_drift`` ``dimension_id`` + ``evidence_source`` and its
+user-story-5 ``feature_family``, so a feature drift finding maps onto the v0.7
+monitoring checklist and the PRD feature set.
 
 Every result references the governance ``dimension_id`` + ``evidence_source`` so
 a finding maps onto the v0.7 monitoring checklist. All checks are deterministic:
@@ -41,6 +44,20 @@ import pandas as pd
 
 from banking_fraud_lab.data_quality import DatasetQualityReport, generate_dataset_quality_report
 from banking_fraud_lab.governance.spec import MON_DATA_QUALITY, MON_DRIFT
+
+# Feature-name fragment -> user-story-5 family (amount, geography, channel, device,
+# relationship activity, user behavior). A reviewer can see which family each drift
+# row belongs to so monitoring stays tied to the PRD feature set. Frozen vocabulary:
+# extending it is an additive change (no existing family id is renamed).
+FEATURE_DRIFT_FAMILIES: dict[str, str] = {
+    "amount": "amount",
+    "geography": "geography",
+    "channel": "channel",
+    "device": "device",
+    "relationship_activity": "relationship_activity",
+    "user_behavior": "user_behavior",
+}
+_FEATURE_DRIFT_FAMILY_OTHER = "other"
 
 
 @dataclass(frozen=True)
@@ -67,8 +84,10 @@ class DataQualityResult:
 
     Carries the ``generate_dataset_quality_report`` summary (row counts, issue
     count, the wrapped :class:`DatasetQualityReport`) plus the monitoring-frame
-    required-column completeness check, so a reviewer sees both the generated-
-    dataset report and the caller's monitoring-input completeness.
+    required-column completeness and in-range checks, so a reviewer sees both the
+    generated-dataset report and the caller's monitoring-input validity. ``passed``
+    is True only when no required column is missing/null AND no in-range rule fails
+    AND the wrapped report has no issues.
     """
 
     dimension_id: str
@@ -78,6 +97,7 @@ class DataQualityResult:
     issue_count: int
     required_columns: tuple[str, ...]
     missing_required_columns: tuple[str, ...]
+    out_of_range_columns: tuple[str, ...]
     report: DatasetQualityReport
     passed: bool
 
@@ -160,7 +180,12 @@ def check_feature_drift(
         (``'numeric'`` or ``'categorical'``), ``reference_mean`` and
         ``review_mean`` (numeric only), ``mean_shift`` (numeric) or
         ``distribution_shift`` (categorical), and ``shifted`` (True when the
-        shift is greater than zero). Rows are ordered by feature name.
+        shift is greater than zero). Rows are ordered by feature name. The
+        trailing columns ``feature_family`` (one of the user-story-5 families or
+        ``'other'``), ``dimension_id`` (the frozen ``MON_DRIFT`` ``score_drift``
+        id), and ``evidence_source`` (``MON_DRIFT.evidence_source``) link each
+        drift row back to the v0.7 governance checklist dimension and the PRD
+        feature set.
 
     Raises:
         ValueError: If any feature column is missing from either frame.
@@ -208,6 +233,11 @@ def check_feature_drift(
                 }
             )
 
+    for row in rows:
+        row["feature_family"] = _resolve_feature_family(row["feature"])
+        row["dimension_id"] = MON_DRIFT.dimension_id
+        row["evidence_source"] = MON_DRIFT.evidence_source
+
     columns = [
         "feature",
         "dtype_kind",
@@ -216,6 +246,9 @@ def check_feature_drift(
         "mean_shift",
         "distribution_shift",
         "shifted",
+        "feature_family",
+        "dimension_id",
+        "evidence_source",
     ]
     return pd.DataFrame(rows, columns=columns)
 
@@ -228,17 +261,28 @@ def check_monitoring_data_quality(
     seed: int = 42,
     scale: str = "tiny",
 ) -> DataQualityResult:
-    """Check monitoring-input completeness, wrapping ``generate_dataset_quality_report``.
+    """Check monitoring-input completeness and ranges, wrapping ``generate_dataset_quality_report``.
 
     Implements MON_DATA_QUALITY by reusing
     :func:`banking_fraud_lab.data_quality.generate_dataset_quality_report` for the
     report summary (row counts, issue count) and checking the caller's
-    ``frame`` for required-column completeness. ``passed`` is True when no
-    required column is missing from ``frame`` AND the wrapped report has no
-    issues.
+    ``frame`` for required-column completeness AND focused input ranges. The
+    in-range rules (matching MON_DATA_QUALITY.guidance) are applied to columns
+    *when present*, so a caller can pass a monitoring frame that only carries a
+    subset of them:
+
+    - ``score``: non-null numeric values in ``[0, 1]``.
+    - ``confirmed_fraud``: boolean-like values (``True``/``False``,
+      ``0``/``1``, or the case-insensitive strings ``"true"``/``"false"``) when
+      present.
+    - ``loss_amount_chf``: non-negative numeric values when present.
+
+    ``passed`` is True when no required column is missing/null, no in-range rule
+    fails, AND the wrapped report has no issues.
 
     Args:
-        frame: Monitoring-input frame to check for required-column completeness.
+        frame: Monitoring-input frame to check for required-column completeness
+            and input ranges.
         required_columns: Columns that must be present (and non-null) on
             ``frame``.
         table_name: Name recorded on the result for the monitoring-input table.
@@ -251,7 +295,8 @@ def check_monitoring_data_quality(
         A :class:`DataQualityResult` referencing the ``data_quality`` governance
         dimension and ``generate_dataset_quality_report`` evidence source,
         carrying the wrapped report, the row count, the issue count, the required
-        columns, the sorted missing required columns, and the ``passed`` flag.
+        columns, the sorted missing required columns, the sorted out-of-range
+        columns, and the ``passed`` flag.
 
     Raises:
         ValueError: If any required column is missing from ``frame``.
@@ -265,18 +310,21 @@ def check_monitoring_data_quality(
     )
     missing_required = tuple(sorted(missing + nullable_required))
 
+    out_of_range = _detect_out_of_range_columns(frame)
+
     report = generate_dataset_quality_report(seed=seed, scale=scale)
 
-    passed = not missing_required and report.passed
+    passed = not missing_required and not out_of_range and report.passed
 
     return DataQualityResult(
         dimension_id=MON_DATA_QUALITY.dimension_id,
         evidence_source=MON_DATA_QUALITY.evidence_source,
         table_name=table_name,
         row_count=int(len(frame)),
-        issue_count=int(len(report.issues)) + len(missing_required),
+        issue_count=int(len(report.issues)) + len(missing_required) + len(out_of_range),
         required_columns=tuple(required_columns),
         missing_required_columns=missing_required,
+        out_of_range_columns=out_of_range,
         report=report,
         passed=bool(passed),
     )
@@ -298,6 +346,66 @@ def _coerce_scores(
     return array
 
 
+# Boolean-like values accepted for a ``confirmed_fraud`` monitoring input column.
+# Matches Python/numpy/pandas and common CSV string spellings (case-insensitive).
+_BOOLEAN_LIKE: frozenset[object] = frozenset(
+    {True, False, 0, 1, "true", "false", "True", "False", "0", "1"}
+)
+
+
+def _detect_out_of_range_columns(frame: "pd.DataFrame") -> tuple[str, ...]:
+    """Return the sorted monitoring-input columns failing the MON_DATA_QUALITY in-range rules.
+
+    Each rule applies only when the column is present (so a monitoring frame that
+    carries a subset is still valid). Nulls are already reported via the required-
+    column completeness check; here we flag *non-null* values that fall outside
+    the expected range / shape:
+
+    - ``score``: numeric values must lie in ``[0, 1]``.
+    - ``confirmed_fraud``: every non-null value must be boolean-like.
+    - ``loss_amount_chf``: numeric values must be non-negative.
+    """
+    failing: list[str] = []
+    if "score" in frame.columns and _score_out_of_range(frame["score"]):
+        failing.append("score")
+    if "confirmed_fraud" in frame.columns and _confirmed_fraud_misshapen(frame["confirmed_fraud"]):
+        failing.append("confirmed_fraud")
+    if "loss_amount_chf" in frame.columns and _loss_amount_negative(frame["loss_amount_chf"]):
+        failing.append("loss_amount_chf")
+    return tuple(sorted(failing))
+
+
+def _score_out_of_range(series: "pd.Series") -> bool:
+    """Return True when any non-null ``score`` value is not a finite number in [0, 1]."""
+    non_null = series.dropna()
+    if non_null.empty:
+        return False
+    numeric = pd.to_numeric(non_null, errors="coerce")
+    if numeric.isna().any():
+        return True
+    return bool((numeric < 0.0).any() or (numeric > 1.0).any())
+
+
+def _confirmed_fraud_misshapen(series: "pd.Series") -> bool:
+    """Return True when any non-null ``confirmed_fraud`` value is not boolean-like."""
+    non_null = series.dropna()
+    if non_null.empty:
+        return False
+    bad = non_null[~non_null.map(lambda value: value in _BOOLEAN_LIKE)]
+    return not bad.empty
+
+
+def _loss_amount_negative(series: "pd.Series") -> bool:
+    """Return True when any non-null ``loss_amount_chf`` value is a negative number."""
+    non_null = series.dropna()
+    if non_null.empty:
+        return False
+    numeric = pd.to_numeric(non_null, errors="coerce")
+    if numeric.isna().any():
+        return True
+    return bool((numeric < 0.0).any())
+
+
 def _total_variation_distance(reference: "pd.Series", review: "pd.Series") -> float:
     """Return the total-variation distance between two categorical value-share distributions."""
     reference_counts = reference.astype("string").fillna("__null__").value_counts()
@@ -313,8 +421,24 @@ def _total_variation_distance(reference: "pd.Series", review: "pd.Series") -> fl
     return total / 2.0
 
 
+def _resolve_feature_family(feature: str) -> str:
+    """Map a feature column name to its user-story-5 family, else ``'other'``.
+
+    Substring match against the frozen :data:`FEATURE_DRIFT_FAMILIES` fragments
+    so both exact names (``amount``) and prefixed ones (``amount_zscore``) map to
+    the same family. Unknown features resolve to ``'other'`` so the family column
+    is always populated without inventing a new family id.
+    """
+    lowered = str(feature).lower()
+    for fragment, family in FEATURE_DRIFT_FAMILIES.items():
+        if fragment in lowered:
+            return family
+    return _FEATURE_DRIFT_FAMILY_OTHER
+
+
 __all__ = [
     "DataQualityResult",
+    "FEATURE_DRIFT_FAMILIES",
     "ScoreDriftResult",
     "check_feature_drift",
     "check_monitoring_data_quality",

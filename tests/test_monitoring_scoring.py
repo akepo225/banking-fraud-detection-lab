@@ -7,7 +7,7 @@ import pytest
 
 from banking_fraud_lab import monitoring
 from banking_fraud_lab import recommend_lowest_cost_threshold
-from banking_fraud_lab.monitoring import run_batch_scoring
+from banking_fraud_lab.monitoring import run_batch_scoring, score_from_recommended_threshold
 
 _PATTERN_ID = "pb_high_value_movement"
 
@@ -348,6 +348,91 @@ def test_rejects_null_banking_relationship_id() -> None:
             frame,
             detection_pattern_id=_PATTERN_ID,
             threshold=0.5,
+            scorer="baseline-logreg",
+            score_version="0.1.0",
+        )
+
+
+# --- Caller discipline: threshold sourced from the v0.7 recommender (#201) ---
+
+
+def _recommender_result() -> dict:
+    """Build a tiny recommend_lowest_cost_threshold result over synthetic cases."""
+    cases = pd.DataFrame(
+        {
+            "case_id": ["CASE-1", "CASE-2", "CASE-3", "CASE-4"],
+            "alert_id": ["AL-1", "AL-2", "AL-3", "AL-4"],
+        }
+    )
+    case_outcomes = pd.DataFrame(
+        {
+            "case_id": ["CASE-1", "CASE-2", "CASE-3", "CASE-4"],
+            "confirmed_fraud": [True, False, True, False],
+        }
+    )
+    alert_scores = pd.DataFrame(
+        {
+            "alert_id": ["AL-1", "AL-2", "AL-3", "AL-4"],
+            "score": [0.9, 0.8, 0.7, 0.1],
+        }
+    )
+    return recommend_lowest_cost_threshold(cases, case_outcomes, alert_scores)
+
+
+def test_score_from_recommended_threshold_uses_recommender_value() -> None:
+    """The helper records the v0.7 recommender threshold verbatim (PRD #201 path)."""
+    recommendation = _recommender_result()
+    recommended = recommendation["recommended_threshold"]
+
+    result = score_from_recommended_threshold(
+        _tiny_scored_frame(),
+        recommendation=recommendation,
+        detection_pattern_id=_PATTERN_ID,
+        scorer="baseline-logreg",
+        score_version="0.1.0",
+    )
+
+    assert result.threshold_rows["threshold_value"].iloc[0] == recommended
+    assert (
+        result.threshold_rows["selection_method"].iloc[0]
+        == "v0.7-recommend_lowest_cost_threshold"
+    )
+    assert result.threshold_rows["evidence_ref"].iloc[0] == "recommend_lowest_cost_threshold"
+
+
+def test_score_from_recommended_threshold_matches_manual_call() -> None:
+    """The helper is a provenance wrapper: same output as run_batch_scoring with that threshold."""
+    recommendation = _recommender_result()
+    recommended = recommendation["recommended_threshold"]
+
+    via_helper = score_from_recommended_threshold(
+        _tiny_scored_frame(),
+        recommendation=recommendation,
+        detection_pattern_id=_PATTERN_ID,
+        scorer="baseline-logreg",
+        score_version="0.1.0",
+    )
+    manual = run_batch_scoring(
+        _tiny_scored_frame(),
+        detection_pattern_id=_PATTERN_ID,
+        threshold=recommended,
+        scorer="baseline-logreg",
+        score_version="0.1.0",
+        selection_method="v0.7-recommend_lowest_cost_threshold",
+        evidence_ref="recommend_lowest_cost_threshold",
+    )
+
+    pd.testing.assert_frame_equal(via_helper.score_rows, manual.score_rows)
+    pd.testing.assert_frame_equal(via_helper.threshold_rows, manual.threshold_rows)
+
+
+def test_score_from_recommended_threshold_rejects_bad_recommendation() -> None:
+    """A recommendation missing 'recommended_threshold' is rejected."""
+    with pytest.raises(ValueError):
+        score_from_recommended_threshold(
+            _tiny_scored_frame(),
+            recommendation={"not_the_key": 0.5},
+            detection_pattern_id=_PATTERN_ID,
             scorer="baseline-logreg",
             score_version="0.1.0",
         )

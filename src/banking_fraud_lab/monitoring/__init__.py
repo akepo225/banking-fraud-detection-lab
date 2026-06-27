@@ -17,6 +17,7 @@ from banking_fraud_lab.monitoring.decisions import (
 )
 from banking_fraud_lab.monitoring.drift import (
     DataQualityResult,
+    FEATURE_DRIFT_FAMILIES,
     ScoreDriftResult,
     check_feature_drift,
     check_monitoring_data_quality,
@@ -25,8 +26,13 @@ from banking_fraud_lab.monitoring.drift import (
 from banking_fraud_lab.monitoring.operations import (
     inspect_alert_queue,
     summarise_alert_operations,
+    summarise_alert_operations_by_track,
 )
-from banking_fraud_lab.monitoring.scoring import BatchScoringResult, run_batch_scoring
+from banking_fraud_lab.monitoring.scoring import (
+    BatchScoringResult,
+    run_batch_scoring,
+    score_from_recommended_threshold,
+)
 from banking_fraud_lab.monitoring.spec import (
     ALERT_DECISION,
     AUDIT_ALERT_DECISION_MADE,
@@ -56,6 +62,7 @@ __all__ = [
     "AlertDecisionResult",
     "BatchScoringResult",
     "DataQualityResult",
+    "FEATURE_DRIFT_FAMILIES",
     "MonitoringTableSpec",
     "MONITORING_TABLES",
     "MONITORING_TABLE_IDS",
@@ -71,5 +78,7 @@ __all__ = [
     "inspect_alert_queue",
     "record_reviewer_action",
     "run_batch_scoring",
+    "score_from_recommended_threshold",
     "summarise_alert_operations",
+    "summarise_alert_operations_by_track",
 ]

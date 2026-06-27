@@ -43,6 +43,39 @@ the three modules cross-reference each other.
 The three notebooks are track counterparts and respect the **User** (digital
 login identity) vs **Client** (legal customer) distinction.
 
+## Notebook filename traceability
+
+Child issues #207 and #208 suggested the names
+`alpine_crest_production_monitoring.ipynb` and
+`novabank_production_monitoring.ipynb`. The delivered notebooks are the same
+artifacts under shorter, module-consistent names:
+
+- `alpine_crest_monitoring.ipynb` → the #207 Alpine Crest Private Bank
+  production-monitoring deliverable (smoke-tested in
+  `tests/test_alpine_crest_monitoring_notebook.py`).
+- `novabank_monitoring.ipynb` → the #208 NovaBank Digital production-monitoring
+  deliverable (smoke-tested in `tests/test_novabank_monitoring_notebook.py`).
+
+This traceability is recorded in the v0.8 acceptance review
+([`docs/release/v0.8-production-monitoring-acceptance-review.md`](../../docs/release/v0.8-production-monitoring-acceptance-review.md))
+so the delivered filenames map unambiguously onto the requested issues.
+
+## Real-time infrastructure (optional, advanced)
+
+The required v0.8 path is **local batch scoring** — no streaming dependency.
+What a real-time streaming world (event streams, online feature stores,
+streaming decision engines, dashboards) would add **later** is described in the
+optional advanced notes:
+
+- [`docs/advanced/realtime_infrastructure.md`](../../docs/advanced/realtime_infrastructure.md)
+
+Those notes map each local monitoring table (`score`, `threshold`,
+`alert_decision`, `reviewer_action`, `audit_event`) to its real-time
+counterpart and explicitly state the repo does not claim production readiness.
+No Kafka, Spark, Redis, or dashboard dependency is added to the core/dev
+install (the optionality is guarded by
+`tests/test_realtime_infra_optionality.py`).
+
 ## How to run
 
 ```bash

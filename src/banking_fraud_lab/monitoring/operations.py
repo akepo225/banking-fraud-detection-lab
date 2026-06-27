@@ -10,6 +10,12 @@ operational summary reuses the v0.7 :func:`evaluate_alert_scores`
 ``lowest_cost_summary`` precision/recall and the v0.1 ``alert_capacity``
 convention rather than recomputing them.
 
+Two summary entry points are provided: :func:`summarise_alert_operations` (one
+institution, the original contract) and :func:`summarise_alert_operations_by_track`
+(grouped by institution / track, so Alpine Crest Private Bank and NovaBank
+Digital can be contrasted — PRD user story 6). Both share the same per-group
+computation and reuse evaluation precision/recall on the PRD path.
+
 Glossary terms are used verbatim where natural: every queue row traces to a
 Banking relationship (and Client / User lineage when present) and to a
 Detection pattern; the Alert lifecycle and Detection pattern vocabulary are
@@ -42,6 +48,7 @@ def inspect_alert_queue(
     *,
     institution: str,
     now: "pd.Timestamp | None" = None,
+    stale_threshold_hours: "float | None" = None,
 ) -> "pd.DataFrame":
     """Build an inspectable Alert queue view for one institution.
 
@@ -64,22 +71,31 @@ def inspect_alert_queue(
         now: Reference timestamp used to compute ``alert_age_hours``. If
             ``None``, defaults to the deterministic
             :data:`_DEFAULT_NOW` (NOT ``datetime.now()``).
+        stale_threshold_hours: When set, alerts whose ``alert_age_hours`` exceeds
+            this value are flagged ``is_stale_alert=True`` so aged-out alerts
+            surface in the queue (PRD user story 3). When ``None`` (the default)
+            every row is ``is_stale_alert=False``, preserving prior behavior.
 
     Returns:
         A queue view (one row per alert) ordered by ``alert_queue_rank`` with
         columns ``alert_id``, ``institution_name``, ``banking_relationship_id``,
         ``client_id``/``user_id``/``account_id``/``transaction_id`` (when
         present), ``detection_pattern_id`` (when present), ``severity``,
-        ``alert_status``, ``alert_age_hours`` (rounded to 2 decimals), and
-        ``alert_queue_rank``. Each row traces to a Banking relationship (and
-        Client/User lineage when present) and to a Detection pattern.
+        ``alert_status``, ``alert_age_hours`` (rounded to 2 decimals),
+        ``alert_queue_rank``, and ``is_stale_alert``. Each row traces to a
+        Banking relationship (and Client/User lineage when present) and to a
+        Detection pattern.
 
     Raises:
         ValueError: If ``decision_rows`` is missing a required column, if
-            ``generated_at`` is not a datetime column, or if no rows match the
-            requested institution.
+            ``generated_at`` is not a datetime column, if no rows match the
+            requested institution, or if ``stale_threshold_hours`` is negative.
     """
     _validate_decision_rows(decision_rows)
+    if stale_threshold_hours is not None and (
+        not isinstance(stale_threshold_hours, int | float) or stale_threshold_hours < 0
+    ):
+        raise ValueError("stale_threshold_hours must be a non-negative number or None")
 
     resolved_now = _DEFAULT_NOW if now is None else pd.Timestamp(now)
 
@@ -103,6 +119,11 @@ def inspect_alert_queue(
     ).reset_index(drop=True)
     filtered["alert_queue_rank"] = range(1, len(filtered) + 1)
 
+    if stale_threshold_hours is not None:
+        filtered["is_stale_alert"] = filtered["alert_age_hours"] > float(stale_threshold_hours)
+    else:
+        filtered["is_stale_alert"] = False
+
     queue_columns = [
         "alert_id",
         "institution_name",
@@ -111,7 +132,9 @@ def inspect_alert_queue(
     for column in _OPTIONAL_LINEAGE_COLUMNS:
         if column in filtered.columns:
             queue_columns.append(column)
-    queue_columns.extend(["severity", "alert_status", "alert_age_hours", "alert_queue_rank"])
+    queue_columns.extend(
+        ["severity", "alert_status", "alert_age_hours", "alert_queue_rank", "is_stale_alert"]
+    )
     return filtered[queue_columns]
 
 
@@ -151,6 +174,104 @@ def summarise_alert_operations(
     Raises:
         ValueError: If ``alert_capacity`` is not positive.
     """
+    institution = _resolve_institution(decision_rows)
+    return _summarise_one_group(
+        decision_rows,
+        alert_capacity=alert_capacity,
+        evaluation=evaluation,
+        institution=institution,
+    )
+
+
+def summarise_alert_operations_by_track(
+    decision_rows: "pd.DataFrame",
+    *,
+    alert_capacity: int,
+    evaluation: "dict[str, Any] | None" = None,
+) -> "dict[str, dict[str, Any]]":
+    """Summarise Alert operations grouped by institution / track (PRD user story 4).
+
+    The grouped companion to :func:`summarise_alert_operations`: it splits the
+    decision rows by ``institution_name`` (e.g. Alpine Crest Private Bank and
+    NovaBank Digital) and runs the SAME per-group summary logic, so alert
+    volume, precision, recall, capacity utilization, and closure outcomes are
+    visible per track rather than only in aggregate. Like the single-group
+    function, precision/recall are REUSED from ``evaluate_alert_scores`` when an
+    ``evaluation`` result is supplied (the PRD path) rather than recomputed.
+
+    Args:
+        decision_rows: ``alert_decision`` rows carrying ``institution_name``
+            plus the optional enrichment columns documented on
+            :func:`summarise_alert_operations`. Must contain at least one row.
+        alert_capacity: Operational alert capacity (the v0.1 convention), shared
+            by every track. Must be positive.
+        evaluation: An :func:`evaluate_alert_scores` result dict. When supplied,
+            its ``lowest_cost_summary`` precision/recall are reused verbatim for
+            every track group (the PRD reuse path).
+
+    Returns:
+        A dict keyed by the exact institution name (as it appears in the frame),
+        each value the same operational-metrics dict shape
+        :func:`summarise_alert_operations` returns. Tracks are deterministically
+        ordered by institution name.
+
+    Raises:
+        ValueError: If ``alert_capacity`` is not positive, if
+            ``institution_name`` is missing, or if there are no rows to group.
+    """
+    if not isinstance(alert_capacity, int | float) or alert_capacity <= 0:
+        raise ValueError("alert_capacity must be positive")
+    if "institution_name" not in decision_rows.columns:
+        raise ValueError("decision_rows is missing required column: ['institution_name']")
+    if decision_rows.empty:
+        raise ValueError("decision_rows must contain at least one row")
+
+    grouped: "dict[str, dict[str, Any]]" = {}
+    for institution in sorted(
+        decision_rows["institution_name"].dropna().astype(str).unique()
+    ):
+        group_rows = decision_rows[
+            decision_rows["institution_name"].astype(str) == institution
+        ]
+        grouped[institution] = _summarise_one_group(
+            group_rows,
+            alert_capacity=alert_capacity,
+            evaluation=evaluation,
+            institution=institution,
+        )
+    return grouped
+
+
+# --- Internal helpers ------------------------------------------------------
+
+
+def _resolve_institution(decision_rows: "pd.DataFrame") -> "str | None":
+    """Return the dominant institution name on the frame, else None."""
+    if "institution_name" in decision_rows.columns and not decision_rows.empty:
+        non_null = decision_rows["institution_name"].dropna()
+        if not non_null.empty:
+            mode = non_null.mode()
+            return (
+                str(mode.iloc[0])
+                if not mode.empty
+                else str(non_null.iloc[0])
+            )
+    return None
+
+
+def _summarise_one_group(
+    decision_rows: "pd.DataFrame",
+    *,
+    alert_capacity: "int | float",
+    evaluation: "dict[str, Any] | None",
+    institution: "str | None",
+) -> "dict[str, Any]":
+    """Compute the operational-metrics dict for one (institution) group of decision rows.
+
+    Shared by :func:`summarise_alert_operations` (whole frame as one group) and
+    :func:`summarise_alert_operations_by_track` (one group per institution).
+    Precision/recall reuse the ``evaluate_alert_scores`` summary when supplied.
+    """
     if not isinstance(alert_capacity, int | float) or alert_capacity <= 0:
         raise ValueError("alert_capacity must be positive")
 
@@ -170,16 +291,6 @@ def summarise_alert_operations(
 
     precision, recall = _resolve_precision_recall(decision_rows, evaluation)
 
-    if "institution_name" in decision_rows.columns and not decision_rows.empty:
-        non_null = decision_rows["institution_name"].dropna()
-        institution = (
-            str(non_null.mode().iloc[0])
-            if not non_null.mode().empty
-            else str(non_null.iloc[0])
-        )
-    else:
-        institution = None
-
     detection_pattern_ids: list[str] = []
     if "detection_pattern_id" in decision_rows.columns:
         detection_pattern_ids = sorted(
@@ -197,9 +308,6 @@ def summarise_alert_operations(
         "closure_distribution": closure_distribution,
         "detection_pattern_ids": detection_pattern_ids,
     }
-
-
-# --- Internal helpers ------------------------------------------------------
 
 
 def _validate_decision_rows(decision_rows: "pd.DataFrame") -> None:
@@ -265,4 +373,5 @@ def _resolve_precision_recall(
 __all__ = [
     "inspect_alert_queue",
     "summarise_alert_operations",
+    "summarise_alert_operations_by_track",
 ]

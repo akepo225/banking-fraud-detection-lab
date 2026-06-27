@@ -221,17 +221,16 @@ Purpose: teach production concepts through lightweight runnable patterns before 
 
 Learner outcome:
 
-A learner can move from notebook scoring to batch scoring, simple APIs, monitoring tables, and production-style alert review without needing Kafka, Spark, or Neo4j.
+A learner can move from notebook scoring to deterministic local batch scoring, monitoring tables, alert-queue inspection, drift/data-quality checks, and production-style alert review without needing Kafka, Spark, Redis, or Neo4j.
 
 Deliverables:
 
-- Batch scoring pipeline over generated datasets.
-- Simple scoring service or command interface.
+- Local batch scoring pipeline over generated datasets (the required production pattern).
 - Monitoring tables for model scores, thresholds, alert decisions, reviewer actions, and audit events.
-- Drift and data-quality monitoring notebook.
-- Alert-review queue exercise.
-- Optional advanced notes for PostgreSQL deployment.
-- Clear boundary for what full real-time infrastructure would add later.
+- Alert-queue inspection, alert aging, and operational metrics (alert volume, precision, recall, capacity utilization, closure outcomes).
+- Drift and data-quality monitoring checks tied to the v0.7 governance checklist dimensions.
+- Alert-review queue exercise reusing v0.7 interpretability explanations.
+- Optional advanced notes describing what real-time infrastructure (Kafka, Spark, Redis, dashboards) would add later, kept out of the core/dev install.
 
 Exit criteria:
 

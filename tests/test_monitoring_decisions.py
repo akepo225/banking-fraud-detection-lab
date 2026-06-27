@@ -294,3 +294,99 @@ def test_decide_alerts_accepts_numeric_string_threshold() -> None:
     result = decide_alerts(score_rows, threshold="0.5", threshold_id="thr-1")
     expected = ["alert" if score >= 0.5 else "suppress" for score in score_rows["score"]]
     assert result.alert_decision_rows["decision"].tolist() == expected
+
+
+# --- Caller discipline: reviewer evidence as v0.7 interpretability (#202) ----
+
+
+def _decisions() -> pd.DataFrame:
+    """Return alert_decision rows for reviewer-action tests."""
+    return decide_alerts(_score_rows(), threshold=0.5, threshold_id="thr-1").alert_decision_rows
+
+
+def test_validate_evidence_rejects_arbitrary_dict() -> None:
+    """validate_evidence=True rejects a dict lacking a v0.7 interpretability marker."""
+    with pytest.raises(ValueError, match="v0.7 interpretability"):
+        record_reviewer_action(
+            _decisions(),
+            reviewer="r",
+            action="confirm",
+            rationale="x",
+            evidence={"arbitrary": "dict"},
+            validate_evidence=True,
+        )
+
+
+def test_validate_evidence_accepts_v0_7_interpretability_dict() -> None:
+    """validate_evidence=True accepts a real extract_feature_importance-shaped dict."""
+    feature_cols = ["amount_zscore", "velocity_7d", "new_beneficiary_flag"]
+    feature_frame = pd.DataFrame(
+        {
+            "amount_zscore": [0.1, 2.5, -0.3, 1.1, 3.2, 0.0, 0.8, 2.0],
+            "velocity_7d": [1, 5, 0, 2, 6, 1, 3, 4],
+            "new_beneficiary_flag": [0, 1, 0, 0, 1, 0, 1, 1],
+        }
+    )
+    y = pd.Series([0, 1, 0, 0, 1, 0, 1, 1])
+    model = LogisticRegression(random_state=42).fit(feature_frame, y)
+    importance = extract_feature_importance(
+        model,
+        feature_cols,
+        feature_frame=feature_frame,
+        detection_pattern_id=_PATTERN_ID,
+    )
+    top_row = importance.sort_values("native_importance", ascending=False).iloc[0]
+    evidence = {
+        "explanation_family_id": str(top_row["explanation_family_id"]),
+        "top_feature": str(top_row["feature"]),
+        "native_importance": float(top_row["native_importance"]),
+    }
+
+    result = record_reviewer_action(
+        _decisions(),
+        reviewer="r",
+        action="escalate",
+        rationale="v0.7 driver flagged",
+        evidence=evidence,
+        validate_evidence=True,
+    )
+    cell = result.reviewer_action_rows["evidence"].iloc[0]
+    assert isinstance(cell, str)
+    parsed = json.loads(cell)
+    assert parsed["explanation_family_id"] == top_row["explanation_family_id"]
+
+
+def test_validate_evidence_accepts_str_and_none() -> None:
+    """validate_evidence=True still accepts a str pointer and None (no dict to inspect)."""
+    str_result = record_reviewer_action(
+        _decisions(),
+        reviewer="r",
+        action="confirm",
+        rationale="x",
+        evidence="see-note-7",
+        validate_evidence=True,
+    )
+    assert (str_result.reviewer_action_rows["evidence"] == "see-note-7").all()
+
+    none_result = record_reviewer_action(
+        _decisions(),
+        reviewer="r",
+        action="confirm",
+        rationale="x",
+        evidence=None,
+        validate_evidence=True,
+    )
+    assert none_result.reviewer_action_rows["evidence"].isna().all()
+
+
+def test_validate_evidence_default_is_noop() -> None:
+    """With validate_evidence=False (the default), an arbitrary dict is accepted unchanged."""
+    result = record_reviewer_action(
+        _decisions(),
+        reviewer="r",
+        action="confirm",
+        rationale="x",
+        evidence={"arbitrary": "dict"},
+    )
+    cell = result.reviewer_action_rows["evidence"].iloc[0]
+    assert json.loads(cell) == {"arbitrary": "dict"}

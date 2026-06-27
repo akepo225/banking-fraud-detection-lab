@@ -137,6 +137,7 @@ def record_reviewer_action(
     evidence: "dict[str, Any] | str | None" = None,
     seed: int = 42,
     reviewed_at: "pd.Timestamp | None" = None,
+    validate_evidence: bool = False,
 ) -> ReviewerActionResult:
     """Record a reviewer action per alert_decision row + emit audit events.
 
@@ -165,6 +166,11 @@ def record_reviewer_action(
         seed: Drives the deterministic ids and the default reviewed_at timestamp.
         reviewed_at: Review timestamp. If ``None``, defaults to a seed-derived
             deterministic timestamp (each row gets a strictly increasing offset).
+        validate_evidence: When ``True`` (the PRD #202 discipline path), a dict
+            ``evidence`` must carry a recognizable v0.7 interpretability marker
+            (``explanation_family_id`` or ``native_importance``); a str / None is
+            still accepted. When ``False`` (the default) no validation runs, so
+            existing callers and notebooks are unaffected.
 
     Returns:
         A :class:`ReviewerActionResult` whose ``reviewer_action_rows`` conform
@@ -173,9 +179,13 @@ def record_reviewer_action(
         :data:`banking_fraud_lab.monitoring.AUDIT_EVENT`.
 
     Raises:
-        ValueError: If ``alert_decision_rows`` is missing a required column.
+        ValueError: If ``alert_decision_rows`` is missing a required column, or
+            if ``validate_evidence`` is True and a dict ``evidence`` does not
+            carry a v0.7 interpretability marker.
     """
     _validate_alert_decision_rows(alert_decision_rows)
+    if validate_evidence:
+        _assert_evidence_is_v07_interpretability(evidence)
 
     resolved_reviewed_at = _resolve_timestamp(reviewed_at, seed)
     serialized_evidence = _serialize_evidence(evidence)
@@ -277,6 +287,35 @@ def _serialize_evidence(evidence: "dict[str, Any] | str | None") -> str | None:
     if isinstance(evidence, str):
         return evidence
     return json.dumps(evidence, sort_keys=True)
+
+
+# Marker keys that identify a real v0.7 interpretability summary, so the
+# ``validate_evidence`` discipline path can confirm a reviewer action's evidence
+# came from explain_feature_family / extract_feature_importance rather than an
+# arbitrary dict. The two keys are the tag columns those utilities emit.
+_V07_INTERPRETABILITY_MARKERS: tuple[str, ...] = (
+    "explanation_family_id",
+    "native_importance",
+)
+
+
+def _assert_evidence_is_v07_interpretability(evidence: "dict[str, Any] | str | None") -> None:
+    """Raise ValueError when dict evidence lacks a v0.7 interpretability marker.
+
+    A str / None evidence is always accepted (a str pointer to an external note
+    is valid provenance; None marks "no evidence"). Only a dict that claims to be
+    evidence but carries none of the v0.7 marker keys is rejected, so the PRD
+    #202 "reviewer evidence should be v0.7 interpretability output" discipline is
+    enforced where the caller opts in.
+    """
+    if not isinstance(evidence, dict):
+        return
+    present = [marker for marker in _V07_INTERPRETABILITY_MARKERS if marker in evidence]
+    if not present:
+        raise ValueError(
+            "evidence dict must be a v0.7 interpretability summary carrying one of "
+            f"{_V07_INTERPRETABILITY_MARKERS} (pass validate_evidence=False to disable)"
+        )
 
 
 def _build_alert_decision_rows(

@@ -23,10 +23,20 @@ monitoring, governance memo) is added in slice #228.
   same loop against the `digital_scam_to_mule` and `new_beneficiary_payment`
   **Detection patterns**. The **User** is the digital login identity, distinct
   from the **Client** who holds the Banking relationship.
+- [capstone_synthesis.ipynb](capstone_synthesis.ipynb): the synthesis notebook
+  that closes the end-to-end path. Runs BOTH tracks in one comparison frame:
+  graph evidence (`circular_funds_movement` for Alpine Crest, `mule_ring` for
+  NovaBank Digital) as investigative support, the v0.8 production-monitoring flow
+  (batch scoring → alert decisions → reviewer action → alert queue → drift), and
+  a governance memo from the v0.7 documentation and monitoring-checklist
+  templates. Cross-references `03_alert_governance` and
+  `07_interpretability_model_risk`.
 
-Both notebooks reuse — they do not reimplement — the v0.3/v0.4 track feature
-libraries, `evaluate_alert_scores`, `recommend_lowest_cost_threshold`,
-`extract_feature_importance`, and `concentrate_false_positives`.
+Both scoring notebooks reuse — they do not reimplement — the v0.3/v0.4 track
+feature libraries, `evaluate_alert_scores`, `recommend_lowest_cost_threshold`,
+`extract_feature_importance`, and `concentrate_false_positives`. The synthesis
+notebook reuses the v0.6 graph layer, the v0.8 monitoring builders, and the v0.7
+governance template.
 
 ## How to run
 

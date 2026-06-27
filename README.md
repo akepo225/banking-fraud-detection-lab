@@ -106,7 +106,11 @@ modules in order:
   [`alpine_crest_capstone_scoring.ipynb`](notebooks/09_capstone/alpine_crest_capstone_scoring.ipynb)
   (private banking, `pb_high_value_movement` / `pb_transaction_fraud`) and
   [`novabank_capstone_scoring.ipynb`](notebooks/09_capstone/novabank_capstone_scoring.ipynb)
-  (digital banking, `digital_scam_to_mule` / `new_beneficiary_payment`).
+  (digital banking, `digital_scam_to_mule` / `new_beneficiary_payment`). The
+  [`capstone_synthesis.ipynb`](notebooks/09_capstone/capstone_synthesis.ipynb)
+  adds graph/case evidence, production monitoring, and a governance memo for
+  both tracks. Scenario briefs and the deterministic dataset command live under
+  [`docs/capstone/`](docs/capstone/).
 
 Optional canonical-data refreshers for Python, pandas, SQL, and sklearn live in
 [`00_foundations/warmups`](notebooks/00_foundations/warmups/). They are outside

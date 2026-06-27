@@ -39,7 +39,6 @@ from pathlib import Path
 import pandas as pd
 
 from banking_fraud_lab.generators import (
-    DEFAULT_SCALE_PROFILE,
     DatasetScaleProfile,
     build_learner_facing_views,
     generate_minimal_banking_world,
@@ -51,7 +50,7 @@ from banking_fraud_lab.generators.private_banking import (
 from banking_fraud_lab.schema import TABLE_NAMES
 
 CAPSTONE_SEED = 42
-CAPSTONE_SCALE = DEFAULT_SCALE_PROFILE
+CAPSTONE_SCALE = "tiny"
 
 PRIVATE_BANKING_TRACK = "private_banking"
 DIGITAL_BANKING_TRACK = "digital_banking"

@@ -5,7 +5,7 @@ institution: NovaBank Digital
 detection_patterns: digital_scam_to_mule, new_beneficiary_payment, mule_ring
 capstone_seed: 42
 capstone_scale: tiny
-linked_modules: notebooks/09_capstone/, sql/examples/capstone_digital_banking.sql
+linked_modules: notebooks/09_capstone/, sql/examples/13_capstone_digital_banking.sql
 ---
 
 # NovaBank Digital Capstone Brief

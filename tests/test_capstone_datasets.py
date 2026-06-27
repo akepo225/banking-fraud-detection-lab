@@ -93,16 +93,13 @@ def test_capstone_grading_and_learner_exports_split_protected_keys(
 def test_capstone_datasets_are_deterministic_at_fixed_seed_and_scale(
     generator: object,
 ) -> None:
-    """Regenerating at the same seed + scale produces byte-identical protected keys."""
+    """Regenerating at the same seed + scale produces byte-identical tables."""
     first = generator()  # type: ignore[operator]
     second = generator()  # type: ignore[operator]
 
-    pd.testing.assert_frame_equal(
-        first[PROTECTED_SCENARIO_ANSWER_KEYS],
-        second[PROTECTED_SCENARIO_ANSWER_KEYS],
-    )
-    pd.testing.assert_frame_equal(first[TRANSACTIONS], second[TRANSACTIONS])
-    pd.testing.assert_frame_equal(first["alerts"], second["alerts"])
+    assert set(first) == set(second) == set(TABLE_NAMES)
+    for table_name in TABLE_NAMES:
+        pd.testing.assert_frame_equal(first[table_name], second[table_name])
 
 
 def test_capstone_protected_answer_keys_reference_generated_rows() -> None:

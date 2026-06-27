@@ -5,7 +5,7 @@ institution: Alpine Crest Private Bank
 detection_patterns: pb_high_value_movement, pb_transaction_fraud, circular_funds_movement
 capstone_seed: 42
 capstone_scale: tiny
-linked_modules: notebooks/09_capstone/, sql/examples/capstone_private_banking.sql
+linked_modules: notebooks/09_capstone/, sql/examples/12_capstone_private_banking.sql
 ---
 
 # Alpine Crest Private Bank Capstone Brief

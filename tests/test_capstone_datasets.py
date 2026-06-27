@@ -176,3 +176,24 @@ def test_capstone_cli_generates_learner_facing_csvs(tmp_path: Path) -> None:
         csvs = {p.name for p in track_dir.glob("*.csv")}
         assert csvs == {f"{name}.csv" for name in LEARNER_FACING_TABLE_NAMES}
         assert "protected_scenario_answer_keys.csv" not in csvs
+
+
+def test_capstone_cli_writes_single_track_directly_to_output(tmp_path: Path) -> None:
+    """A single track writes CSVs directly to --output, not a nested subdir."""
+    output_dir = tmp_path / "private"
+    rc = capstone_main(
+        [
+            "--track",
+            "private_banking",
+            "--learner-facing",
+            "--output",
+            str(output_dir),
+        ]
+    )
+    assert rc == 0
+
+    assert output_dir.is_dir()
+    csvs = {p.name for p in output_dir.glob("*.csv")}
+    assert csvs == {f"{name}.csv" for name in LEARNER_FACING_TABLE_NAMES}
+    nested = list(output_dir.glob("private_banking/*.csv"))
+    assert not nested, "single-track run should not create a nested track subdir"

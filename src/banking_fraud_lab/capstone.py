@@ -225,17 +225,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--output",
         type=Path,
-        help="Output directory for CSV files (defaults to a per-track directory).",
+        help=(
+            "Output directory for CSV files. For a single track, CSVs are written "
+            "directly here; for --track both, per-track subdirectories are created. "
+            "Defaults to a per-track data/capstone/<track> directory."
+        ),
     )
     args = parser.parse_args(argv)
 
     tracks = CAPSTONE_TRACKS if args.track == "both" else (args.track,)
     wrote_any = False
     for track in tracks:
-        if args.output is not None:
-            output_dir = args.output / track
-        else:
+        if args.output is None:
             output_dir = Path(f"data/capstone/{track}")
+        elif len(tracks) == 1:
+            output_dir = args.output
+        else:
+            output_dir = args.output / track
         tables = _generate_track(
             track,
             seed=args.seed,

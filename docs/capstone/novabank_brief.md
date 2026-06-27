@@ -55,7 +55,7 @@ The dataset is deterministic. Generate it from a clean checkout with the fixed c
 seed and scale:
 
 ```bash
-uv run python -m banking_fraud_lab.capstone --track digital_banking --learner-facing --output data/capstone
+uv run python -m banking_fraud_lab.capstone --track digital_banking --seed 42 --scale tiny --learner-facing --output data/capstone
 ```
 
 - Seed: `42` (`CAPSTONE_SEED`).

@@ -106,10 +106,12 @@ def test_capstone_briefs_avoid_banned_phrases() -> None:
 
 
 def test_capstone_briefs_reference_dataset_command() -> None:
-    """Each brief documents how to regenerate the deterministic capstone substrate."""
+    """Each brief documents the pinned deterministic capstone regeneration recipe."""
     for filename, _, _ in _briefs():
         text = (CAPSTONE_DIR / filename).read_text(encoding="utf-8")
         assert "banking_fraud_lab.capstone" in text, (
             f"{filename} does not document the capstone CLI"
         )
         assert "CAPSTONE_SEED" in text and "CAPSTONE_SCALE" in text
+        assert "--seed 42" in text, f"{filename} does not pin --seed 42"
+        assert "--scale tiny" in text, f"{filename} does not pin --scale tiny"

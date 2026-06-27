@@ -172,7 +172,9 @@ def summarise_alert_operations(
         for fixed inputs.
 
     Raises:
-        ValueError: If ``alert_capacity`` is not positive.
+        ValueError: If ``alert_capacity`` is not positive, or if ``decision_rows``
+            contains more than one institution (use
+            :func:`summarise_alert_operations_by_track` for a mixed-bank frame).
     """
     institution = _resolve_institution(decision_rows)
     return _summarise_one_group(
@@ -217,7 +219,8 @@ def summarise_alert_operations_by_track(
 
     Raises:
         ValueError: If ``alert_capacity`` is not positive, if
-            ``institution_name`` is missing, or if there are no rows to group.
+            ``institution_name`` is missing, if any ``institution_name`` is null,
+            or if there are no rows to group.
     """
     if not isinstance(alert_capacity, int | float) or alert_capacity <= 0:
         raise ValueError("alert_capacity must be positive")
@@ -225,11 +228,11 @@ def summarise_alert_operations_by_track(
         raise ValueError("decision_rows is missing required column: ['institution_name']")
     if decision_rows.empty:
         raise ValueError("decision_rows must contain at least one row")
+    if decision_rows["institution_name"].isna().any():
+        raise ValueError("decision_rows['institution_name'] must be non-null for every row")
 
     grouped: "dict[str, dict[str, Any]]" = {}
-    for institution in sorted(
-        decision_rows["institution_name"].dropna().astype(str).unique()
-    ):
+    for institution in sorted(decision_rows["institution_name"].astype(str).unique()):
         group_rows = decision_rows[
             decision_rows["institution_name"].astype(str) == institution
         ]
@@ -246,16 +249,25 @@ def summarise_alert_operations_by_track(
 
 
 def _resolve_institution(decision_rows: "pd.DataFrame") -> "str | None":
-    """Return the dominant institution name on the frame, else None."""
+    """Return the single institution name on the frame, else None.
+
+    Raises ``ValueError`` when the frame mixes more than one institution. The
+    single-institution summary (:func:`summarise_alert_operations`) must not
+    silently aggregate a mixed-bank frame under one label; the caller should use
+    :func:`summarise_alert_operations_by_track` for that.
+    """
     if "institution_name" in decision_rows.columns and not decision_rows.empty:
-        non_null = decision_rows["institution_name"].dropna()
-        if not non_null.empty:
-            mode = non_null.mode()
-            return (
-                str(mode.iloc[0])
-                if not mode.empty
-                else str(non_null.iloc[0])
+        unique = sorted(
+            decision_rows["institution_name"].dropna().astype(str).unique()
+        )
+        if len(unique) > 1:
+            raise ValueError(
+                "decision_rows contains multiple institutions ("
+                + ", ".join(unique)
+                + "); use summarise_alert_operations_by_track"
             )
+        if unique:
+            return unique[0]
     return None
 
 

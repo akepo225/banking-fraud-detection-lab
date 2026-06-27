@@ -356,3 +356,52 @@ def test_summarise_alert_operations_by_track_rejects_bad_capacity() -> None:
     )
     with pytest.raises(ValueError):
         summarise_alert_operations_by_track(rows, alert_capacity=0)
+
+
+def test_summarise_alert_operations_rejects_mixed_institution_frame() -> None:
+    """A mixed-bank frame must not be aggregated under one institution label.
+
+    The single-institution summary refuses a frame carrying more than one
+    institution rather than silently combining rows under one name; the caller
+    is pointed at summarise_alert_operations_by_track.
+    """
+    mixed = pd.DataFrame(
+        {
+            "institution_name": [
+                "Alpine Crest Private Bank",
+                "NovaBank Digital",
+            ],
+            "decision": ["alert", "alert"],
+        }
+    )
+    with pytest.raises(ValueError, match="multiple institutions"):
+        summarise_alert_operations(mixed, alert_capacity=5)
+
+
+def test_summarise_alert_operations_accepts_single_institution_frame() -> None:
+    """A single-institution frame still aggregates normally (no false rejection)."""
+    single = pd.DataFrame(
+        {
+            "institution_name": ["Alpine Crest Private Bank"] * 3,
+            "decision": ["alert", "alert", "suppress"],
+        }
+    )
+    metrics = summarise_alert_operations(single, alert_capacity=5)
+    assert metrics["institution"] == "Alpine Crest Private Bank"
+    assert metrics["alert_volume"] == 2
+
+
+def test_summarise_alert_operations_by_track_rejects_null_institution_name() -> None:
+    """A row with a null institution_name is rejected, not silently dropped.
+
+    Null institution rows must surface as an error rather than disappearing from
+    the grouped result, matching the codebase raise-on-null-required-data norm.
+    """
+    rows = pd.DataFrame(
+        {
+            "institution_name": ["Alpine Crest Private Bank", None],
+            "decision": ["alert", "alert"],
+        }
+    )
+    with pytest.raises(ValueError, match="non-null"):
+        summarise_alert_operations_by_track(rows, alert_capacity=5)

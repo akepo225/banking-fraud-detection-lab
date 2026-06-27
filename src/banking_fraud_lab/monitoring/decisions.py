@@ -289,10 +289,6 @@ def _serialize_evidence(evidence: "dict[str, Any] | str | None") -> str | None:
     return json.dumps(evidence, sort_keys=True)
 
 
-# Marker keys that identify a real v0.7 interpretability summary, so the
-# ``validate_evidence`` discipline path can confirm a reviewer action's evidence
-# came from explain_feature_family / extract_feature_importance rather than an
-# arbitrary dict. The two keys are the tag columns those utilities emit.
 _V07_INTERPRETABILITY_MARKERS: tuple[str, ...] = (
     "explanation_family_id",
     "native_importance",

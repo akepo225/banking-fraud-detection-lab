@@ -16,6 +16,7 @@ primary_official_sources:
 linked_modules:
   - notebooks/03_alert_governance/alert_governance_memo.ipynb
   - notebooks/04_private_banking_feature_engineering/alpine_crest_supervised_baseline.ipynb
+  - notebooks/08_production_monitoring_patterns/alpine_crest_monitoring.ipynb
 ---
 
 # Ongoing Model Monitoring For Fraud Scoring
@@ -58,6 +59,9 @@ trigger a re-review, rather than waiting for an alert to degrade silently.
   exposes precision, recall, and cost summaries that a monitoring review would track.
 - `notebooks/05_digital_session_and_payment_fraud/novabank_supervised_baseline.ipynb`: exposes
   the same summaries for the digital track.
+- `notebooks/08_production_monitoring_patterns/alpine_crest_monitoring.ipynb`: operates the
+  monitoring cadence end to end (batch scoring, alert queue, drift and data-quality checks)
+  for the private-banking track, so ongoing monitoring has production-pattern meaning.
 
 ## Human Review
 

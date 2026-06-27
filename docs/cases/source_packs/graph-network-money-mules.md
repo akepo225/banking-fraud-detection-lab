@@ -12,7 +12,7 @@ source_type: enforcement
 geography: Europe / international
 product: digital current accounts and instant payments
 source_quality: official law-enforcement source candidate
-linked_modules: notebooks/06_graph_network_fraud/novabank_graph_investigation.ipynb, notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb
+linked_modules: notebooks/06_graph_network_fraud/novabank_graph_investigation.ipynb, notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb, notebooks/09_capstone/novabank_capstone_scoring.ipynb
 ---
 
 # Graph Network Money Mules Source Pack

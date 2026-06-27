@@ -98,6 +98,15 @@ modules in order:
   runs both tracks side by side, reuses a v0.7 explanation as alert-review
   evidence, and renders a governance-readable summary tying monitoring back to
   the Alert lifecycle.
+- [`09_capstone`](notebooks/09_capstone/alpine_crest_capstone_scoring.ipynb):
+  v0.9 integration capstone. Run the full end-to-end learner path from scenario
+  brief through synthetic data, engineered features, a fitted score, alert-aware
+  metrics, capacity-aware threshold selection, and per-alert explanation for both
+  tracks:
+  [`alpine_crest_capstone_scoring.ipynb`](notebooks/09_capstone/alpine_crest_capstone_scoring.ipynb)
+  (private banking, `pb_high_value_movement` / `pb_transaction_fraud`) and
+  [`novabank_capstone_scoring.ipynb`](notebooks/09_capstone/novabank_capstone_scoring.ipynb)
+  (digital banking, `digital_scam_to_mule` / `new_beneficiary_payment`).
 
 Optional canonical-data refreshers for Python, pandas, SQL, and sklearn live in
 [`00_foundations/warmups`](notebooks/00_foundations/warmups/). They are outside

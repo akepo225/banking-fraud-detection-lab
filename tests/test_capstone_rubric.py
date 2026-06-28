@@ -30,6 +30,18 @@ NOVABANK = "NovaBank Digital"
 RUBRIC = "rubric.md"
 TEMPLATE = "presentation_template.md"
 
+# (deliverable basename, repo-relative path) the rubric must reference. Each path is
+# asserted to exist on disk so the rubric never points at aspirational artifacts.
+DELIVERABLES = (
+    ("alpine_crest_brief.md", "docs/capstone/alpine_crest_brief.md"),
+    ("novabank_brief.md", "docs/capstone/novabank_brief.md"),
+    ("12_capstone_private_banking.sql", "sql/examples/12_capstone_private_banking.sql"),
+    ("13_capstone_digital_banking.sql", "sql/examples/13_capstone_digital_banking.sql"),
+    ("alpine_crest_capstone_scoring.ipynb", "notebooks/09_capstone/alpine_crest_capstone_scoring.ipynb"),
+    ("novabank_capstone_scoring.ipynb", "notebooks/09_capstone/novabank_capstone_scoring.ipynb"),
+    ("capstone_synthesis.ipynb", "notebooks/09_capstone/capstone_synthesis.ipynb"),
+)
+
 
 def _artifacts() -> list[str]:
     """Return the filenames of the capstone rubric and presentation template."""
@@ -70,18 +82,22 @@ def test_rubric_covers_all_six_dimensions() -> None:
 
 
 def test_rubric_traces_real_capstone_deliverables() -> None:
-    """The rubric references only capstone deliverables that actually exist."""
+    """The rubric references only capstone deliverables that actually exist on disk."""
     text = (CAPSTONE_DIR / RUBRIC).read_text(encoding="utf-8")
-    for deliverable in (
-        "alpine_crest_brief.md",
-        "novabank_brief.md",
-        "12_capstone_private_banking.sql",
-        "13_capstone_digital_banking.sql",
-        "alpine_crest_capstone_scoring.ipynb",
-        "novabank_capstone_scoring.ipynb",
-        "capstone_synthesis.ipynb",
-    ):
-        assert deliverable in text, f"rubric does not reference deliverable {deliverable!r}"
+    for basename, rel_path in DELIVERABLES:
+        assert (ROOT / rel_path).is_file(), f"deliverable {rel_path!r} does not exist"
+        assert basename in text, f"rubric does not reference deliverable {basename!r}"
+
+
+def test_presentation_template_preserves_section_order() -> None:
+    """The presentation template keeps its nine numbered sections in order."""
+    text = (CAPSTONE_DIR / TEMPLATE).read_text(encoding="utf-8")
+    cursor = 0
+    for n in range(1, 10):
+        heading = f"## {n}."
+        idx = text.find(heading, cursor)
+        assert idx != -1, f"{TEMPLATE} missing or out-of-order heading {heading!r}"
+        cursor = idx + len(heading)
 
 
 def test_artifacts_use_glossary_terms() -> None:

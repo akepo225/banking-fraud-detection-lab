@@ -59,7 +59,9 @@ New cases must include:
 - Avoid real client data or realistic reconstruction claims.
 - Add tests for generator behavior and referential integrity.
 - Keep notebooks runnable from a clean setup.
-- Schema is additive only (ADR-0002); a new table/column needs a new ADR.
+- Schema is additive only (ADR-0002): extend the canonical model additively. A
+  *breaking* schema change requires a new ADR; an ordinary additive
+  table/column does not.
 - Optional extras (`neo4j`, `shap`) stay optional and out of CI.
 
 ## Notebook Contributions

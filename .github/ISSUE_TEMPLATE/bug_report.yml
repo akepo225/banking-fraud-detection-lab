@@ -72,5 +72,5 @@ body:
       label: Contribution boundaries
       description: Please confirm.
       options:
-        - label: This report contains NO real client data, real-bank affiliation, or real-event reconstruction claims.
+        - label: This report contains NO real client data, real-bank affiliation, real-event reconstruction claims, or legal/compliance advice.
           required: true

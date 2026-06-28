@@ -28,9 +28,15 @@ KNOWN_LABELS = CATEGORY_LABELS | STATE_LABELS | {"afk", "hitl", "blocked", "pare
 
 
 def _templates() -> dict[str, dict[str, object]]:
-    """Return parsed issue-form templates keyed by filename stem."""
+    """Return parsed issue-form templates keyed by filename stem.
+
+    ``config.yml`` is a template-directory config (not an issue form), so it is
+    excluded from the form-template set.
+    """
     templates: dict[str, dict[str, object]] = {}
     for path in sorted(TEMPLATE_DIR.glob("*.yml")):
+        if path.name == "config.yml":
+            continue
         templates[path.stem] = yaml.safe_load(path.read_text(encoding="utf-8"))
     return templates
 
@@ -41,6 +47,17 @@ def test_issue_templates_present() -> None:
     templates = _templates()
     assert "bug_report" in templates, "missing bug report template"
     assert "enhancement" in templates, "missing enhancement template"
+
+
+def test_config_disables_blank_issues_for_structured_intake() -> None:
+    """config.yml should disable blank issues so public feedback uses the forms."""
+    config_path = TEMPLATE_DIR / "config.yml"
+    assert config_path.is_file(), ".github/ISSUE_TEMPLATE/config.yml missing"
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    assert isinstance(config, dict)
+    assert config.get("blank_issues_enabled") is False, (
+        "blank_issues_enabled must be false so reporters use the structured forms"
+    )
 
 
 def test_issue_templates_parse_and_reference_known_labels() -> None:

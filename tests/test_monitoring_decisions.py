@@ -356,27 +356,18 @@ def test_validate_evidence_accepts_v0_7_interpretability_dict() -> None:
     assert parsed["explanation_family_id"] == top_row["explanation_family_id"]
 
 
-def test_validate_evidence_accepts_str_and_none() -> None:
-    """validate_evidence=True still accepts a str pointer and None (no dict to inspect)."""
-    str_result = record_reviewer_action(
-        _decisions(),
-        reviewer="r",
-        action="confirm",
-        rationale="x",
-        evidence="see-note-7",
-        validate_evidence=True,
-    )
-    assert (str_result.reviewer_action_rows["evidence"] == "see-note-7").all()
-
-    none_result = record_reviewer_action(
-        _decisions(),
-        reviewer="r",
-        action="confirm",
-        rationale="x",
-        evidence=None,
-        validate_evidence=True,
-    )
-    assert none_result.reviewer_action_rows["evidence"].isna().all()
+@pytest.mark.parametrize("bad_evidence", ["see-note-7", None])
+def test_validate_evidence_rejects_str_and_none(bad_evidence: str | None) -> None:
+    """validate_evidence=True requires v0.7 interpretability output, not placeholders."""
+    with pytest.raises(ValueError, match="v0.7 interpretability"):
+        record_reviewer_action(
+            _decisions(),
+            reviewer="r",
+            action="confirm",
+            rationale="x",
+            evidence=bad_evidence,
+            validate_evidence=True,
+        )
 
 
 def test_validate_evidence_default_is_noop() -> None:

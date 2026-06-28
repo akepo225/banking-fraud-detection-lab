@@ -26,6 +26,7 @@ from banking_fraud_lab.monitoring.drift import (
 from banking_fraud_lab.monitoring.operations import (
     inspect_alert_queue,
     summarise_alert_operations,
+    summarise_alert_operations_by_institution_track,
     summarise_alert_operations_by_track,
 )
 from banking_fraud_lab.monitoring.scoring import (
@@ -80,5 +81,6 @@ __all__ = [
     "run_batch_scoring",
     "score_from_recommended_threshold",
     "summarise_alert_operations",
+    "summarise_alert_operations_by_institution_track",
     "summarise_alert_operations_by_track",
 ]

@@ -323,7 +323,9 @@ These are intentionally outside the v1.0 core curriculum.
 
 ### v1.4: Advanced Production Infrastructure
 
-- Optional PostgreSQL deployment.
+- Optional relational-database deployment notes only if a future advanced-track
+  issue explicitly scopes them; the v1.0 core and v0.8 monitoring path remain
+  SQLite-first and local-batch.
 - Optional Neo4j graph export.
 - Optional Kafka or stream-processing lab.
 - Optional dashboard or API deployment.
@@ -352,7 +354,8 @@ Why deep: it keeps generated data, docs, SQL exercises, and notebooks aligned.
 
 ### SQL Loader
 
-Responsibility: load generated data into SQLite and later optional PostgreSQL.
+Responsibility: load generated data into SQLite; any PostgreSQL-style path is a
+separately scoped advanced extension, not part of the required core.
 
 Why deep: it gives every module the same SQL exercise surface.
 

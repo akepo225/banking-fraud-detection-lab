@@ -10,11 +10,12 @@ operational summary reuses the v0.7 :func:`evaluate_alert_scores`
 ``lowest_cost_summary`` precision/recall and the v0.1 ``alert_capacity``
 convention rather than recomputing them.
 
-Two summary entry points are provided: :func:`summarise_alert_operations` (one
-institution, the original contract) and :func:`summarise_alert_operations_by_track`
-(grouped by institution / track, so Alpine Crest Private Bank and NovaBank
-Digital can be contrasted — PRD user story 6). Both share the same per-group
-computation and reuse evaluation precision/recall on the PRD path.
+Three summary entry points are provided: :func:`summarise_alert_operations` (one
+institution, the original contract), :func:`summarise_alert_operations_by_track`
+(grouped by institution, preserving the original grouped shape), and
+:func:`summarise_alert_operations_by_institution_track` (one row per institution
+/ track pair for the PRD #203 path). All share the same per-group computation
+and reuse evaluation precision/recall on the PRD path.
 
 Glossary terms are used verbatim where natural: every queue row traces to a
 Banking relationship (and Client / User lineage when present) and to a
@@ -26,6 +27,7 @@ timestamps are introduced (the default ``now`` is a fixed timestamp, not
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import pandas as pd
@@ -191,25 +193,27 @@ def summarise_alert_operations_by_track(
     alert_capacity: int,
     evaluation: "dict[str, Any] | None" = None,
 ) -> "dict[str, dict[str, Any]]":
-    """Summarise Alert operations grouped by institution / track (PRD user story 4).
+    """Summarise Alert operations grouped by institution (legacy grouped shape).
 
     The grouped companion to :func:`summarise_alert_operations`: it splits the
     decision rows by ``institution_name`` (e.g. Alpine Crest Private Bank and
     NovaBank Digital) and runs the SAME per-group summary logic, so alert
     volume, precision, recall, capacity utilization, and closure outcomes are
-    visible per track rather than only in aggregate. Like the single-group
+    visible per institution rather than only in aggregate. Like the single-group
     function, precision/recall are REUSED from ``evaluate_alert_scores`` when an
-    ``evaluation`` result is supplied (the PRD path) rather than recomputed.
+    ``evaluation`` result is supplied rather than recomputed. Use
+    :func:`summarise_alert_operations_by_institution_track` for the strict PRD
+    #203 institution / track contract.
 
     Args:
         decision_rows: ``alert_decision`` rows carrying ``institution_name``
             plus the optional enrichment columns documented on
             :func:`summarise_alert_operations`. Must contain at least one row.
         alert_capacity: Operational alert capacity (the v0.1 convention), shared
-            by every track. Must be positive.
+            by every institution group. Must be positive.
         evaluation: An :func:`evaluate_alert_scores` result dict. When supplied,
             its ``lowest_cost_summary`` precision/recall are reused verbatim for
-            every track group (the PRD reuse path).
+            every institution group.
 
     Returns:
         A dict keyed by the exact institution name (as it appears in the frame),
@@ -243,6 +247,103 @@ def summarise_alert_operations_by_track(
             institution=institution,
         )
     return grouped
+
+
+def summarise_alert_operations_by_institution_track(
+    decision_rows: "pd.DataFrame",
+    *,
+    alert_capacity: int,
+    evaluation_by_group: Mapping[tuple[str, str], dict[str, Any]] | None = None,
+) -> "pd.DataFrame":
+    """Summarise operations for each institution / track pair.
+
+    This companion keeps :func:`summarise_alert_operations_by_track` backward
+    compatible while providing the stricter PRD #203 grouping contract: one
+    deterministic row per ``(institution_name, track)`` pair with alert volume,
+    precision, recall, capacity utilization, and closure outcomes. When
+    ``evaluation_by_group`` is supplied, each group's precision/recall are read
+    from that group's full :func:`evaluate_alert_scores` result instead of being
+    recomputed from labels.
+
+    Args:
+        decision_rows: ``alert_decision`` rows carrying non-null
+            ``institution_name`` and ``track`` columns plus the optional
+            enrichment columns documented on :func:`summarise_alert_operations`.
+        alert_capacity: Operational alert capacity (the v0.1 convention), shared
+            by every group. Must be positive.
+        evaluation_by_group: Optional mapping keyed by
+            ``(institution_name, track)``. If supplied, every observed group must
+            have a matching :func:`evaluate_alert_scores` result; precision and
+            recall are reused from its ``lowest_cost_summary``.
+
+    Returns:
+        A deterministic DataFrame ordered by ``institution_name`` then ``track``.
+
+    Raises:
+        ValueError: If required grouping columns are missing/null, if capacity is
+            not positive, or if ``evaluation_by_group`` lacks an observed group.
+    """
+    if not isinstance(alert_capacity, int | float) or alert_capacity <= 0:
+        raise ValueError("alert_capacity must be positive")
+    required = {"institution_name", "track"}
+    missing = sorted(required - set(decision_rows.columns))
+    if missing:
+        raise ValueError(f"decision_rows is missing required columns: {missing}")
+    if decision_rows.empty:
+        raise ValueError("decision_rows must contain at least one row")
+    null_grouping = sorted(
+        column for column in required if decision_rows[column].isna().any()
+    )
+    if null_grouping:
+        raise ValueError(
+            f"decision_rows grouping columns must be non-null: {null_grouping}"
+        )
+
+    rows: list[dict[str, Any]] = []
+    for (institution, track), group_rows in decision_rows.groupby(
+        ["institution_name", "track"], sort=True
+    ):
+        group_key = (str(institution), str(track))
+        group_evaluation = None
+        if evaluation_by_group is not None:
+            if group_key not in evaluation_by_group:
+                raise ValueError(
+                    "evaluation_by_group is missing evaluate_alert_scores result "
+                    f"for group {group_key!r}"
+                )
+            group_evaluation = evaluation_by_group[group_key]
+        metrics = _summarise_one_group(
+            group_rows,
+            alert_capacity=alert_capacity,
+            evaluation=group_evaluation,
+            institution=str(institution),
+        )
+        rows.append(
+            {
+                "institution_name": str(institution),
+                "track": str(track),
+                "alert_volume": metrics["alert_volume"],
+                "alert_capacity": metrics["alert_capacity"],
+                "capacity_utilization": metrics["capacity_utilization"],
+                "precision": metrics["precision"],
+                "recall": metrics["recall"],
+                "closure_distribution": metrics["closure_distribution"],
+                "detection_pattern_ids": tuple(metrics["detection_pattern_ids"]),
+            }
+        )
+
+    columns = [
+        "institution_name",
+        "track",
+        "alert_volume",
+        "alert_capacity",
+        "capacity_utilization",
+        "precision",
+        "recall",
+        "closure_distribution",
+        "detection_pattern_ids",
+    ]
+    return pd.DataFrame(rows, columns=columns)
 
 
 # --- Internal helpers ------------------------------------------------------
@@ -292,14 +393,13 @@ def _summarise_one_group(
     else:
         alert_volume = int(len(decision_rows))
 
-    capacity_utilization = round(alert_volume / float(alert_capacity), 4)
+    evaluation_summary = _evaluation_summary(evaluation)
+    if evaluation_summary is not None:
+        capacity_utilization = evaluation_summary["capacity_utilization"]
+    else:
+        capacity_utilization = round(alert_volume / float(alert_capacity), 4)
 
-    closure_distribution: "dict[str, int]" = {}
-    if "alert_status" in decision_rows.columns:
-        closure_distribution = {
-            str(status): int(count)
-            for status, count in decision_rows["alert_status"].value_counts().items()
-        }
+    closure_distribution = _closure_distribution(decision_rows)
 
     precision, recall = _resolve_precision_recall(decision_rows, evaluation)
 
@@ -346,13 +446,8 @@ def _resolve_precision_recall(
     evaluation: "dict[str, Any] | None",
 ) -> "tuple[float | None, float | None]":
     """Reuse precision/recall from evaluation when supplied, else compute from labels."""
-    if evaluation is not None:
-        summary = evaluation.get("lowest_cost_summary")
-        if summary is None:
-            raise ValueError(
-                "evaluation is missing the 'lowest_cost_summary' key "
-                "(pass a full evaluate_alert_scores result)"
-            )
+    summary = _evaluation_summary(evaluation)
+    if summary is not None:
         return summary["precision"], summary["recall"]
 
     if "confirmed_fraud" in decision_rows.columns and "decision" in decision_rows.columns:
@@ -382,8 +477,40 @@ def _resolve_precision_recall(
     return None, None
 
 
+def _evaluation_summary(evaluation: "dict[str, Any] | None") -> "dict[str, Any] | None":
+    """Return the evaluate_alert_scores lowest_cost_summary, validating shape."""
+    if evaluation is None:
+        return None
+    summary = evaluation.get("lowest_cost_summary")
+    if summary is None:
+        raise ValueError(
+            "evaluation is missing the 'lowest_cost_summary' key "
+            "(pass a full evaluate_alert_scores result)"
+        )
+    required = {"precision", "recall", "capacity_utilization"}
+    missing = sorted(required - set(summary))
+    if missing:
+        raise ValueError(
+            "evaluation['lowest_cost_summary'] is missing required keys: "
+            f"{missing}"
+        )
+    return summary
+
+
+def _closure_distribution(decision_rows: "pd.DataFrame") -> "dict[str, int]":
+    """Return closure/outcome counts from the richest available lifecycle column."""
+    for column in ("outcome_type", "closure_outcome", "alert_status", "case_status"):
+        if column in decision_rows.columns:
+            return {
+                str(status): int(count)
+                for status, count in decision_rows[column].value_counts().items()
+            }
+    return {}
+
+
 __all__ = [
     "inspect_alert_queue",
     "summarise_alert_operations",
+    "summarise_alert_operations_by_institution_track",
     "summarise_alert_operations_by_track",
 ]

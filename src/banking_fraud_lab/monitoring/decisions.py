@@ -166,11 +166,11 @@ def record_reviewer_action(
         seed: Drives the deterministic ids and the default reviewed_at timestamp.
         reviewed_at: Review timestamp. If ``None``, defaults to a seed-derived
             deterministic timestamp (each row gets a strictly increasing offset).
-        validate_evidence: When ``True`` (the PRD #202 discipline path), a dict
-            ``evidence`` must carry a recognizable v0.7 interpretability marker
-            (``explanation_family_id`` or ``native_importance``); a str / None is
-            still accepted. When ``False`` (the default) no validation runs, so
-            existing callers and notebooks are unaffected.
+        validate_evidence: When ``True`` (the PRD #202 discipline path),
+            ``evidence`` must be a dict carrying a recognizable v0.7
+            interpretability marker (``explanation_family_id`` or
+            ``native_importance``). When ``False`` (the default) no validation
+            runs, so existing callers and notebooks are unaffected.
 
     Returns:
         A :class:`ReviewerActionResult` whose ``reviewer_action_rows`` conform
@@ -180,8 +180,8 @@ def record_reviewer_action(
 
     Raises:
         ValueError: If ``alert_decision_rows`` is missing a required column, or
-            if ``validate_evidence`` is True and a dict ``evidence`` does not
-            carry a v0.7 interpretability marker.
+            if ``validate_evidence`` is True and ``evidence`` is not a v0.7
+            interpretability summary dict.
     """
     _validate_alert_decision_rows(alert_decision_rows)
     if validate_evidence:
@@ -296,16 +296,19 @@ _V07_INTERPRETABILITY_MARKERS: tuple[str, ...] = (
 
 
 def _assert_evidence_is_v07_interpretability(evidence: "dict[str, Any] | str | None") -> None:
-    """Raise ValueError when dict evidence lacks a v0.7 interpretability marker.
+    """Raise ValueError unless evidence is a v0.7 interpretability summary dict.
 
-    A str / None evidence is always accepted (a str pointer to an external note
-    is valid provenance; None marks "no evidence"). Only a dict that claims to be
-    evidence but carries none of the v0.7 marker keys is rejected, so the PRD
-    #202 "reviewer evidence should be v0.7 interpretability output" discipline is
-    enforced where the caller opts in.
+    The default :func:`record_reviewer_action` path stays permissive for
+    compatibility. The explicit PRD #202 discipline path
+    (``validate_evidence=True``) is intentionally strict: reviewer evidence must
+    be the v0.7 interpretability output shape, not an arbitrary dict, string
+    pointer, or absent value.
     """
     if not isinstance(evidence, dict):
-        return
+        raise ValueError(
+            "evidence must be a v0.7 interpretability summary dict when "
+            "validate_evidence=True"
+        )
     present = [marker for marker in _V07_INTERPRETABILITY_MARKERS if marker in evidence]
     if not present:
         raise ValueError(

@@ -78,6 +78,7 @@ def test_monitoring_public_builders_are_present() -> None:
         record_reviewer_action,
         run_batch_scoring,
         summarise_alert_operations,
+        summarise_alert_operations_by_institution_track,
     )
 
     for builder in (
@@ -86,6 +87,7 @@ def test_monitoring_public_builders_are_present() -> None:
         record_reviewer_action,
         inspect_alert_queue,
         summarise_alert_operations,
+        summarise_alert_operations_by_institution_track,
         check_score_drift,
         check_feature_drift,
         check_monitoring_data_quality,

@@ -398,8 +398,6 @@ def test_summarise_alert_operations_by_institution_track_groups_and_reuses_evalu
                 "nb_session_anomaly",
                 "digital_scam_to_mule",
             ],
-            # Deliberately misleading labels: the PRD path must reuse the
-            # supplied evaluate_alert_scores summaries, not recompute here.
             "confirmed_fraud": [False, False, False, False],
         }
     )
@@ -475,6 +473,25 @@ def test_summarise_alert_operations_by_institution_track_requires_group_evaluati
             rows,
             alert_capacity=2,
             evaluation_by_group={},
+        )
+
+
+def test_summarise_alert_operations_by_institution_track_rejects_none_group_evaluation() -> None:
+    """A present group key must carry a full evaluate_alert_scores result."""
+    rows = pd.DataFrame(
+        {
+            "institution_name": ["Alpine Crest Private Bank"],
+            "track": ["private_banking"],
+            "decision": ["alert"],
+        }
+    )
+    with pytest.raises(ValueError, match="full evaluate_alert_scores result"):
+        summarise_alert_operations_by_institution_track(
+            rows,
+            alert_capacity=2,
+            evaluation_by_group={
+                ("Alpine Crest Private Bank", "private_banking"): None,
+            },
         )
 
 

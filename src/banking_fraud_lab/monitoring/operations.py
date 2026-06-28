@@ -312,6 +312,11 @@ def summarise_alert_operations_by_institution_track(
                     f"for group {group_key!r}"
                 )
             group_evaluation = evaluation_by_group[group_key]
+            if group_evaluation is None:
+                raise ValueError(
+                    "evaluation_by_group must contain a full "
+                    f"evaluate_alert_scores result for group {group_key!r}"
+                )
         metrics = _summarise_one_group(
             group_rows,
             alert_capacity=alert_capacity,

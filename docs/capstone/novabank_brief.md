@@ -22,7 +22,8 @@ You have joined the **NovaBank Digital** fraud-operations team. **NovaBank Digit
 the fictional online bank used throughout the digital-banking **Fraud detection track**.
 Your team reviews authorised payments and session activity across app and e-banking
 channels, where a **User** is the digital login identity that authenticates a session and
-acts through it, distinct from the **Client** who is the legal party that holds the banking relationship.
+acts through it, distinct from the **Client** who is the legal party that holds the
+**Banking relationship**.
 
 Digital payments move fast and the channel produces rich telemetry — device fingerprints,
 network risk, beneficiary-change events, session velocity, and account age — but it also
@@ -55,7 +56,7 @@ The dataset is deterministic. Generate it from a clean checkout with the fixed c
 seed and scale:
 
 ```bash
-uv run python -m banking_fraud_lab.capstone --track digital_banking --seed 42 --scale tiny --learner-facing --output data/capstone
+uv run python -m banking_fraud_lab.capstone --track digital_banking --seed 42 --scale tiny --learner-facing --output data/capstone/digital_banking
 ```
 
 - Seed: `42` (`CAPSTONE_SEED`).
@@ -70,8 +71,10 @@ uv run python -m banking_fraud_lab.capstone --track digital_banking --seed 42 --
 
 ## Expected Outcome
 
-- SQL feature extraction tying rows back to **Banking relationship**, **Client** or
-  **User**, and Alert lifecycle lineage.
+- SQL feature extraction
+  ([13_capstone_digital_banking.sql](../../sql/examples/13_capstone_digital_banking.sql))
+  tying rows back to **Banking relationship**, **Client** or **User**, and Alert
+  lifecycle lineage.
 - A fitted scoring rule with precision / recall, PR-AUC, alert volume, and cost tradeoffs
   reported through `evaluate_alert_scores`, avoiding headline accuracy claims.
 - A capacity-aware threshold from `recommend_lowest_cost_threshold` with its rationale.
@@ -81,8 +84,9 @@ uv run python -m banking_fraud_lab.capstone --track digital_banking --seed 42 --
 ## Limitations
 
 - The capstone is synthetic; it does not reconstruct any real event or institution.
-- Confirmed-fraud labels in the protected answer key are imperfect by design (the v0.4
-  families add label noise); avoid treating any single metric as the ground truth.
+- The protected answer key is the true reference signal for grading; noisy triage
+  outcomes may deliberately disagree with it. Avoid treating any single operational
+  outcome or metric as the full ground truth.
 - The `tiny` scale is for the smoke-test path; larger scales are generated locally and
   stay out of git.
 

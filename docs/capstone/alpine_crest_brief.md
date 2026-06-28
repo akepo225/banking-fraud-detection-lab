@@ -56,7 +56,7 @@ The dataset is deterministic. Generate it from a clean checkout with the fixed c
 seed and scale:
 
 ```bash
-uv run python -m banking_fraud_lab.capstone --track private_banking --seed 42 --scale tiny --learner-facing --output data/capstone
+uv run python -m banking_fraud_lab.capstone --track private_banking --seed 42 --scale tiny --learner-facing --output data/capstone/private_banking
 ```
 
 - Seed: `42` (`CAPSTONE_SEED`).
@@ -69,8 +69,9 @@ uv run python -m banking_fraud_lab.capstone --track private_banking --seed 42 --
 
 ## Expected Outcome
 
-- SQL feature extraction tying rows back to **Banking relationship**, **Client**, and
-  Alert lifecycle lineage.
+- SQL feature extraction
+  ([12_capstone_private_banking.sql](../../sql/examples/12_capstone_private_banking.sql))
+  tying rows back to **Banking relationship**, **Client**, and Alert lifecycle lineage.
 - A fitted scoring rule with precision / recall, PR-AUC, alert volume, and cost tradeoffs
   reported through `evaluate_alert_scores`, avoiding headline accuracy claims.
 - A capacity-aware threshold from `recommend_lowest_cost_threshold` with its rationale.
@@ -80,8 +81,9 @@ uv run python -m banking_fraud_lab.capstone --track private_banking --seed 42 --
 ## Limitations
 
 - The capstone is synthetic; it does not reconstruct any real event or institution.
-- Confirmed-fraud labels in the protected answer key are imperfect by design (the digital
-  track adds label noise); avoid treating any single metric as the ground truth.
+- Protected answer keys are grading references, not learner-facing shortcuts;
+  confirmed-fraud labels used for scoring come through case outcomes. Avoid treating any
+  single metric as the full operational truth.
 - The `tiny` scale is for the smoke-test path; larger scales are generated locally and
   stay out of git.
 

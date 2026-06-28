@@ -1,5 +1,7 @@
 """Banking Fraud Detection Lab package."""
 
+from importlib import import_module
+
 from banking_fraud_lab.generators import (
     SCALE_PROFILES,
     DatasetScaleProfile,
@@ -94,16 +96,6 @@ from banking_fraud_lab.graph import (
     build_path_length_features,
     join_graph_features_to_view,
 )
-from banking_fraud_lab.capstone import (
-    CAPSTONE_SCALE,
-    CAPSTONE_SEED,
-    CAPSTONE_TRACKS,
-    generate_capstone_digital_banking_world,
-    generate_capstone_private_banking_world,
-    generate_learner_facing_capstone_digital_banking_world,
-    generate_learner_facing_capstone_private_banking_world,
-)
-
 __all__ = [
     "CAPSTONE_SCALE",
     "CAPSTONE_SEED",
@@ -198,8 +190,22 @@ __all__ = [
 __version__ = "0.1.0"
 
 
+_CAPSTONE_EXPORTS = {
+    "CAPSTONE_SCALE",
+    "CAPSTONE_SEED",
+    "CAPSTONE_TRACKS",
+    "generate_capstone_digital_banking_world",
+    "generate_capstone_private_banking_world",
+    "generate_learner_facing_capstone_digital_banking_world",
+    "generate_learner_facing_capstone_private_banking_world",
+}
+
+
 def __getattr__(name: str):
-    """Lazy-load the data-quality API so module CLI execution stays warning-free."""
+    """Lazy-load APIs whose modules also expose ``python -m`` entry points."""
+    if name in _CAPSTONE_EXPORTS:
+        capstone = import_module("banking_fraud_lab.capstone")
+        return getattr(capstone, name)
     if name == "DatasetQualityReport":
         from banking_fraud_lab.data_quality import DatasetQualityReport
 

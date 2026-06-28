@@ -41,8 +41,9 @@ governance template.
 ## How to run
 
 ```bash
-uv run jupyter notebook notebooks/09_capstone/alpine_crest_capstone_scoring.ipynb
-uv run jupyter notebook notebooks/09_capstone/novabank_capstone_scoring.ipynb
+uv run jupyter lab notebooks/09_capstone/alpine_crest_capstone_scoring.ipynb
+uv run jupyter lab notebooks/09_capstone/novabank_capstone_scoring.ipynb
+uv run jupyter lab notebooks/09_capstone/capstone_synthesis.ipynb
 ```
 
 Each notebook runs on the seed-42 `tiny` capstone dataset generated in-cell, with
@@ -50,13 +51,15 @@ no extra infrastructure and no optional extras required.
 
 ## Notebook generation / regeneration
 
-The `.ipynb` files are the executed and tested artifacts; the source of truth for
-their content is the smoke test `tests/test_capstone_scoring_notebook.py`. Each
-notebook has a deterministic `_build_*.py` regeneration source:
+The `_build_*.py` scripts are the authoring source for notebook content. The
+committed `.ipynb` files are the executed and tested artifacts, and the smoke
+tests verify that those artifacts still run end to end. Each notebook has a
+deterministic regeneration source:
 
 ```bash
 uv run python notebooks/09_capstone/_build_alpine_crest_capstone_scoring_notebook.py
 uv run python notebooks/09_capstone/_build_novabank_capstone_scoring_notebook.py
+uv run python notebooks/09_capstone/_build_capstone_synthesis_notebook.py
 ```
 
 Regeneration is **optional and manual**. The committed `.ipynb` files are

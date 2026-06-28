@@ -94,7 +94,7 @@ CELLS = [
         "solved by inspecting labels."
     ),
     _code(
-        "tables = generate_capstone_private_banking_world(seed=42)\n"
+        "tables = generate_capstone_private_banking_world(seed=42, scale=\"tiny\")\n"
         "learner_tables = build_learner_facing_views(tables)\n"
         "\n"
         "assert PROTECTED_SCENARIO_ANSWER_KEYS in tables\n"
@@ -195,9 +195,9 @@ CELLS = [
         "## Alert-Aware Evaluation\n"
         "\n"
         "Alert-aware metrics report precision, recall, PR-AUC, alert volume, capacity use, and "
-        "cost — never headline accuracy. Confirmed-fraud labels in the protected answer key are "
-        "imperfect by design, so no single metric is the ground truth. The limitation summary "
-        "keeps that framing visible."
+        "cost — never headline accuracy. Confirmed-fraud labels used for evaluation come from "
+        "`learner_tables[\"case_outcomes\"]`, while protected answer keys stay separate from "
+        "learner-facing views. The limitation summary keeps that framing visible."
     ),
     _code(
         "alert_scores = pd.DataFrame(\n"

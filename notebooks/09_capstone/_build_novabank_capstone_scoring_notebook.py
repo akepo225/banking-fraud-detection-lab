@@ -91,10 +91,10 @@ CELLS = [
         "substrate. The supervised label comes from generated case outcomes for the "
         "`digital_scam_to_mule` and `new_beneficiary_payment` Detection patterns. Protected "
         "answer keys stay separate from the learner-facing views. The v0.4 families carry noisy "
-        "triage outcomes, so confirmed-fraud labels are imperfect by design."
+        "triage outcomes that may deliberately disagree with the true protected label."
     ),
     _code(
-        "tables = generate_capstone_digital_banking_world(seed=42)\n"
+        "tables = generate_capstone_digital_banking_world(seed=42, scale=\"tiny\")\n"
         "learner_tables = build_learner_facing_views(tables)\n"
         "\n"
         "assert PROTECTED_SCENARIO_ANSWER_KEYS in tables\n"
@@ -188,9 +188,9 @@ CELLS = [
         "## Alert-Aware Evaluation\n"
         "\n"
         "Alert-aware metrics report precision, recall, PR-AUC, alert volume, capacity use, and "
-        "cost — never headline accuracy. The v0.4 families carry noisy triage outcomes, so "
-        "confirmed-fraud labels are imperfect by design; no single metric is the ground truth. "
-        "The limitation summary keeps that framing visible."
+        "cost — never headline accuracy. The v0.4 families carry noisy triage outcomes that may "
+        "disagree with the true protected label; no single operational metric is the full "
+        "ground truth. The limitation summary keeps that framing visible."
     ),
     _code(
         "alert_scores = pd.DataFrame(\n"

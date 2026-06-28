@@ -143,15 +143,18 @@ def test_capstone_private_banking_prevalence_is_bounded() -> None:
 
 
 def test_capstone_digital_banking_prevalence_is_bounded() -> None:
-    """Digital-banking capstone scam-to-mule prevalence scales with account count."""
+    """Digital-banking capstone scam-to-mule transaction labels scale with account count."""
     tables = generate_capstone_digital_banking_world()
     digital_accounts = tables["accounts"][
         tables["accounts"]["institution_name"] == NOVABANK
     ]
     digital_account_count = len(digital_accounts)
     scam_keys = tables[PROTECTED_SCENARIO_ANSWER_KEYS][
-        tables[PROTECTED_SCENARIO_ANSWER_KEYS]["scenario_name"]
-        == DIGITAL_SCAM_TO_MULE_SCENARIO_NAME
+        (
+            tables[PROTECTED_SCENARIO_ANSWER_KEYS]["scenario_name"]
+            == DIGITAL_SCAM_TO_MULE_SCENARIO_NAME
+        )
+        & (tables[PROTECTED_SCENARIO_ANSWER_KEYS]["entity_table"] == TRANSACTIONS)
     ]
 
     expected = math.ceil(digital_account_count * 0.5)

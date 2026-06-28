@@ -15,7 +15,7 @@ WITH digital_accounts AS (
     ON br.banking_relationship_id = a.banking_relationship_id
   WHERE a.institution_name = 'NovaBank Digital'
 ),
-digital_transactions AS (
+all_digital_transactions AS (
   SELECT
     t.transaction_id,
     da.account_id,
@@ -29,7 +29,11 @@ digital_transactions AS (
   FROM transactions AS t
   JOIN digital_accounts AS da
     ON da.account_id = t.account_id
-  WHERE t.direction = 'debit'
+),
+digital_transactions AS (
+  SELECT *
+  FROM all_digital_transactions
+  WHERE direction = 'debit'
 ),
 transaction_session AS (
   SELECT
@@ -97,7 +101,7 @@ prior_credit AS (
     MAX(c.booked_at) AS nearest_prior_credit_at,
     (
       SELECT c2.amount_chf
-      FROM digital_transactions AS c2
+      FROM all_digital_transactions AS c2
       WHERE c2.account_id = d.account_id
         AND c2.direction = 'credit'
         AND c2.booked_at <= d.booked_at
@@ -105,11 +109,10 @@ prior_credit AS (
       LIMIT 1
     ) AS nearest_prior_credit_amount_chf
   FROM digital_transactions AS d
-  LEFT JOIN digital_transactions AS c
+  LEFT JOIN all_digital_transactions AS c
     ON c.account_id = d.account_id
    AND c.direction = 'credit'
    AND c.booked_at <= d.booked_at
-  WHERE d.direction = 'debit'
   GROUP BY d.transaction_id
 )
 SELECT

@@ -16,6 +16,7 @@ from banking_fraud_lab.evaluation import evaluate_alert_scores
 from banking_fraud_lab.monitoring import (
     inspect_alert_queue,
     summarise_alert_operations,
+    summarise_alert_operations_by_institution_track,
     summarise_alert_operations_by_track,
 )
 
@@ -129,6 +130,36 @@ def _tiny_evaluation_report() -> dict:
         case_outcomes,
         alert_scores,
         thresholds=(0.75,),
+        alert_capacity=2,
+    )
+
+
+def _group_evaluation_report(
+    alert_ids: list[str],
+    confirmed_fraud: list[bool],
+    scores: list[float],
+    *,
+    threshold: float,
+) -> dict:
+    """Build an evaluate_alert_scores report for one institution / track group."""
+    cases = pd.DataFrame(
+        {
+            "case_id": [f"CASE-{alert_id}" for alert_id in alert_ids],
+            "alert_id": alert_ids,
+        }
+    )
+    case_outcomes = pd.DataFrame(
+        {
+            "case_id": [f"CASE-{alert_id}" for alert_id in alert_ids],
+            "confirmed_fraud": confirmed_fraud,
+        }
+    )
+    alert_scores = pd.DataFrame({"alert_id": alert_ids, "score": scores})
+    return evaluate_alert_scores(
+        cases,
+        case_outcomes,
+        alert_scores,
+        thresholds=(threshold,),
         alert_capacity=2,
     )
 
@@ -340,6 +371,128 @@ def test_summarise_alert_operations_by_track_reuses_evaluation_precision_recall(
     for institution_metrics in grouped.values():
         assert institution_metrics["precision"] == summary["precision"]
         assert institution_metrics["recall"] == summary["recall"]
+
+
+def test_summarise_alert_operations_by_institution_track_groups_and_reuses_evaluation() -> None:
+    """One row per institution/track pair reuses each group's evaluate_alert_scores result."""
+    rows = pd.DataFrame(
+        {
+            "alert_id": ["PB-1", "PB-2", "DB-1", "DB-2"],
+            "institution_name": [
+                "Alpine Crest Private Bank",
+                "Alpine Crest Private Bank",
+                "NovaBank Digital",
+                "NovaBank Digital",
+            ],
+            "track": [
+                "private_banking",
+                "private_banking",
+                "digital_banking",
+                "digital_banking",
+            ],
+            "decision": ["alert", "suppress", "alert", "suppress"],
+            "alert_status": ["open", "closed", "escalated", "closed"],
+            "detection_pattern_id": [
+                "pb_high_value_movement",
+                "pb_structuring_indicator",
+                "nb_session_anomaly",
+                "digital_scam_to_mule",
+            ],
+            "confirmed_fraud": [False, False, False, False],
+        }
+    )
+    pb_eval = _group_evaluation_report(
+        ["PB-1", "PB-2"], [True, False], [0.9, 0.1], threshold=0.5
+    )
+    db_eval = _group_evaluation_report(
+        ["DB-1", "DB-2"], [False, True], [0.8, 0.7], threshold=0.75
+    )
+
+    grouped = summarise_alert_operations_by_institution_track(
+        rows,
+        alert_capacity=2,
+        evaluation_by_group={
+            ("Alpine Crest Private Bank", "private_banking"): pb_eval,
+            ("NovaBank Digital", "digital_banking"): db_eval,
+        },
+    )
+
+    assert grouped[["institution_name", "track"]].to_dict("records") == [
+        {
+            "institution_name": "Alpine Crest Private Bank",
+            "track": "private_banking",
+        },
+        {"institution_name": "NovaBank Digital", "track": "digital_banking"},
+    ]
+
+    pb_summary = pb_eval["lowest_cost_summary"]
+    db_summary = db_eval["lowest_cost_summary"]
+    pb_row = grouped[grouped["track"] == "private_banking"].iloc[0]
+    db_row = grouped[grouped["track"] == "digital_banking"].iloc[0]
+
+    assert pb_row["precision"] == pb_summary["precision"]
+    assert pb_row["recall"] == pb_summary["recall"]
+    assert pb_row["capacity_utilization"] == pb_summary["capacity_utilization"]
+    assert pb_row["alert_volume"] == 1
+    assert pb_row["closure_distribution"] == {"open": 1, "closed": 1}
+    assert pb_row["detection_pattern_ids"] == (
+        "pb_high_value_movement",
+        "pb_structuring_indicator",
+    )
+
+    assert db_row["precision"] == db_summary["precision"]
+    assert db_row["recall"] == db_summary["recall"]
+    assert db_row["capacity_utilization"] == db_summary["capacity_utilization"]
+    assert db_row["alert_volume"] == 1
+    assert db_row["closure_distribution"] == {"escalated": 1, "closed": 1}
+
+
+def test_summarise_alert_operations_by_institution_track_requires_track() -> None:
+    """The strict PRD #203 companion requires explicit track grouping."""
+    rows = pd.DataFrame(
+        {
+            "institution_name": ["Alpine Crest Private Bank"],
+            "decision": ["alert"],
+        }
+    )
+    with pytest.raises(ValueError, match="track"):
+        summarise_alert_operations_by_institution_track(rows, alert_capacity=2)
+
+
+def test_summarise_alert_operations_by_institution_track_requires_group_evaluation() -> None:
+    """A partial evaluation map is rejected instead of silently recomputing one group."""
+    rows = pd.DataFrame(
+        {
+            "institution_name": ["Alpine Crest Private Bank"],
+            "track": ["private_banking"],
+            "decision": ["alert"],
+        }
+    )
+    with pytest.raises(ValueError, match="missing evaluate_alert_scores"):
+        summarise_alert_operations_by_institution_track(
+            rows,
+            alert_capacity=2,
+            evaluation_by_group={},
+        )
+
+
+def test_summarise_alert_operations_by_institution_track_rejects_none_group_evaluation() -> None:
+    """A present group key must carry a full evaluate_alert_scores result."""
+    rows = pd.DataFrame(
+        {
+            "institution_name": ["Alpine Crest Private Bank"],
+            "track": ["private_banking"],
+            "decision": ["alert"],
+        }
+    )
+    with pytest.raises(ValueError, match="full evaluate_alert_scores result"):
+        summarise_alert_operations_by_institution_track(
+            rows,
+            alert_capacity=2,
+            evaluation_by_group={
+                ("Alpine Crest Private Bank", "private_banking"): None,
+            },
+        )
 
 
 def test_summarise_alert_operations_by_track_requires_institution_name() -> None:

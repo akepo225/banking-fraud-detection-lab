@@ -201,8 +201,8 @@ def generate_learner_facing_capstone_digital_banking_world(
 def main(argv: Sequence[str] | None = None) -> int:
     """Generate capstone dataset CSVs for one or both tracks from the CLI.
 
-    Reproduces the deterministic capstone dataset(s) so a learner (or capstone
-    notebook) can regenerate the substrate without hidden maintainer state.
+    Regenerates the deterministic capstone dataset(s) so a learner (or capstone
+    notebook) can rebuild the substrate without hidden maintainer state.
     Defaults to the fixed capstone seed and scale.
     """
     parser = argparse.ArgumentParser(

@@ -104,6 +104,8 @@ def test_record_reviewer_action_conforms_and_carries_lineage() -> None:
     assert (actions["action"] == "confirm").all()
     assert (actions["rationale"] == "Matches high-value movement playbook.").all()
     assert actions["banking_relationship_id"].isin(decisions["banking_relationship_id"]).all()
+    assert actions["detection_pattern_id"].notna().all()
+    assert (actions["detection_pattern_id"] == _PATTERN_ID).all()
     assert actions["reviewed_at"].is_monotonic_increasing
 
 

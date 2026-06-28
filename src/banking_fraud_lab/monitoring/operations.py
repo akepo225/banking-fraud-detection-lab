@@ -174,7 +174,8 @@ def summarise_alert_operations(
         for fixed inputs.
 
     Raises:
-        ValueError: If ``alert_capacity`` is not positive, or if ``decision_rows``
+        ValueError: If ``alert_capacity`` is not positive, if any
+            ``institution_name`` is empty/whitespace-only, or if ``decision_rows``
             contains more than one institution (use
             :func:`summarise_alert_operations_by_track` for a mixed-bank frame).
     """
@@ -223,8 +224,8 @@ def summarise_alert_operations_by_track(
 
     Raises:
         ValueError: If ``alert_capacity`` is not positive, if
-            ``institution_name`` is missing, if any ``institution_name`` is null,
-            or if there are no rows to group.
+            ``institution_name`` is missing, if any ``institution_name`` is null or
+            empty/whitespace-only, or if there are no rows to group.
     """
     if not isinstance(alert_capacity, int | float) or alert_capacity <= 0:
         raise ValueError("alert_capacity must be positive")
@@ -234,6 +235,8 @@ def summarise_alert_operations_by_track(
         raise ValueError("decision_rows must contain at least one row")
     if decision_rows["institution_name"].isna().any():
         raise ValueError("decision_rows['institution_name'] must be non-null for every row")
+    if (decision_rows["institution_name"].astype(str).str.strip() == "").any():
+        raise ValueError("decision_rows['institution_name'] must be non-empty for every row")
 
     grouped: "dict[str, dict[str, Any]]" = {}
     for institution in sorted(decision_rows["institution_name"].astype(str).unique()):
@@ -280,8 +283,9 @@ def summarise_alert_operations_by_institution_track(
         A deterministic DataFrame ordered by ``institution_name`` then ``track``.
 
     Raises:
-        ValueError: If required grouping columns are missing/null, if capacity is
-            not positive, or if ``evaluation_by_group`` lacks an observed group.
+        ValueError: If required grouping columns are missing/null, if
+            ``institution_name`` is empty/whitespace-only, if capacity is not
+            positive, or if ``evaluation_by_group`` lacks an observed group.
     """
     if not isinstance(alert_capacity, int | float) or alert_capacity <= 0:
         raise ValueError("alert_capacity must be positive")
@@ -298,6 +302,8 @@ def summarise_alert_operations_by_institution_track(
         raise ValueError(
             f"decision_rows grouping columns must be non-null: {null_grouping}"
         )
+    if (decision_rows["institution_name"].astype(str).str.strip() == "").any():
+        raise ValueError("decision_rows['institution_name'] must be non-empty for every row")
 
     rows: list[dict[str, Any]] = []
     for (institution, track), group_rows in decision_rows.groupby(
@@ -357,15 +363,19 @@ def summarise_alert_operations_by_institution_track(
 def _resolve_institution(decision_rows: "pd.DataFrame") -> "str | None":
     """Return the single institution name on the frame, else None.
 
-    Raises ``ValueError`` when the frame mixes more than one institution. The
-    single-institution summary (:func:`summarise_alert_operations`) must not
-    silently aggregate a mixed-bank frame under one label; the caller should use
+    Raises ``ValueError`` when the frame mixes more than one institution or when
+    any institution name is empty/whitespace-only. The single-institution summary
+    (:func:`summarise_alert_operations`) must not silently aggregate a mixed-bank
+    frame under one label; the caller should use
     :func:`summarise_alert_operations_by_track` for that.
     """
     if "institution_name" in decision_rows.columns and not decision_rows.empty:
-        unique = sorted(
-            decision_rows["institution_name"].dropna().astype(str).unique()
-        )
+        names = decision_rows["institution_name"].dropna().astype(str)
+        if (names.str.strip() == "").any():
+            raise ValueError(
+                "decision_rows['institution_name'] must be non-empty for every row"
+            )
+        unique = sorted(names.unique())
         if len(unique) > 1:
             raise ValueError(
                 "decision_rows contains multiple institutions ("

@@ -558,3 +558,45 @@ def test_summarise_alert_operations_by_track_rejects_null_institution_name() -> 
     )
     with pytest.raises(ValueError, match="non-null"):
         summarise_alert_operations_by_track(rows, alert_capacity=5)
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_summarise_alert_operations_rejects_blank_institution_name(blank: str) -> None:
+    """An empty/whitespace institution_name is rejected, not silently aggregated (#224)."""
+    rows = pd.DataFrame(
+        {
+            "institution_name": ["Alpine Crest Private Bank", blank],
+            "decision": ["alert", "alert"],
+        }
+    )
+    with pytest.raises(ValueError, match="non-empty"):
+        summarise_alert_operations(rows, alert_capacity=5)
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_summarise_alert_operations_by_track_rejects_blank_institution_name(blank: str) -> None:
+    """An empty/whitespace institution_name is rejected by the grouped summary (#224)."""
+    rows = pd.DataFrame(
+        {
+            "institution_name": ["Alpine Crest Private Bank", blank],
+            "decision": ["alert", "alert"],
+        }
+    )
+    with pytest.raises(ValueError, match="non-empty"):
+        summarise_alert_operations_by_track(rows, alert_capacity=5)
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_summarise_alert_operations_by_institution_track_rejects_blank_institution_name(
+    blank: str,
+) -> None:
+    """An empty/whitespace institution_name is rejected by the institution/track summary (#224)."""
+    rows = pd.DataFrame(
+        {
+            "institution_name": ["Alpine Crest Private Bank", blank],
+            "track": ["private_banking", "private_banking"],
+            "decision": ["alert", "alert"],
+        }
+    )
+    with pytest.raises(ValueError, match="non-empty"):
+        summarise_alert_operations_by_institution_track(rows, alert_capacity=5)

@@ -114,6 +114,8 @@ def test_score_rows_conform_to_score_spec() -> None:
     for column in ("client_id", "user_id", "account_id", "transaction_id", "alert_id"):
         assert column in result.score_rows.columns
     assert sorted(result.score_rows["score"].tolist()) == sorted(frame["score"].tolist())
+    assert result.score_rows["batch_id"].notna().all()
+    assert (result.score_rows["batch_id"] == result.batch_id).all()
 
 
 def test_threshold_row_conforms_and_records_source() -> None:
@@ -136,6 +138,7 @@ def test_threshold_row_conforms_and_records_source() -> None:
     assert row["review_status"] == "active"
     assert row["selection_method"] == "cost-optimal"
     assert row["evidence_ref"] == "eval/run-001"
+    assert row["score_version"] == "0.1.0"
 
 
 def test_threshold_sourced_from_v0_7_recommender() -> None:

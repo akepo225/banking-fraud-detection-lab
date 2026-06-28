@@ -186,7 +186,7 @@ CELLS = [
     _md(
         "## Choose The Threshold And Run Batch Scoring\n"
         "\n"
-        "The threshold is sourced from the v0.7 costaware recommender (reused, not "
+        "The threshold is sourced from the v0.7 cost-aware recommender (reused, not "
         "recomputed). The scored frame carries Banking relationship, transaction, alert, and "
         "User lineage so each monitoring score row traces back to a Client-facing record and "
         "the digital login identity. `run_batch_scoring` materializes the production `score` "

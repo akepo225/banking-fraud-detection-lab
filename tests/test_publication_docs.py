@@ -290,3 +290,149 @@ def test_capstone_notebook_guide_markdown_links_resolve() -> None:
         if not resolved.exists():
             unresolved.append(target)
     assert not unresolved, f"notebook guide links do not resolve: {unresolved}"
+
+
+# --- v0.9 terminology guardrails (issue #232) -------------------------------
+# Extend publication-docs coverage to the capstone and beta surface. Mirrors the
+# prohibition vocabulary already enforced by the case-library / regulatory-index
+# validators (CRLF-tolerant, whitespace-aware) without weakening them.
+
+V09_TERMINOLOGY_DOC_PATHS = (
+    "docs/capstone/alpine_crest_brief.md",
+    "docs/capstone/novabank_brief.md",
+    "docs/capstone/rubric.md",
+    "docs/capstone/presentation_template.md",
+    "docs/capstone/troubleshooting.md",
+    "docs/release/v0.9-beta-checklist.md",
+)
+
+# Real-bank names that must never appear in public-facing text. Word-bounded so
+# "substrate" (contains "ubs") does not trip.
+FORBIDDEN_REAL_BANK_NAMES = (
+    "julius baer",
+    "ubs ",
+    "credit suisse",
+    "hsbc",
+    "barclays",
+    "deutsche bank",
+    "santander",
+)
+
+# Job-preparation / public-release framing that has no place in the curriculum.
+FORBIDDEN_JOB_OR_RELEASE_FRAMING = (
+    "portfolio project",
+    "recruiters",
+    "job-preparation",
+    "we shipped",
+    "publicly released",
+    "is now published",
+    "has been published",
+)
+
+# Imperative compliance/legal-advice wording (mirrors case-library ban).
+FORBIDDEN_IMPERATIVE_COMPLIANCE = (
+    "you must comply",
+    "must comply with",
+    "must report",
+    "required to comply",
+    "legal requirement for learners",
+)
+
+# Reconstruction claims (mirrors case-library BANNED_RECONSTRUCTION_PHRASES).
+FORBIDDEN_RECONSTRUCTION_CLAIMS = (
+    "reconstructs the",
+    "reproduces the",
+    "recreation of",
+    "based on actual",
+    "replicate the",
+    "exact case",
+)
+
+
+def _v09_doc_texts() -> dict[str, str]:
+    """Read every v0.9 public-facing doc into a normalized lower-case form."""
+    return {
+        path: _read(path).lower()
+        for path in V09_TERMINOLOGY_DOC_PATHS
+        if (ROOT / path).exists()
+    }
+
+
+def test_v09_docs_avoid_forbidden_real_bank_names() -> None:
+    """No v0.9 public-facing doc names a real bank."""
+    for path, text in _v09_doc_texts().items():
+        for bank in FORBIDDEN_REAL_BANK_NAMES:
+            assert bank not in text, f"{path} names a real bank: {bank!r}"
+
+
+def test_v09_docs_avoid_job_preparation_and_public_release_framing() -> None:
+    """No v0.9 public-facing doc uses job-prep or public-release framing."""
+    for path, text in _v09_doc_texts().items():
+        for phrase in FORBIDDEN_JOB_OR_RELEASE_FRAMING:
+            assert phrase not in text, f"{path} uses banned framing: {phrase!r}"
+
+
+def test_v09_docs_avoid_imperative_compliance_wording() -> None:
+    """No v0.9 public-facing doc issues imperative legal/compliance instructions."""
+    for path, text in _v09_doc_texts().items():
+        for phrase in FORBIDDEN_IMPERATIVE_COMPLIANCE:
+            assert phrase not in text, f"{path} uses imperative compliance: {phrase!r}"
+
+
+def test_v09_docs_avoid_real_event_reconstruction_claims() -> None:
+    """No v0.9 public-facing doc claims to reconstruct/reproduce a real event."""
+    for path, text in _v09_doc_texts().items():
+        for phrase in FORBIDDEN_RECONSTRUCTION_CLAIMS:
+            assert phrase not in text, f"{path} makes a reconstruction claim: {phrase!r}"
+
+
+def test_v09_docs_use_fixed_glossary_institutions() -> None:
+    """v0.9 docs use the fixed institution names, not synonyms or real banks."""
+    alpine_crest_brief = _read("docs/capstone/alpine_crest_brief.md")
+    novabank_brief = _read("docs/capstone/novabank_brief.md")
+    assert "Alpine Crest Private Bank" in alpine_crest_brief
+    assert "NovaBank Digital" in novabank_brief
+
+
+def test_v09_capstone_notebooks_avoid_forbidden_framing() -> None:
+    """The committed capstone notebooks avoid prohibited public-facing framing.
+
+    Reads the notebook JSON as text (CRLF/whitespace-tolerant) and checks the
+    prohibition vocabulary, mirroring the case-library/regex guardrails.
+    """
+    notebook_dir = ROOT / "notebooks" / "09_capstone"
+    notebooks = sorted(notebook_dir.glob("*.ipynb"))
+    assert notebooks, "expected committed capstone notebooks"
+    forbidden = (
+        FORBIDDEN_REAL_BANK_NAMES
+        + FORBIDDEN_JOB_OR_RELEASE_FRAMING
+        + FORBIDDEN_IMPERATIVE_COMPLIANCE
+        + FORBIDDEN_RECONSTRUCTION_CLAIMS
+    )
+    for notebook in notebooks:
+        text = notebook.read_text(encoding="utf-8").lower()
+        for phrase in forbidden:
+            assert phrase not in text, f"{notebook.name} contains banned phrase: {phrase!r}"
+
+
+def test_v09_customer_term_is_only_used_to_define_the_glossary() -> None:
+    """The word 'customer' may appear only in the glossary-definition context.
+
+    The glossary explicitly defines Client as 'the legal customer' and says
+    'Never customer'. A bare-term ban would fail on that definition, so instead
+    assert 'customer' appears only alongside the glossary markers ('client' or
+    'never'), catching any NEW assertive use while keeping the anti-term valid.
+    """
+    paths = V09_TERMINOLOGY_DOC_PATHS + ("notebooks/09_capstone/README.md",)
+    for path in paths:
+        full = ROOT / path
+        if not full.exists():
+            continue
+        for line in full.read_text(encoding="utf-8").splitlines():
+            if "customer" not in line.lower():
+                continue
+            joined = _normalize(line).lower()
+            assert "client" in joined or "never" in joined, (
+                f"{path} uses 'customer' outside the glossary definition: {line.strip()!r}"
+            )
+

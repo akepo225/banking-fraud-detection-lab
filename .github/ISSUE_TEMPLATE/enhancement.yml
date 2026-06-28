@@ -1,0 +1,65 @@
+name: Enhancement
+description: Suggest a new feature or improvement for the Banking Fraud Detection Lab.
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an enhancement for the Banking Fraud Detection
+        Lab. This template uses the repo's triage-label vocabulary
+        (`docs/agents/triage-labels.md`): an `enhancement` category role and a
+        `needs-triage` state role are applied automatically.
+
+        The project is educational only and unaffiliated with any bank, fintech,
+        regulator, vendor, or public case source, and does not provide legal,
+        compliance, audit, investment, regulatory, or professional advice.
+        Enhancements must stay within the curriculum scope: no new real client
+        data, real-bank affiliation claims, or claims that synthetic data
+        reconstructs real events.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What learner or maintainer problem does this enhancement solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: The feature or improvement you'd like, and where it fits.
+      placeholder: "Add a ... under notebooks/... that ..."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you considered and why they fall short.
+    validations:
+      required: false
+  - type: dropdown
+    id: module
+    attributes:
+      label: Affected module
+      description: Which part of the curriculum would this touch?
+      options:
+        - Foundations (00)
+        - Private-banking track (01, 04, 06, 07, 08, 09)
+        - Digital-banking track (02, 05, 06, 07, 08, 09)
+        - Alert governance (03)
+        - Capstone (09)
+        - SQL examples
+        - Docs
+        - CI / tooling
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Contribution boundaries
+      description: Please confirm.
+      options:
+        - label: This suggestion keeps the educational-only, unaffiliated, no-real-data, no-reconstruction, no-legal-advice boundaries.
+          required: true

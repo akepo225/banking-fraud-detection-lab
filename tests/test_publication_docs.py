@@ -267,7 +267,9 @@ def test_capstone_scenario_briefs_link_back_to_curriculum() -> None:
     }
     for filename, (notebook_link, sql_example) in briefs.items():
         text = (capstone_dir / filename).read_text(encoding="utf-8")
-        assert notebook_link in text, f"{filename} does not link {notebook_link}"
+        assert re.search(rf"\]\(([^)]+{re.escape(notebook_link)})\)", text), (
+            f"{filename} does not link {notebook_link}"
+        )
         assert re.search(rf"\]\(([^)]+{re.escape(sql_example)})\)", text), (
             f"{filename} does not link {sql_example}"
         )

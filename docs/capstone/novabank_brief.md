@@ -71,7 +71,7 @@ uv run python -m banking_fraud_lab.capstone --track digital_banking --seed 42 --
 
 ## Expected Outcome
 
-- SQL feature extraction
+- Notebook work under [09_capstone](../../notebooks/09_capstone/) and SQL feature extraction
   ([13_capstone_digital_banking.sql](../../sql/examples/13_capstone_digital_banking.sql))
   tying rows back to **Banking relationship**, **Client** or **User**, and Alert
   lifecycle lineage.

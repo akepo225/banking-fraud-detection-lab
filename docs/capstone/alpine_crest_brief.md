@@ -69,7 +69,7 @@ uv run python -m banking_fraud_lab.capstone --track private_banking --seed 42 --
 
 ## Expected Outcome
 
-- SQL feature extraction
+- Notebook work under [09_capstone](../../notebooks/09_capstone/) and SQL feature extraction
   ([12_capstone_private_banking.sql](../../sql/examples/12_capstone_private_banking.sql))
   tying rows back to **Banking relationship**, **Client**, and Alert lifecycle lineage.
 - A fitted scoring rule with precision / recall, PR-AUC, alert volume, and cost tradeoffs

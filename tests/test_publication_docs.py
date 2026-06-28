@@ -227,3 +227,66 @@ def test_readme_markdown_links_resolve() -> None:
         if not (ROOT / path_part).exists():
             unresolved.append(target)
     assert not unresolved, f"README links do not resolve to existing files: {unresolved}"
+
+
+def test_capstone_is_reachable_from_entry_docs() -> None:
+    """The v0.9 capstone must be reachable from README, notebook guide, and SQL guide.
+
+    Closes issue #230 cross-doc consistency: a first-time reader of the README,
+    notebook guide, or SQL guide must be able to reach the capstone module and
+    its scenario briefs without dead links. ``test_readme_markdown_links_resolve``
+    already guarantees the README links themselves resolve.
+    """
+    readme = _read("README.md")
+    notebook_guide = _read("notebooks/README.md")
+    sql_guide = _read("sql/README.md")
+
+    # README curriculum map links the 09_capstone module and docs/capstone/.
+    assert "(notebooks/09_capstone/" in readme
+    assert "(docs/capstone/)" in readme
+    # Notebook guide documents the 09_capstone module and its README.
+    assert "`09_capstone/`" in notebook_guide
+    assert "(09_capstone/README.md)" in notebook_guide
+    # SQL guide links the capstone SQL examples.
+    assert re.search(r"\]\(([^)]+12_capstone_private_banking\.sql)\)", sql_guide)
+    assert re.search(r"\]\(([^)]+13_capstone_digital_banking\.sql)\)", sql_guide)
+
+
+def test_capstone_scenario_briefs_link_back_to_curriculum() -> None:
+    """Each capstone brief links the notebook module and SQL example it frames."""
+    capstone_dir = ROOT / "docs" / "capstone"
+    briefs = {
+        "alpine_crest_brief.md": (
+            "notebooks/09_capstone/",
+            "12_capstone_private_banking.sql",
+        ),
+        "novabank_brief.md": (
+            "notebooks/09_capstone/",
+            "13_capstone_digital_banking.sql",
+        ),
+    }
+    for filename, (notebook_link, sql_example) in briefs.items():
+        text = (capstone_dir / filename).read_text(encoding="utf-8")
+        assert re.search(rf"\]\(([^)]+{re.escape(notebook_link)})\)", text), (
+            f"{filename} does not link {notebook_link}"
+        )
+        assert re.search(rf"\]\(([^)]+{re.escape(sql_example)})\)", text), (
+            f"{filename} does not link {sql_example}"
+        )
+
+
+def test_capstone_notebook_guide_markdown_links_resolve() -> None:
+    """Every local markdown link in the notebook guide must resolve."""
+    guide = _read("notebooks/README.md")
+    targets = re.findall(r"\]\(([^)]+)\)", guide)
+    unresolved = []
+    for target in targets:
+        if target.startswith(("http://", "https://", "#", "mailto:")):
+            continue
+        path_part = target.split()[0].split("#", 1)[0]
+        if not path_part:
+            continue
+        resolved = ROOT / "notebooks" / path_part
+        if not resolved.exists():
+            unresolved.append(target)
+    assert not unresolved, f"notebook guide links do not resolve: {unresolved}"

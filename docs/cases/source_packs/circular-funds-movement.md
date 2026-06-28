@@ -12,7 +12,7 @@ source_type: regulator
 geography: Switzerland / cross-border
 product: private-banking relationships and transactions
 source_quality: official regulator source candidate
-linked_modules: notebooks/06_graph_network_fraud/alpine_crest_graph_investigation.ipynb, notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb
+linked_modules: notebooks/06_graph_network_fraud/alpine_crest_graph_investigation.ipynb, notebooks/01_private_banking_transaction_fraud/alpine_crest_baseline.ipynb, notebooks/09_capstone/capstone_synthesis.ipynb
 ---
 
 # Circular Funds Movement Source Pack

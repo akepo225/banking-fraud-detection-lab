@@ -67,6 +67,23 @@ Track extension notebook naming and module-layout conventions are defined in
   ships committed `_build_*.py` generator scripts (see the module's
   [README](08_production_monitoring_patterns/README.md) for the regeneration
   convention).
+- `09_capstone/`: v0.9 integration capstone. Learners run the full end-to-end
+  path from scenario brief through synthetic data, SQL features, engineered
+  features, a fitted score, alert review, capacity-aware threshold selection,
+  and per-alert explanation, then synthesise graph/case evidence, production
+  monitoring, and a governance memo for both tracks. Start with
+  `09_capstone/alpine_crest_capstone_scoring.ipynb`
+  (**Alpine Crest Private Bank**, `pb_high_value_movement` /
+  `pb_transaction_fraud`) and
+  `09_capstone/novabank_capstone_scoring.ipynb` (**NovaBank Digital**,
+  `digital_scam_to_mule` / `new_beneficiary_payment`), then run
+  `09_capstone/capstone_synthesis.ipynb` (graph `circular_funds_movement` /
+  `mule_ring` evidence as investigative support, v0.8 monitoring, and a
+  governance memo for both tracks). Scenario briefs live under
+  [`docs/capstone/`](../docs/capstone/). This module extends — and does not
+  replace — the v0.1–v0.8 investigation, and ships committed `_build_*.py`
+  generator scripts (see the module's
+  [README](09_capstone/README.md) for the regeneration convention).
 
 ## Case Library And Regulatory Context
 
@@ -82,6 +99,7 @@ to the relevant case source packs and regulatory source notes. See:
 - [06_graph_network_fraud/README.md](06_graph_network_fraud/README.md)
 - [07_interpretability_model_risk/README.md](07_interpretability_model_risk/README.md)
 - [08_production_monitoring_patterns/README.md](08_production_monitoring_patterns/README.md)
+- [09_capstone/README.md](09_capstone/README.md)
 
 For the full catalogs, see the [case library index](../docs/cases/index.md) and
 the [regulatory source index](../docs/regulation/index.md).

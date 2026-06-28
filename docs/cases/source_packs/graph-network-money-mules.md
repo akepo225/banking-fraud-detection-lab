@@ -12,7 +12,7 @@ source_type: enforcement
 geography: Europe / international
 product: digital current accounts and instant payments
 source_quality: official law-enforcement source candidate
-linked_modules: notebooks/06_graph_network_fraud/novabank_graph_investigation.ipynb, notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb
+linked_modules: notebooks/06_graph_network_fraud/novabank_graph_investigation.ipynb, notebooks/02_digital_scam_to_mule/novabank_scam_to_mule_baseline.ipynb, notebooks/09_capstone/capstone_synthesis.ipynb
 ---
 
 # Graph Network Money Mules Source Pack
@@ -88,4 +88,3 @@ flow; `mule_ring` captures the networked cluster that several such flows form.
 - Verify whether this source should be paired with FATF or national-agency typologies.
 - Review graph/network framing for the v0.6 module.
 - Confirm source-pack status before publication.
-

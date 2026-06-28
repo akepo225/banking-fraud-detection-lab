@@ -1,0 +1,76 @@
+name: Bug report
+description: Report something that is broken in the Banking Fraud Detection Lab.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report for the Banking Fraud
+        Detection Lab. This template uses the repo's triage-label vocabulary
+        (`docs/agents/triage-labels.md`): a `bug` category role and a
+        `needs-triage` state role are applied automatically.
+
+        The project is educational only and unaffiliated with any bank, fintech,
+        regulator, vendor, or public case source, and does not provide legal,
+        compliance, audit, investment, regulatory, or professional advice. Do
+        not include real client data, real-bank affiliation claims, or claims
+        that synthetic data reconstructs real events.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the broken behaviour.
+      placeholder: "When I ran `uv run pytest ...`, ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: The behaviour you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The exact commands or steps. Include the seed/scale if relevant.
+      placeholder: |
+        uv sync --extra dev
+        uv run ruff check .
+        uv run pytest ...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, and whether `uv` was used.
+      placeholder: "Windows 11, Python 3.11, uv 0.x"
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Affected module
+      description: Which part of the curriculum is affected?
+      options:
+        - Foundations (00)
+        - Private-banking track (01, 04, 06, 07, 08, 09)
+        - Digital-banking track (02, 05, 06, 07, 08, 09)
+        - Alert governance (03)
+        - Capstone (09)
+        - SQL examples
+        - Docs
+        - CI / tooling
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Contribution boundaries
+      description: Please confirm.
+      options:
+        - label: This report contains NO real client data, real-bank affiliation, real-event reconstruction claims, or legal/compliance advice.
+          required: true

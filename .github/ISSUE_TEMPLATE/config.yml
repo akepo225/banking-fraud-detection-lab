@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/akepo225/banking-fraud-detection-lab/blob/main/CONTRIBUTING.md
+    about: Read the contributor guidance (educational-only boundaries, glossary, CI gate) before opening an issue.

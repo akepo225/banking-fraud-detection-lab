@@ -98,6 +98,9 @@ V10_TEST_MODULES = (
 
 # Prior-version notebook smoke-test modules re-executed for cross-version regression.
 # UNCHANGED from v0.9 (tests/test_v09_acceptance_review.py): v1.0 adds no notebooks.
+# TODO(#264): extend this set with the v0.5 case-narrative + alert-triage smoke tests
+# (currently covered structurally by the per-module runnability test above, not
+# re-executed in this subprocess loop).
 PRIOR_NOTEBOOK_TEST_MODULES = (
     "test_foundations_notebook",  # v0.1
     "test_private_banking_notebook",  # v0.3

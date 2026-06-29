@@ -436,3 +436,145 @@ def test_v09_customer_term_is_only_used_to_define_the_glossary() -> None:
                 f"{path} uses 'customer' outside the glossary definition: {line.strip()!r}"
             )
 
+
+# --- v1.0 terminology guardrails + extension boundary (issue #253) -----------
+# Extend publication-docs coverage to the v1.0 release surface (scope doc + the
+# v1.0 acceptance review) and add a structural extension-boundary guardrail.
+# The terminology checks reuse the FORBIDDEN_* vocabulary already enforced on the
+# v0.9 surface; the extension-boundary guard keeps v1.1-v1.4 out of the v1.0 core.
+
+V10_TERMINOLOGY_DOC_PATHS = (
+    "docs/release/v1.0-scope.md",
+    "docs/release/v1.0-complete-public-core-curriculum-acceptance-review.md",
+)
+
+
+def _v10_doc_texts() -> dict[str, str]:
+    """Read every v1.0 public-facing doc into a normalized lower-case form."""
+    return {
+        path: _read(path).lower()
+        for path in V10_TERMINOLOGY_DOC_PATHS
+        if (ROOT / path).exists()
+    }
+
+
+def test_v10_docs_avoid_forbidden_real_bank_names() -> None:
+    """No v1.0 public-facing doc names a real bank."""
+    for path, text in _v10_doc_texts().items():
+        for bank in FORBIDDEN_REAL_BANK_NAMES:
+            assert bank not in text, f"{path} names a real bank: {bank!r}"
+
+
+def test_v10_docs_avoid_job_preparation_and_public_release_framing() -> None:
+    """No v1.0 public-facing doc uses job-prep or public-release framing."""
+    for path, text in _v10_doc_texts().items():
+        for phrase in FORBIDDEN_JOB_OR_RELEASE_FRAMING:
+            assert phrase not in text, f"{path} uses banned framing: {phrase!r}"
+
+
+def test_v10_docs_avoid_imperative_compliance_wording() -> None:
+    """No v1.0 public-facing doc issues imperative legal/compliance instructions."""
+    for path, text in _v10_doc_texts().items():
+        for phrase in FORBIDDEN_IMPERATIVE_COMPLIANCE:
+            assert phrase not in text, f"{path} uses imperative compliance: {phrase!r}"
+
+
+def test_v10_docs_avoid_real_event_reconstruction_claims() -> None:
+    """No v1.0 public-facing doc claims to reconstruct/reproduce a real event."""
+    for path, text in _v10_doc_texts().items():
+        for phrase in FORBIDDEN_RECONSTRUCTION_CLAIMS:
+            assert phrase not in text, f"{path} makes a reconstruction claim: {phrase!r}"
+
+
+def test_v10_docs_use_fixed_glossary_institutions() -> None:
+    """v1.0 docs use the fixed institution names, not synonyms or real banks."""
+    review = _read("docs/release/v1.0-complete-public-core-curriculum-acceptance-review.md")
+    assert "Alpine Crest Private Bank" in review
+    assert "NovaBank Digital" in review
+
+
+def test_v10_customer_term_is_only_used_to_define_the_glossary() -> None:
+    """In v1.0 docs the word 'customer' may appear only in the glossary context."""
+    for path in V10_TERMINOLOGY_DOC_PATHS:
+        full = ROOT / path
+        if not full.exists():
+            continue
+        for line in full.read_text(encoding="utf-8").splitlines():
+            if "customer" not in line.lower():
+                continue
+            joined = _normalize(line).lower()
+            assert "client" in joined or "never" in joined, (
+                f"{path} uses 'customer' outside the glossary definition: {line.strip()!r}"
+            )
+
+
+# v1.1-v1.4 advanced-track phrases that have no legitimate place in the v1.0
+# core public narrative (README). Kept deliberately to unambiguous track terms;
+# the structural freeze below is the primary boundary guard, because some generic
+# tokens (e.g. the v0.6 optional Neo4j extra, monitoring "no Kafka" disclaimers,
+# the glossary's "digital brokerages") legitimately appear elsewhere in core.
+V10_README_ADVANCED_TRACK_PHRASES = (
+    "wallet withdrawal",
+    "on-ramp",
+    "off-ramp",
+    "market abuse",
+    "market-abuse",
+    "unauthorized trading",
+    "order execution",
+    "communication monitoring",
+    "insider risk",
+    "insider-risk",
+    "case-note summarization",
+    "case-note",
+    "stream processing",
+    "stream-processing",
+    "api deployment",
+    "relational database deploy",
+)
+
+
+def test_v10_core_module_dirs_stay_within_frozen_core_range() -> None:
+    """No notebook module directory beyond the frozen 00-09 core may exist.
+
+    The primary v1.1-v1.4 extension-boundary guard: v1.0 is frozen at the ten
+    modules 00_foundations through 09_capstone (docs/release/v1.0-scope.md). A
+    new v1.1+ track would land as a ``notebooks/10_*`` (or higher) directory, so
+    this structural check catches leakage that a keyword scan cannot.
+    """
+    numbered = [
+        path
+        for path in (ROOT / "notebooks").iterdir()
+        if path.is_dir() and re.fullmatch(r"[0-9][0-9]_.*", path.name)
+    ]
+    assert numbered, "expected numbered notebook module directories"
+    for module in numbered:
+        assert int(module.name[:2]) <= 9, (
+            f"v1.0 core is frozen at 00-09; found module beyond core: {module.name}"
+        )
+
+
+def test_v10_extension_boundary_is_recorded() -> None:
+    """The v1.1-v1.4 boundary is on record in ADR-0004, ROADMAP, and the scope doc."""
+    assert (
+        ROOT / "docs" / "adr" / "0004-treat-v1-1-through-v1-4-as-optional-advanced-extensions.md"
+    ).is_file()
+    roadmap = _read("docs/ROADMAP.md")
+    assert "## Post-1.0 Advanced Tracks" in roadmap
+    assert "v1.1" in roadmap
+    assert "v1.4" in roadmap
+    scope = _read("docs/release/v1.0-scope.md")
+    assert "v1.1" in scope
+    assert "v1.4" in scope
+
+
+def test_v10_readme_keeps_advanced_tracks_out_of_core_narrative() -> None:
+    """The public README must not introduce v1.1-v1.4 advanced tracks as core.
+
+    README is the public entry narrative; it stays pure v1.0. v1.1-v1.4 tracks
+    are confined to docs/ROADMAP.md § Post-1.0 and docs/adr/0004-*.md (asserted
+    present above) plus the scope/review docs that document the boundary.
+    """
+    readme = _read("README.md").lower()
+    for phrase in V10_README_ADVANCED_TRACK_PHRASES:
+        assert phrase not in readme, f"README introduces advanced-track term: {phrase!r}"
+

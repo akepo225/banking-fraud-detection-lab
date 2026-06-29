@@ -615,6 +615,52 @@ def test_every_core_module_has_an_inbound_case_or_regulatory_link() -> None:
     )
 
 
+# v1.0 frozen core (matches docs/release/v1.0-scope.md). CORE_NOTEBOOK_MODULES is
+# discovered dynamically from notebooks/[0-9][0-9]_*; this pins the v1.0 freeze so
+# the case/regulatory coverage gate is explicit about the ten required modules.
+V10_FROZEN_CORE_MODULES = (
+    "00_foundations",
+    "01_private_banking_transaction_fraud",
+    "02_digital_scam_to_mule",
+    "03_alert_governance",
+    "04_private_banking_feature_engineering",
+    "05_digital_session_and_payment_fraud",
+    "06_graph_network_fraud",
+    "07_interpretability_model_risk",
+    "08_production_monitoring_patterns",
+    "09_capstone",
+)
+
+
+def test_v10_core_modules_have_case_or_regulatory_link() -> None:
+    """Every frozen v1.0 core module has >= 1 inbound case/regulatory link.
+
+    Generalizes test_every_core_module_has_an_inbound_case_or_regulatory_link
+    (#124) with an explicit v1.0 frozen-list assertion: per-module, against the
+    ten modules frozen by docs/release/v1.0-scope.md (00-09), not just the
+    dynamic aggregate. Reuses _inbound_module_links() without weakening it.
+    """
+    inbound_sources = _inbound_module_links()
+    frozen = [Path("notebooks") / module for module in V10_FROZEN_CORE_MODULES]
+    uncovered = sorted(str(module) for module in frozen if not inbound_sources.get(module))
+    assert not uncovered, (
+        "Frozen v1.0 core modules with no inbound link from any source pack or "
+        f"regulatory note: {uncovered}"
+    )
+
+
+def test_v10_frozen_core_matches_on_disk_core_modules() -> None:
+    """The frozen v1.0 core equals the notebook modules discovered on disk.
+
+    Reinforces the v1.0 boundary from the case-library angle: the frozen ten
+    modules are exactly notebooks/[0-9][0-9]_* (no more, no fewer), so a new
+    v1.1+ module added under notebooks/ would fail this check too.
+    """
+    assert set(CORE_NOTEBOOK_MODULES) == {
+        Path("notebooks") / module for module in V10_FROZEN_CORE_MODULES
+    }
+
+
 def _exercise_blocks(exercise_section: str) -> list[str]:
     """Split the exercise section into one text block per ``### Exercise N``."""
     blocks = re.findall(

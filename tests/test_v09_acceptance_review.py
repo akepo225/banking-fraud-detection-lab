@@ -134,8 +134,8 @@ def test_v09_acceptance_review_has_hitl_boundary_and_evidence() -> None:
     """The v0.9 review must state HITL status, command evidence, and PRD linkage."""
     review = REVIEW_PATH.read_text(encoding="utf-8")
     required_terms = [
-        "Status: draft for human review.",
-        "<!-- HITL-REVIEW-REQUIRED:",
+        "Status: accepted for v0.9 beta with bounded v1.0 follow-ups.",
+        "<!-- HITL-REVIEW-COMPLETE:",
         "uv sync --extra dev",
         "uv run ruff check .",
         "uv run pytest",
@@ -145,7 +145,10 @@ def test_v09_acceptance_review_has_hitl_boundary_and_evidence() -> None:
         "#234",
         "Alpine Crest Private Bank",
         "NovaBank Digital",
-        "Hold pending final human beta decision",
+        "Accepted for v0.9 beta with bounded v1.0 follow-ups",
+        "PRD User Story Acceptance Matrix",
+        "End-To-End Learner Path Evidence",
+        "Final Verification Evidence",
         "recommend_lowest_cost_threshold",
         "evaluate_alert_scores",
         "v1.0 hardens",
@@ -183,6 +186,45 @@ def test_v09_acceptance_review_preserves_private_beta_framing() -> None:
             continue
         for claim in assertive_claims:
             assert claim not in line, f"v0.9 review makes assertive claim {claim!r}: {stripped!r}"
+
+
+def test_v09_acceptance_review_maps_every_prd_user_story() -> None:
+    """Every parent PRD user story maps to issue/PR, files, tests, and HITL evidence."""
+    review = REVIEW_PATH.read_text(encoding="utf-8")
+    assert "PRD User Story Acceptance Matrix" in review
+    required_headings = (
+        "Child issue / PR",
+        "Evidence files",
+        "Automated tests",
+        "Manual / HITL evidence",
+    )
+    for heading in required_headings:
+        assert heading in review, f"acceptance matrix missing column {heading!r}"
+    for story_number in range(1, 13):
+        assert f"User story {story_number}:" in review, (
+            f"acceptance matrix missing user story {story_number}"
+        )
+    for child_issue in range(225, 235):
+        assert f"#{child_issue}" in review, f"acceptance review missing issue #{child_issue}"
+    for pr_number in (240, 243, 244, 245, 247, 248):
+        assert f"#{pr_number}" in review, f"acceptance review missing PR #{pr_number}"
+
+
+def test_v09_acceptance_review_traces_the_learner_path_end_to_end() -> None:
+    """The remediation evidence must cover the full capstone learner workflow."""
+    review = REVIEW_PATH.read_text(encoding="utf-8")
+    assert "End-To-End Learner Path Evidence" in review
+    required_steps = (
+        "Scenario brief",
+        "Data generation",
+        "SQLite loading",
+        "SQL features",
+        "Scoring and alert review",
+        "Synthesis and limitations",
+        "Rubric and presentation",
+    )
+    for step in required_steps:
+        assert step in review, f"end-to-end learner path missing step {step!r}"
 
 
 def test_v09_enforces_both_prd_exit_criteria() -> None:

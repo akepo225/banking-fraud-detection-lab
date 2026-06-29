@@ -63,6 +63,8 @@ def test_beta_checklist_carries_hitl_marker_and_beta_framing() -> None:
     """The beta checklist is a maintainer artifact, not a publication announcement."""
     text = BETA_CHECKLIST.read_text(encoding="utf-8")
     assert "<!-- HITL-REVIEW-REQUIRED" in text
+    assert "Status: accepted for v0.9 beta with bounded v1.0 follow-ups." in text
+    assert "Final Beta Decision" in text
     assert "beta" in text.lower()
     assert "private" in text.lower()
     for banned in ("we shipped", "publicly released", "is now published"):

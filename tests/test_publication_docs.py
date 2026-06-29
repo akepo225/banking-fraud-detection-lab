@@ -578,3 +578,80 @@ def test_v10_readme_keeps_advanced_tracks_out_of_core_narrative() -> None:
     for phrase in V10_README_ADVANCED_TRACK_PHRASES:
         assert phrase not in readme, f"README introduces advanced-track term: {phrase!r}"
 
+
+# --- v1.0 framing-document consistency (issue #251) -------------------------
+# Reuses the test_readme_markdown_links_resolve idiom across the framing docs and
+# reconciles the module-06 naming drift recorded in docs/release/v1.0-scope.md.
+
+V10_FRAMING_DOC_PATHS = (
+    "README.md",
+    "docs/ROADMAP.md",
+    "CONTRIBUTING.md",
+)
+
+
+def _doc_local_link_targets(doc_rel: str) -> list[str]:
+    """Return local (non-http/fragment/mailto) markdown link targets in one doc."""
+    text = _read(doc_rel)
+    targets = re.findall(r"\]\(([^)]+)\)", text)
+    resolved: list[str] = []
+    for target in targets:
+        if target.startswith(("http://", "https://", "#", "mailto:")):
+            continue
+        path_part = target.split()[0].split("#", 1)[0]
+        if path_part:
+            resolved.append(path_part)
+    return resolved
+
+
+def test_v10_framing_doc_local_links_resolve() -> None:
+    """Every local markdown link in the framing docs must resolve to an existing file.
+
+    Reuses the test_readme_markdown_links_resolve idiom across README, ROADMAP,
+    CONTRIBUTING, every ADR, and every release doc. External, fragment, and mailto
+    targets are skipped; links resolve relative to the doc's directory or the repo
+    root. Guards against dead links to notebooks or docs renamed or moved.
+    """
+    docs = list(V10_FRAMING_DOC_PATHS)
+    docs += sorted(path.relative_to(ROOT).as_posix() for path in (ROOT / "docs" / "adr").glob("*.md"))
+    docs += sorted(
+        path.relative_to(ROOT).as_posix() for path in (ROOT / "docs" / "release").glob("*.md")
+    )
+    unresolved: list[str] = []
+    for doc_rel in docs:
+        doc_dir = (ROOT / doc_rel).parent
+        for target in _doc_local_link_targets(doc_rel):
+            if (doc_dir / target).exists() or (ROOT / target).exists():
+                continue
+            unresolved.append(f"{doc_rel} -> {target}")
+    assert not unresolved, f"framing docs have unresolved local links: {unresolved}"
+
+
+def test_v10_release_docs_reachable_from_roadmap() -> None:
+    """The v1.0 scope doc and acceptance review must be reachable from ROADMAP."""
+    roadmap = _read("docs/ROADMAP.md")
+    assert "(release/v1.0-scope.md)" in roadmap
+    assert "(release/v1.0-complete-public-core-curriculum-acceptance-review.md)" in roadmap
+
+
+def test_v10_roadmap_required_modules_match_on_disk() -> None:
+    """ROADMAP's v1.0 required-module names must equal the on-disk module directories.
+
+    Closes the module-06 naming drift (docs/release/v1.0-scope.md § Naming-
+    discrepancy note): ROADMAP listed 06_graph_network_analytics while the on-disk
+    directory is 06_graph_network_fraud. Both must now match exactly.
+    """
+    text = _read("docs/ROADMAP.md")
+    start = text.index("### v1.0: Complete Public Core Curriculum")
+    rest = text[start:]
+    modules_block = rest.split("v1.0 acceptance criteria:")[0]
+    roadmap_modules = re.findall(r"`([0-9][0-9]_[a-z_]+)`", modules_block)
+    on_disk = sorted(
+        path.name
+        for path in (ROOT / "notebooks").iterdir()
+        if path.is_dir() and re.fullmatch(r"[0-9][0-9]_.*", path.name)
+    )
+    assert sorted(roadmap_modules) == on_disk, (
+        f"ROADMAP v1.0 required modules {sorted(roadmap_modules)} != on-disk {on_disk}"
+    )
+

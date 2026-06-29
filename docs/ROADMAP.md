@@ -278,7 +278,7 @@ Required modules:
 - `03_alert_governance`: alert interpretation, limitations, and governance memo.
 - `04_private_banking_feature_engineering`: relationship, account, counterparty, and RM-context features.
 - `05_digital_session_and_payment_fraud`: session, device, beneficiary, and payment-risk features.
-- `06_graph_network_analytics`: NetworkX-first graph fraud patterns.
+- `06_graph_network_fraud`: NetworkX-first graph fraud patterns.
 - `07_interpretability_model_risk`: explainability, validation, thresholding, and model documentation.
 - `08_production_monitoring_patterns`: batch scoring, score tables, alert queues, and monitoring.
 - `09_capstone`: end-to-end capstone project.
@@ -295,6 +295,11 @@ v1.0 acceptance criteria:
 - CI passes on a clean checkout.
 - README, roadmap, contribution guide, disclaimers, licenses, and ADRs are consistent.
 - The repo contains no real client data, no job-preparation material, no real-bank affiliation claims, and no legal advice.
+
+Release artifacts:
+
+- [v1.0 scope boundary](release/v1.0-scope.md)
+- [v1.0 acceptance review](release/v1.0-complete-public-core-curriculum-acceptance-review.md)
 
 ## Post-1.0 Advanced Tracks
 

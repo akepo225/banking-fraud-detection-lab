@@ -450,10 +450,12 @@ def test_v09_customer_term_is_only_used_to_define_the_glossary() -> None:
 # is instead covered line-by-line by
 # tests/test_v10_acceptance_review.py::test_v10_acceptance_review_preserves_private_pre_publication_framing
 # (which skips the rg command and code fences) and by the content-assertion
-# tests. The scope doc is clean of every forbidden substring, so it stays in.
+# tests. The scope doc and the release checklist (#255) are both clean of every
+# forbidden substring, so they stay in.
 
 V10_TERMINOLOGY_DOC_PATHS = (
     "docs/release/v1.0-scope.md",
+    "docs/release/v1.0-release-checklist.md",
 )
 
 

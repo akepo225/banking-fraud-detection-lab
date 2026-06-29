@@ -89,11 +89,11 @@ V10_DELIVERABLE_PATHS = {
     },
 }
 
-# v1.0 test modules that must exist (each enforces a v1.0 gate). Downstream slices
-# (#252) extend this tuple as their gate modules land; #250 lists only the modules
-# present at this slice so the gate stays green here.
+# v1.0 test modules that must exist (each enforces a v1.0 gate). Extended in #255
+# to include the #252 data/schema gate module now that it has landed.
 V10_TEST_MODULES = (
     "test_v10_acceptance_review",
+    "test_v10_data_schema_gate",
 )
 
 # Prior-version notebook smoke-test modules re-executed for cross-version regression.
@@ -320,7 +320,10 @@ def test_v10_release_checklist_present_and_gated() -> None:
     """The v1.0 release checklist exists, carries the HITL boundary, and references CI."""
     assert CHECKLIST_PATH.is_file(), f"v1.0 release checklist missing: {CHECKLIST_PATH}"
     checklist = CHECKLIST_PATH.read_text(encoding="utf-8")
-    assert "<!-- HITL-REVIEW-REQUIRED:" in checklist
+    assert (
+        "<!-- HITL-REVIEW-COMPLETE:" in checklist
+        or "<!-- HITL-REVIEW-REQUIRED:" in checklist
+    ), "v1.0 release checklist missing HITL boundary marker"
     for cmd in ("uv sync --extra dev", "uv run ruff check .", "uv run pytest"):
         assert cmd in checklist, f"checklist missing CI command {cmd!r}"
     assert "hardening only" in checklist.lower()

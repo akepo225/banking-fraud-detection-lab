@@ -145,6 +145,7 @@ def run_batch_scoring(
         selected_at=resolved_selected_at,
         selection_method=selection_method,
         evidence_ref=evidence_ref,
+        score_version=score_version,
     )
 
     return BatchScoringResult(
@@ -306,6 +307,7 @@ def _build_score_rows(
         "score": pd.to_numeric(ordered["score"], errors="raise").to_numpy(),
         "scorer": [scorer] * rows,
         "score_version": [score_version] * rows,
+        "batch_id": [batch_id] * rows,
     }
     for column in _OPTIONAL_LINEAGE_COLUMNS:
         if column in ordered.columns:
@@ -324,6 +326,7 @@ def _build_threshold_row(
     selected_at: "pd.Timestamp",
     selection_method: str,
     evidence_ref: str,
+    score_version: str,
 ) -> "pd.DataFrame":
     """Build the single threshold row conforming exactly to the THRESHOLD spec."""
     threshold_id = f"{batch_id}-threshold"
@@ -338,6 +341,7 @@ def _build_threshold_row(
                 "selection_method": selection_method,
                 "review_status": "active",
                 "evidence_ref": evidence_ref,
+                "score_version": score_version,
             }
         ]
     )[column_order]

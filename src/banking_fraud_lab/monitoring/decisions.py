@@ -420,6 +420,7 @@ def _build_reviewer_action_rows(
     column_sources: dict[str, pd.Series | list] = {
         "reviewer_action_id": reviewer_action_ids,
         "alert_decision_id": alert_decision_rows["alert_decision_id"].to_numpy(),
+        "detection_pattern_id": alert_decision_rows["detection_pattern_id"].to_numpy(),
         "banking_relationship_id": alert_decision_rows["banking_relationship_id"].to_numpy(),
         "reviewer": [reviewer] * count,
         "reviewed_at": timestamps.to_numpy(),
@@ -444,8 +445,8 @@ def _build_reviewer_audit_rows(
 ) -> "pd.DataFrame":
     """Build one AUDIT_REVIEWER_ACTION_RECORDED audit_event row per reviewer_action.
 
-    score_id + detection_pattern_id are NOT on reviewer_action rows, so they are
-    looked up from the linked alert_decision rows via alert_decision_id.
+    score_id is NOT on reviewer_action rows, so it is looked up from the linked
+    alert_decision rows via alert_decision_id.
     """
     count = len(actions)
     audit_event_ids = [

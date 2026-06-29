@@ -112,6 +112,12 @@ SCORE = MonitoringTableSpec(
             False,
             "Version of the scorer/model that produced the score.",
         ),
+        ColumnSpec(
+            "batch_id",
+            "string",
+            False,
+            "Batch identifier grouping scores produced in one run.",
+        ),
     ),
     lineage_keys=(
         "banking_relationship_id",
@@ -167,6 +173,12 @@ THRESHOLD = MonitoringTableSpec(
             "string",
             False,
             "Pointer to the evaluation artifact supporting the threshold.",
+        ),
+        ColumnSpec(
+            "score_version",
+            "string",
+            False,
+            "Version of the scorer/model the threshold applies to.",
         ),
     ),
     lineage_keys=(),
@@ -307,6 +319,12 @@ REVIEWER_ACTION = MonitoringTableSpec(
             True,
             "Alert the reviewer action concerns, where applicable.",
             references="alerts.alert_id",
+        ),
+        ColumnSpec(
+            "detection_pattern_id",
+            "string",
+            False,
+            "Detection pattern the reviewer action concerns.",
         ),
         ColumnSpec(
             "banking_relationship_id",

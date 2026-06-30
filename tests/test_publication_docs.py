@@ -438,14 +438,24 @@ def test_v09_customer_term_is_only_used_to_define_the_glossary() -> None:
 
 
 # --- v1.0 terminology guardrails + extension boundary (issue #253) -----------
-# Extend publication-docs coverage to the v1.0 release surface (scope doc + the
-# v1.0 acceptance review) and add a structural extension-boundary guardrail.
-# The terminology checks reuse the FORBIDDEN_* vocabulary already enforced on the
-# v0.9 surface; the extension-boundary guard keeps v1.1-v1.4 out of the v1.0 core.
+# Extend publication-docs coverage to the v1.0 release surface and add a
+# structural extension-boundary guardrail. The terminology checks reuse the
+# FORBIDDEN_* vocabulary already enforced on the v0.9 surface; the extension-
+# boundary guard keeps v1.1-v1.4 out of the v1.0 core.
+#
+# The v1.0 acceptance review doc is intentionally excluded from the FLAT
+# forbidden-substring checks below (mirrors v0.9, where the review doc is also
+# excluded): the review legitimately lists the banned phrases inside its
+# prohibited-content search command and quotes the ROADMAP criterion. The review
+# is instead covered line-by-line by
+# tests/test_v10_acceptance_review.py::test_v10_acceptance_review_preserves_private_pre_publication_framing
+# (which skips the rg command and code fences) and by the content-assertion
+# tests. The scope doc and the release checklist (#255) are both clean of every
+# forbidden substring, so they stay in.
 
 V10_TERMINOLOGY_DOC_PATHS = (
     "docs/release/v1.0-scope.md",
-    "docs/release/v1.0-complete-public-core-curriculum-acceptance-review.md",
+    "docs/release/v1.0-release-checklist.md",
 )
 
 

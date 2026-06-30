@@ -18,6 +18,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEW_PATH = ROOT / "docs" / "release" / "v1.0-complete-public-core-curriculum-acceptance-review.md"
+CHECKLIST_PATH = ROOT / "docs" / "release" / "v1.0-release-checklist.md"
 
 # Frozen v1.0 core modules (matches docs/release/v1.0-scope.md and docs/ROADMAP.md
 # § "v1.0: Complete Public Core Curriculum → Required modules"). v1.0 adds no modules.
@@ -88,15 +89,18 @@ V10_DELIVERABLE_PATHS = {
     },
 }
 
-# v1.0 test modules that must exist (each enforces a v1.0 gate). Downstream slices
-# (#252) extend this tuple as their gate modules land; #250 lists only the modules
-# present at this slice so the gate stays green here.
+# v1.0 test modules that must exist (each enforces a v1.0 gate). Extended in #255
+# to include the #252 data/schema gate module now that it has landed.
 V10_TEST_MODULES = (
     "test_v10_acceptance_review",
+    "test_v10_data_schema_gate",
 )
 
 # Prior-version notebook smoke-test modules re-executed for cross-version regression.
 # UNCHANGED from v0.9 (tests/test_v09_acceptance_review.py): v1.0 adds no notebooks.
+# TODO(#264): extend this set with the v0.5 case-narrative + alert-triage smoke tests
+# (currently covered structurally by the per-module runnability test above, not
+# re-executed in this subprocess loop).
 PRIOR_NOTEBOOK_TEST_MODULES = (
     "test_foundations_notebook",  # v0.1
     "test_private_banking_notebook",  # v0.3
@@ -262,3 +266,67 @@ def test_v10_acceptance_review_preserves_private_pre_publication_framing() -> No
             continue
         for claim in assertive_claims:
             assert claim not in line, f"v1.0 review makes assertive claim {claim!r}: {stripped!r}"
+
+
+def test_v10_acceptance_review_maps_every_prd_user_story() -> None:
+    """Every parent PRD (#53) user story maps to issue/PR, files, tests, and HITL evidence."""
+    review = REVIEW_PATH.read_text(encoding="utf-8")
+    assert "PRD User Story Acceptance Matrix" in review
+    for heading in ("Child issue / PR", "Evidence files", "Automated tests", "Manual / HITL evidence"):
+        assert heading in review, f"acceptance matrix missing column {heading!r}"
+    for story_number in range(1, 12):  # PRD #53 has 11 user stories
+        assert f"User story {story_number}:" in review, (
+            f"acceptance matrix missing user story {story_number}"
+        )
+    for child_issue in (250, 251, 252, 253, 254, 255):
+        assert f"#{child_issue}" in review, f"acceptance review missing issue #{child_issue}"
+
+
+def test_v10_acceptance_review_traces_the_learner_path() -> None:
+    """The end-to-end learner path evidence must cover the full frozen core sequence."""
+    review = REVIEW_PATH.read_text(encoding="utf-8")
+    assert "End-To-End Learner Path Evidence" in review
+    required_steps = (
+        "Foundations",
+        "Private-banking transaction baseline",
+        "Digital scam-to-mule baseline",
+        "Alert governance",
+        "Private-banking feature engineering",
+        "Digital session and payment fraud",
+        "Graph and network fraud",
+        "Interpretability and model risk",
+        "Production monitoring patterns",
+        "Capstone",
+    )
+    for step in required_steps:
+        assert step in review, f"end-to-end learner path missing step {step!r}"
+
+
+def test_v10_acceptance_review_documents_exit_criteria() -> None:
+    """The review documents the v1.0 acceptance criteria and maps each to a gate."""
+    review = REVIEW_PATH.read_text(encoding="utf-8")
+    assert "Exit Criteria" in review
+    for phrase in (
+        "runnable featured notebooks",
+        "Progressive data views",
+        "SQLite exercises",
+        "Case library covers",
+        "CI passes on a clean checkout",
+    ):
+        assert phrase in review, f"exit criteria missing {phrase!r}"
+
+
+def test_v10_release_checklist_present_and_gated() -> None:
+    """The v1.0 release checklist exists, carries the HITL boundary, and references CI."""
+    assert CHECKLIST_PATH.is_file(), f"v1.0 release checklist missing: {CHECKLIST_PATH}"
+    checklist = CHECKLIST_PATH.read_text(encoding="utf-8")
+    assert (
+        "<!-- HITL-REVIEW-COMPLETE:" in checklist
+        or "<!-- HITL-REVIEW-REQUIRED:" in checklist
+    ), "v1.0 release checklist missing HITL boundary marker"
+    for cmd in ("uv sync --extra dev", "uv run ruff check .", "uv run pytest"):
+        assert cmd in checklist, f"checklist missing CI command {cmd!r}"
+    assert "hardening only" in checklist.lower()
+    assert "Release-Blocking Gates" in checklist
+    for issue in (53, 249):
+        assert f"#{issue}" in checklist, f"checklist missing issue #{issue}"

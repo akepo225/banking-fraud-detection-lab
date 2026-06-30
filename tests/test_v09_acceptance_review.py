@@ -55,12 +55,15 @@ V09_TEST_MODULES = (
 PRIOR_NOTEBOOK_TEST_MODULES = (
     "test_foundations_notebook",  # v0.1
     "test_private_banking_notebook",  # v0.3
+    "test_alpine_crest_case_narrative_notebook",  # v0.3 (issue #264)
     "test_digital_scam_to_mule_notebook",  # v0.4
     "test_alert_governance_notebook",  # v0.1/v0.7
     "test_private_banking_feature_engineering_notebook",  # v0.3/v0.4
     "test_private_banking_supervised_baseline_notebook",  # v0.3/v0.4
     "test_digital_feature_engineering_notebook",
     "test_digital_supervised_baseline_notebook",
+    "test_digital_alert_triage_notebook",  # v0.5 (issue #264)
+    "test_novabank_case_narrative_notebook",  # v0.5 (issue #264)
     "test_alpine_crest_graph_notebook",  # v0.6
     "test_novabank_graph_notebook",  # v0.6
     "test_alpine_crest_interpretability_notebook",  # v0.7

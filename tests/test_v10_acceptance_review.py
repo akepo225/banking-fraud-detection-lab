@@ -97,19 +97,20 @@ V10_TEST_MODULES = (
 )
 
 # Prior-version notebook smoke-test modules re-executed for cross-version regression.
-# UNCHANGED from v0.9 (tests/test_v09_acceptance_review.py): v1.0 adds no notebooks.
-# TODO(#264): extend this set with the v0.5 case-narrative + alert-triage smoke tests
-# (currently covered structurally by the per-module runnability test above, not
-# re-executed in this subprocess loop).
+# Extends the v0.9 set (tests/test_v09_acceptance_review.py) with the v0.5
+# case-narrative + alert-triage smoke tests (issue #264).
 PRIOR_NOTEBOOK_TEST_MODULES = (
     "test_foundations_notebook",  # v0.1
     "test_private_banking_notebook",  # v0.3
+    "test_alpine_crest_case_narrative_notebook",  # v0.3 (issue #264)
     "test_digital_scam_to_mule_notebook",  # v0.4
     "test_alert_governance_notebook",  # v0.1/v0.7
     "test_private_banking_feature_engineering_notebook",  # v0.3/v0.4
     "test_private_banking_supervised_baseline_notebook",  # v0.3/v0.4
     "test_digital_feature_engineering_notebook",
     "test_digital_supervised_baseline_notebook",
+    "test_digital_alert_triage_notebook",  # v0.5 (issue #264)
+    "test_novabank_case_narrative_notebook",  # v0.5 (issue #264)
     "test_alpine_crest_graph_notebook",  # v0.6
     "test_novabank_graph_notebook",  # v0.6
     "test_alpine_crest_interpretability_notebook",  # v0.7
@@ -178,8 +179,9 @@ def test_prior_notebooks_execute_end_to_end() -> None:
 
     Each prior notebook smoke-test module runs in its own subprocess (the canonical
     ``uv run pytest`` invocation CI uses) so a per-module regression is caught on its
-    own. UNCHANGED from v0.9 (tests/test_v09_acceptance_review.py): v1.0 adds no
-    notebooks, so the re-executed set is identical and proves the frozen core still
+    own. Extends the v0.9 set (tests/test_v09_acceptance_review.py, issue #264): the
+    re-executed set now includes v0.5 case-narrative and alert-triage smoke tests,
+    and proves the frozen core still
     runs end-to-end after the v1.0 hardening slices.
     """
     failures: list[str] = []

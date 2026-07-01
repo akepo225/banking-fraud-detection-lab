@@ -51,7 +51,8 @@ V09_TEST_MODULES = (
 
 # Prior-version notebook smoke-test modules re-executed for cross-version
 # regression. Extends the v0.8 set (tests/test_v08_acceptance_review.py) by
-# adding the v0.8 monitoring notebooks + the v0.9 capstone notebooks.
+# adding the v0.8 monitoring notebooks + the v0.9 capstone notebooks, and the
+# v0.5 case-narrative + alert-triage smoke tests retroactively (#264).
 PRIOR_NOTEBOOK_TEST_MODULES = (
     "test_foundations_notebook",  # v0.1
     "test_private_banking_notebook",  # v0.3
@@ -71,6 +72,9 @@ PRIOR_NOTEBOOK_TEST_MODULES = (
     "test_alert_review_governance_notebook",  # v0.8
     "test_capstone_scoring_notebook",  # v0.9
     "test_capstone_synthesis_notebook",  # v0.9
+    "test_alpine_crest_case_narrative_notebook",  # v0.5 (#264)
+    "test_novabank_case_narrative_notebook",  # v0.5 (#264)
+    "test_digital_alert_triage_notebook",  # v0.5 (#264)
 )
 
 

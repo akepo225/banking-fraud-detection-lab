@@ -97,10 +97,9 @@ V10_TEST_MODULES = (
 )
 
 # Prior-version notebook smoke-test modules re-executed for cross-version regression.
-# UNCHANGED from v0.9 (tests/test_v09_acceptance_review.py): v1.0 adds no notebooks.
-# TODO(#264): extend this set with the v0.5 case-narrative + alert-triage smoke tests
-# (currently covered structurally by the per-module runnability test above, not
-# re-executed in this subprocess loop).
+# v1.0 adds no notebooks; #264 extends the set with the v0.5 case-narrative +
+# alert-triage smoke tests (previously covered structurally only), in lockstep
+# with tests/test_v09_acceptance_review.py.
 PRIOR_NOTEBOOK_TEST_MODULES = (
     "test_foundations_notebook",  # v0.1
     "test_private_banking_notebook",  # v0.3
@@ -120,6 +119,9 @@ PRIOR_NOTEBOOK_TEST_MODULES = (
     "test_alert_review_governance_notebook",  # v0.8
     "test_capstone_scoring_notebook",  # v0.9
     "test_capstone_synthesis_notebook",  # v0.9
+    "test_alpine_crest_case_narrative_notebook",  # v0.5 (#264)
+    "test_novabank_case_narrative_notebook",  # v0.5 (#264)
+    "test_digital_alert_triage_notebook",  # v0.5 (#264)
 )
 
 
@@ -178,9 +180,10 @@ def test_prior_notebooks_execute_end_to_end() -> None:
 
     Each prior notebook smoke-test module runs in its own subprocess (the canonical
     ``uv run pytest`` invocation CI uses) so a per-module regression is caught on its
-    own. UNCHANGED from v0.9 (tests/test_v09_acceptance_review.py): v1.0 adds no
-    notebooks, so the re-executed set is identical and proves the frozen core still
-    runs end-to-end after the v1.0 hardening slices.
+    own. v1.0 adds no notebooks; #264 extends the set with the v0.5 case-narrative +
+    alert-triage smoke tests (in lockstep with tests/test_v09_acceptance_review.py),
+    so the re-executed set proves the frozen core still runs end-to-end after the
+    v1.0 hardening slices.
     """
     failures: list[str] = []
     for name in PRIOR_NOTEBOOK_TEST_MODULES:
